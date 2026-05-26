@@ -10,6 +10,7 @@ enum UserRole: string
     case Warehouse = 'warehouse';
     case Manager = 'manager';
     case Owner = 'owner';
+    case Customer = 'customer';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum UserRole: string
             self::Warehouse => 'Warehouse / Gudang',
             self::Manager => 'Manager / Supervisor',
             self::Owner => 'Owner',
+            self::Customer => 'Pelanggan',
         };
     }
 
@@ -65,6 +67,10 @@ enum UserRole: string
                 'dashboard.view',
                 'profits.view',
                 'branches.monitor',
+            ],
+            self::Customer => [
+                'orders.place',
+                'menu.view',
             ],
         };
     }

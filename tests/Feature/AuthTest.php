@@ -19,12 +19,12 @@ class AuthTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_register_creates_cashier_and_sends_verification_code(): void
+    public function test_register_creates_customer_and_sends_verification_code(): void
     {
         Mail::fake();
 
         $response = $this->post(route('register.store'), [
-            'name' => 'Kasir Baru',
+            'username' => 'kasirbaru',
             'email' => 'kasir@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -34,7 +34,9 @@ class AuthTest extends TestCase
 
         $user = User::query()->where('email', 'kasir@example.com')->firstOrFail();
 
-        $this->assertSame(UserRole::Cashier, $user->role);
+        $this->assertSame(UserRole::Customer, $user->role);
+        $this->assertSame('kasirbaru', $user->name);
+        $this->assertSame('kasirbaru', $user->username);
         $this->assertNull($user->email_verified_at);
         $this->assertNotNull($user->email_verification_code);
         $this->assertNotNull($user->email_verification_expires_at);
@@ -66,12 +68,14 @@ class AuthTest extends TestCase
     public function test_unverified_user_cannot_login_before_verification(): void
     {
         $user = User::factory()->create([
+            'username' => 'kasirlogin',
+            'name' => 'kasirlogin',
             'password' => 'password123',
             'email_verified_at' => null,
         ]);
 
         $this->post(route('login.store'), [
-            'email' => $user->email,
+            'username' => 'kasirlogin',
             'password' => 'password123',
         ])->assertRedirect(route('verification.notice'));
 

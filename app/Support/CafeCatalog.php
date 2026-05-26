@@ -29,6 +29,14 @@ class CafeCatalog
         ];
     }
 
+    public static function tables(): array
+    {
+        $count = (int) config('store.table_count', 20);
+        $count = max(1, min($count, 200));
+
+        return range(1, $count);
+    }
+
     public static function ensure(): void
     {
         if (Product::query()->exists()) {

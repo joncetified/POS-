@@ -37,8 +37,8 @@
         <form method="POST" action="{{ route('register.store') }}">
             @csrf
             <div class="field">
-                <label for="name">Nama</label>
-                <input id="name" name="name" value="{{ old('name') }}" autocomplete="name" required autofocus>
+                <label for="username">Username</label>
+                <input id="username" name="username" value="{{ old('username') }}" autocomplete="username" required autofocus>
             </div>
             <div class="field">
                 <label for="email">Email</label>

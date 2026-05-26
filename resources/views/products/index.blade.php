@@ -5,221 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Produk - {{ $store['name'] }}</title>
     <style>
-        :root {
-            --bg: #f3f5f7;
-            --surface: #ffffff;
-            --soft: #f8fafc;
-            --ink: #0f172a;
-            --muted: #64748b;
-            --line: #e2e8f0;
-            --primary: #0f766e;
-            --primary-dark: #115e59;
-            --danger: #dc2626;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            color: var(--ink);
-            background: var(--bg);
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-
-        button,
-        input,
-        select {
-            font: inherit;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .shell {
-            width: min(1180px, calc(100% - 32px));
-            margin: 24px auto;
-            display: grid;
-            gap: 18px;
-        }
-
-        .topbar,
-        .panel,
-        .form-grid,
-        .actions {
-            display: grid;
-            gap: 14px;
-        }
-
-        .topbar {
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: center;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--surface);
-            padding: 16px 18px;
-            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
-        }
-
-        .panel {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--surface);
-            padding: 18px;
-            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07);
-        }
-
-        h1,
-        h2,
-        p {
-            margin: 0;
-        }
-
-        .muted {
-            color: var(--muted);
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-
-        .field {
-            display: grid;
-            gap: 6px;
-        }
-
-        label {
-            color: var(--muted);
-            font-size: 0.78rem;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        input,
-        select {
-            min-height: 42px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 10px 12px;
-            background: var(--surface);
-            color: var(--ink);
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border-bottom: 1px solid var(--line);
-            padding: 12px 10px;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 0.78rem;
-            text-transform: uppercase;
-        }
-
-        .row-form {
-            display: contents;
-        }
-
-        .row-form input,
-        .row-form select {
-            width: 100%;
-            min-width: 110px;
-        }
-
-        .btn {
-            min-height: 42px;
-            border: 0;
-            border-radius: 8px;
-            padding: 10px 12px;
-            color: #fff;
-            background: var(--primary);
-            cursor: pointer;
-            font-weight: 800;
-            transition: background 160ms ease, transform 160ms ease;
-        }
-
-        .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        .btn.secondary {
-            color: var(--ink);
-            background: var(--soft);
-            border: 1px solid var(--line);
-        }
-
-        .btn.secondary:hover {
-            background: #eef2f7;
-        }
-
-        .btn.danger {
-            background: var(--danger);
-        }
-
-        .btn.danger:hover {
-            background: #b91c1c;
-        }
-
-        .logout-form {
-            margin: 0;
-        }
-
-        .logout-form .btn {
-            width: 100%;
-        }
-
-        .status {
-            padding: 10px 12px;
-            border-radius: 8px;
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 800;
-        }
-
-        .errors {
-            padding: 10px 12px;
-            border-radius: 8px;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .actions {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .pagination {
-            margin-top: 14px;
-        }
-
-        @media (max-width: 900px) {
-            .topbar,
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .table-wrap {
-                overflow-x: auto;
-            }
-        }
+        :root { --bg: #f3f5f7; --surface: #fff; --soft: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; --danger: #dc2626; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        button, input, select { font: inherit; }
+        a { color: inherit; text-decoration: none; }
+        .shell { width: min(1220px, calc(100% - 32px)); margin: 24px auto; display: grid; gap: 18px; }
+        .topbar, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 14px 30px rgba(15, 23, 42, .06); }
+        .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 18px; }
+        .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+        .panel { padding: 18px; display: grid; gap: 14px; }
+        .split { display: grid; grid-template-columns: .82fr 1.18fr; gap: 16px; align-items: start; }
+        h1, h2, p { margin: 0; }
+        h1 { font-size: clamp(1.55rem, 2.4vw, 2rem); }
+        h2 { font-size: 1.12rem; }
+        .muted { color: var(--muted); }
+        .btn { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: var(--soft); color: var(--ink); cursor: pointer; font-weight: 850; display: inline-flex; align-items: center; justify-content: center; }
+        .btn.primary { border-color: var(--primary); background: var(--primary); color: #fff; }
+        .btn.danger { border-color: var(--danger); background: var(--danger); color: #fff; }
+        .btn:hover { transform: translateY(-1px); }
+        .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .category-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+        .field { display: grid; gap: 6px; }
+        label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
+        input, select { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
+        .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
+        .status { background: #dcfce7; color: #166534; }
+        .errors { background: #fee2e2; color: #991b1b; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+        th { color: var(--muted); font-size: .76rem; text-transform: uppercase; }
+        tbody tr:hover { background: var(--soft); }
+        .product-fields { display: grid; grid-template-columns: 110px minmax(170px, 1fr); gap: 8px; }
+        .meta-fields { display: grid; grid-template-columns: 80px 80px 98px; gap: 8px; }
+        .swatch-row { display: grid; grid-template-columns: 26px minmax(90px, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
+        .swatch { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: var(--color); }
+        .row-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 170px; }
+        .active-label { display: inline-flex; gap: 8px; align-items: center; font-weight: 850; text-transform: none; color: var(--ink); }
+        .pagination { margin-top: 12px; }
+        .logout-form { margin: 0; }
+        .logout-form .btn { width: 100%; }
+        @media (max-width: 980px) { .topbar, .split, .form-grid, .category-form { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } .table-wrap { overflow-x: auto; } }
     </style>
 </head>
 <body>
@@ -228,12 +55,24 @@
             <div>
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>Produk</h1>
+                <p class="muted">Kelola menu, harga, status aktif, dan stok produk cafe.</p>
             </div>
-            <a class="btn secondary" href="{{ route('pos.index') }}">Kembali ke Kasir</a>
-            <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="btn secondary" type="submit">Logout</button>
-            </form>
+            <div class="actions">
+                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                @endif
+                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                    <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
+                    <a class="btn" href="{{ route('customer.qr.index') }}">QR Meja</a>
+                @endif
+                @if (auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                    <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @endif
+                <form class="logout-form" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="btn" type="submit">Logout</button>
+                </form>
+            </div>
         </section>
 
         @if (session('status'))
@@ -244,93 +83,101 @@
             <div class="errors">{{ $errors->first() }}</div>
         @endif
 
-        <section class="panel">
-            <h2>Tambah Kategori</h2>
-            <form class="form-grid" method="POST" action="{{ route('categories.store') }}">
-                @csrf
-                <div class="field">
-                    <label for="category-name">Nama kategori</label>
-                    <input id="category-name" name="name" required>
-                </div>
-                <button class="btn" type="submit">Simpan Kategori</button>
-            </form>
+        <section class="split">
+            <div class="panel">
+                <h2>Tambah Kategori</h2>
+                <form class="form-grid category-form" method="POST" action="{{ route('categories.store') }}">
+                    @csrf
+                    <div class="field">
+                        <label for="category-name">Nama kategori</label>
+                        <input id="category-name" name="name" required>
+                    </div>
+                    <button class="btn primary" type="submit">Simpan</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>Tambah Produk</h2>
+                @if ($categories->isEmpty())
+                    <p class="muted">Buat kategori dulu sebelum menambahkan produk.</p>
+                @else
+                    <form class="form-grid" method="POST" action="{{ route('products.store') }}">
+                        @csrf
+                        <div class="field">
+                            <label for="category_id">Kategori</label>
+                            <select id="category_id" name="category_id" required>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sku">SKU</label>
+                            <input id="sku" name="sku" required>
+                        </div>
+                        <div class="field">
+                            <label for="name">Nama</label>
+                            <input id="name" name="name" required>
+                        </div>
+                        <div class="field">
+                            <label for="price">Harga</label>
+                            <input id="price" name="price" type="number" min="0" required>
+                        </div>
+                        <div class="field">
+                            <label for="stock">Stok</label>
+                            <input id="stock" name="stock" type="number" min="0" required>
+                        </div>
+                        <div class="field">
+                            <label for="unit">Unit</label>
+                            <input id="unit" name="unit" value="pcs" required>
+                        </div>
+                        <div class="field">
+                            <label for="tag">Tag</label>
+                            <input id="tag" name="tag">
+                        </div>
+                        <div class="field">
+                            <label for="color">Warna</label>
+                            <input id="color" name="color" value="#0f766e" required>
+                        </div>
+                        <input type="hidden" name="is_active" value="1">
+                        <button class="btn primary" type="submit">Simpan Produk</button>
+                    </form>
+                @endif
+            </div>
         </section>
 
         <section class="panel">
-            <h2>Tambah Produk</h2>
-            @if ($categories->isEmpty())
-                <p class="muted">Buat kategori dulu sebelum menambahkan produk.</p>
-            @else
-            <form class="form-grid" method="POST" action="{{ route('products.store') }}">
-                @csrf
-                <div class="field">
-                    <label for="category_id">Kategori</label>
-                    <select id="category_id" name="category_id" required>
-                        @foreach ($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="field">
-                    <label for="sku">SKU</label>
-                    <input id="sku" name="sku" required>
-                </div>
-                <div class="field">
-                    <label for="name">Nama</label>
-                    <input id="name" name="name" required>
-                </div>
-                <div class="field">
-                    <label for="price">Harga</label>
-                    <input id="price" name="price" type="number" min="0" required>
-                </div>
-                <div class="field">
-                    <label for="stock">Stok</label>
-                    <input id="stock" name="stock" type="number" min="0" required>
-                </div>
-                <div class="field">
-                    <label for="unit">Unit</label>
-                    <input id="unit" name="unit" value="pcs" required>
-                </div>
-                <div class="field">
-                    <label for="tag">Tag</label>
-                    <input id="tag" name="tag">
-                </div>
-                <div class="field">
-                    <label for="color">Warna</label>
-                    <input id="color" name="color" value="#0f766e" required>
-                </div>
-                <input type="hidden" name="is_active" value="1">
-                <button class="btn" type="submit">Simpan Produk</button>
-            </form>
-            @endif
-        </section>
-
-        <section class="panel">
-            <h2>Daftar Produk</h2>
+            <div>
+                <h2>Daftar Produk</h2>
+                <p class="muted">Perubahan harga dan stok langsung dipakai di POS.</p>
+            </div>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
                             <th>Produk</th>
                             <th>Kategori</th>
-                            <th>Harga</th>
-                            <th>Stok</th>
+                            <th>Harga / Stok</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($products as $product)
+                        @forelse ($products as $product)
                             <tr>
                                 <td>
                                     <form id="update-{{ $product->id }}" method="POST" action="{{ route('products.update', $product) }}">
                                         @csrf
                                         @method('PUT')
-                                        <input name="sku" value="{{ $product->sku }}" required>
-                                        <input name="name" value="{{ $product->name }}" required style="margin-top: 8px;">
-                                        <input name="unit" value="{{ $product->unit }}" required style="margin-top: 8px;">
-                                        <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;">
-                                        <input name="color" value="{{ $product->color }}" required style="margin-top: 8px;">
+                                        <div class="product-fields">
+                                            <input name="sku" value="{{ $product->sku }}" required aria-label="SKU">
+                                            <input name="name" value="{{ $product->name }}" required aria-label="Nama produk">
+                                        </div>
+                                        <div class="swatch-row">
+                                            <span class="swatch" style="--color: {{ $product->color }}"></span>
+                                            <input name="color" value="{{ $product->color }}" required aria-label="Warna">
+                                        </div>
+                                        <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
                                         <input type="hidden" name="is_active" value="0">
                                     </form>
                                 </td>
@@ -344,20 +191,21 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input form="update-{{ $product->id }}" name="price" type="number" min="0" value="{{ $product->price }}" required>
+                                    <div class="meta-fields">
+                                        <input form="update-{{ $product->id }}" name="price" type="number" min="0" value="{{ $product->price }}" required aria-label="Harga">
+                                        <input form="update-{{ $product->id }}" name="stock" type="number" min="0" value="{{ $product->stock }}" required aria-label="Stok">
+                                        <input form="update-{{ $product->id }}" name="unit" value="{{ $product->unit }}" required aria-label="Unit">
+                                    </div>
                                 </td>
                                 <td>
-                                    <input form="update-{{ $product->id }}" name="stock" type="number" min="0" value="{{ $product->stock }}" required>
-                                </td>
-                                <td>
-                                    <label style="display: flex; gap: 8px; align-items: center; text-transform: none;">
+                                    <label class="active-label">
                                         <input form="update-{{ $product->id }}" name="is_active" type="checkbox" value="1" @checked($product->is_active)>
                                         Aktif
                                     </label>
                                 </td>
                                 <td>
-                                    <div class="actions">
-                                        <button form="update-{{ $product->id }}" class="btn" type="submit">Update</button>
+                                    <div class="row-actions">
+                                        <button form="update-{{ $product->id }}" class="btn primary" type="submit">Update</button>
                                         <form method="POST" action="{{ route('products.destroy', $product) }}">
                                             @csrf
                                             @method('DELETE')
@@ -366,7 +214,9 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="5" class="muted">Belum ada produk.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

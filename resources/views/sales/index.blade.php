@@ -10,7 +10,8 @@
         body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         a { color: inherit; text-decoration: none; }
         .shell { width: min(1180px, calc(100% - 32px)); margin: 24px auto; display: grid; gap: 18px; }
-        .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px 18px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06); }
+        .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px 18px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06); }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
         .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 18px; box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07); }
         h1, p { margin: 0; }
         .muted { color: var(--muted); }
@@ -34,13 +35,25 @@
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>Order</h1>
             </div>
-            <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
-            <a class="btn" href="{{ route('products.index') }}">Produk</a>
-            <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
-            <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="btn" type="submit">Logout</button>
-            </form>
+            <div class="actions">
+                <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                <a class="btn" href="{{ route('sales.print') }}" target="_blank" rel="noopener">Print</a>
+                <a class="btn" href="{{ route('sales.pdf') }}">PDF</a>
+                <a class="btn" href="{{ route('sales.excel') }}">Excel</a>
+                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                    <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
+                @endif
+                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                    <a class="btn" href="{{ route('products.index') }}">Produk</a>
+                @endif
+                @if (auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                    <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @endif
+                <form class="logout-form" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="btn" type="submit">Logout</button>
+                </form>
+            </div>
         </section>
 
         <section class="panel">
@@ -51,8 +64,8 @@
                             <th>Invoice</th>
                             <th>Pelanggan</th>
                             <th>Item</th>
+                            <th>Keuangan</th>
                             <th>Pembayaran</th>
-                            <th>Total</th>
                             <th>Waktu</th>
                         </tr>
                     </thead>
@@ -60,7 +73,13 @@
                         @forelse ($sales as $sale)
                             <tr>
                                 <td><strong>{{ $sale->invoice_number }}</strong></td>
-                                <td>{{ $sale->customer_name ?: 'Umum' }}<br><span class="muted">{{ $sale->order_type }}</span></td>
+                                <td>
+                                    {{ $sale->customer_name ?: 'Umum' }}
+                                    <br><span class="muted">{{ $sale->order_type }}</span>
+                                    @if ($sale->table_number)
+                                        <br><span class="muted">Meja {{ $sale->table_number }}</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="items">
                                         @foreach ($sale->items as $item)
@@ -68,8 +87,20 @@
                                         @endforeach
                                     </div>
                                 </td>
-                                <td>{{ $sale->payment_method }}<br><span class="muted">Bayar Rp {{ number_format($sale->paid_amount, 0, ',', '.') }}</span></td>
-                                <td><strong>Rp {{ number_format($sale->total, 0, ',', '.') }}</strong></td>
+                                <td>
+                                    Subtotal Rp {{ number_format($sale->subtotal, 0, ',', '.') }}<br>
+                                    <span class="muted">Diskon Rp {{ number_format($sale->discount, 0, ',', '.') }}</span><br>
+                                    <span class="muted">PPN Rp {{ number_format($sale->tax, 0, ',', '.') }}</span><br>
+                                    <strong>Total Rp {{ number_format($sale->total, 0, ',', '.') }}</strong>
+                                </td>
+                                <td>
+                                    {{ $sale->payment_method }}
+                                    @if ($sale->payment_reference)
+                                        <br><span class="muted">Ref {{ $sale->payment_reference }}</span>
+                                    @endif
+                                    <br><span class="muted">Bayar Rp {{ number_format($sale->paid_amount, 0, ',', '.') }}</span>
+                                    <br><span class="muted">Kembali Rp {{ number_format($sale->change_amount, 0, ',', '.') }}</span>
+                                </td>
                                 <td>{{ $sale->paid_at?->timezone('Asia/Jakarta')->format('d M Y H:i') }}</td>
                             </tr>
                         @empty

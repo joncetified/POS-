@@ -11,8 +11,9 @@
         a { color: inherit; text-decoration: none; }
         .shell { width: min(1180px, calc(100% - 32px)); margin: 24px auto; display: grid; gap: 18px; }
         .topbar, .cards, .content { display: grid; gap: 14px; }
-        .topbar { grid-template-columns: minmax(0, 1fr) auto auto auto auto; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px 18px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06); }
-        .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .topbar { grid-template-columns: minmax(0, 1fr) auto; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 16px 18px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06); }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .content { grid-template-columns: 1fr 1fr; }
         .panel, .card { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 18px; box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07); }
         h1, h2, p { margin: 0; }
@@ -37,18 +38,30 @@
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>Laporan</h1>
             </div>
-            <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
-            <a class="btn" href="{{ route('products.index') }}">Produk</a>
-            <a class="btn" href="{{ route('sales.index') }}">Order</a>
-            <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="btn" type="submit">Logout</button>
-            </form>
+            <div class="actions">
+                <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                <a class="btn" href="{{ route('reports.print') }}" target="_blank" rel="noopener">Print</a>
+                <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
+                <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
+                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                    <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
+                @endif
+                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                    <a class="btn" href="{{ route('products.index') }}">Produk</a>
+                @endif
+                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('cashiers.monitor') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view'))
+                    <a class="btn" href="{{ route('sales.index') }}">Order</a>
+                @endif
+                <form class="logout-form" method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="btn" type="submit">Logout</button>
+                </form>
+            </div>
         </section>
 
         <section class="cards">
             <div class="card">
-                <p class="muted">Omzet hari ini</p>
+                <p class="muted">Penjualan bersih hari ini</p>
                 <strong>Rp {{ number_format($todayRevenue, 0, ',', '.') }}</strong>
             </div>
             <div class="card">
@@ -58,6 +71,76 @@
             <div class="card">
                 <p class="muted">Omzet bulan ini</p>
                 <strong>Rp {{ number_format($monthRevenue, 0, ',', '.') }}</strong>
+            </div>
+            <div class="card">
+                <p class="muted">PPN hari ini</p>
+                <strong>Rp {{ number_format($todayFinancials['taxes'], 0, ',', '.') }}</strong>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="panel">
+                <h2>Ringkasan Keuangan Hari Ini</h2>
+                <div class="table-wrap">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Penjualan kotor</td>
+                                <td>Rp {{ number_format($todayFinancials['grossSales'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Diskon</td>
+                                <td>Rp {{ number_format($todayFinancials['discounts'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>PPN 11%</td>
+                                <td>Rp {{ number_format($todayFinancials['taxes'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Penjualan bersih</strong></td>
+                                <td><strong>Rp {{ number_format($todayFinancials['netSales'], 0, ',', '.') }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Uang diterima</td>
+                                <td>Rp {{ number_format($todayFinancials['cashTendered'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Kembalian</td>
+                                <td>Rp {{ number_format($todayFinancials['changeGiven'], 0, ',', '.') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Metode Pembayaran Hari Ini</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metode</th>
+                                <th>Order</th>
+                                <th>Penjualan</th>
+                                <th>Diterima</th>
+                                <th>Kembali</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($paymentSummary as $payment)
+                                <tr>
+                                    <td>{{ $payment->payment_method }}</td>
+                                    <td>{{ $payment->orders_count }}</td>
+                                    <td>Rp {{ number_format($payment->total_sales, 0, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($payment->tendered, 0, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($payment->change_given, 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="muted">Belum ada pembayaran hari ini.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 

@@ -25,8 +25,11 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $username = fake()->unique()->userName();
+
         return [
-            'name' => fake()->name(),
+            'name' => $username,
+            'username' => $username,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'role' => UserRole::Cashier,
@@ -73,6 +76,11 @@ class UserFactory extends Factory
     public function owner(): static
     {
         return $this->role(UserRole::Owner);
+    }
+
+    public function customer(): static
+    {
+        return $this->role(UserRole::Customer);
     }
 
     private function role(UserRole $role): static

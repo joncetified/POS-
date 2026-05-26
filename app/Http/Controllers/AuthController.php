@@ -22,14 +22,14 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
-                ->withErrors(['email' => 'Email atau password tidak sesuai.'])
-                ->onlyInput('email');
+                ->withErrors(['username' => 'Username atau password tidak sesuai.'])
+                ->onlyInput('username');
         }
 
         $request->session()->regenerate();
@@ -44,7 +44,7 @@ class AuthController extends Controller
                 ->with('status', 'Verifikasi email dulu sebelum masuk.');
         }
 
-        return redirect()->intended(route('pos.index'));
+        return redirect()->intended(route($this->homeRouteFor($request->user())));
     }
 
     public function showRegister(): View
@@ -55,16 +55,17 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'username' => ['required', 'string', 'alpha_dash', 'min:3', 'max:80', 'unique:users,username'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
         $user = User::query()->create([
-            'name' => $validated['name'],
+            'name' => $validated['username'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'role' => UserRole::Cashier,
+            'role' => UserRole::Customer,
         ]);
 
         $this->sendVerificationCode($user);
@@ -110,7 +111,7 @@ class AuthController extends Controller
         $request->session()->forget('pending_verification_user_id');
         $request->session()->regenerate();
 
-        return redirect()->route('pos.index');
+        return redirect()->route($this->homeRouteFor($user));
     }
 
     public function resendVerification(Request $request): RedirectResponse
@@ -168,5 +169,36 @@ class AuthController extends Controller
         $userId = $request->session()->get('pending_verification_user_id');
 
         return $userId ? User::query()->find($userId) : null;
+    }
+
+    private function homeRouteFor(User $user): string
+    {
+        if (
+            $user->hasPermission('dashboard.view')
+            || $user->hasPermission('profits.view')
+            || $user->hasPermission('reports.view_store')
+            || $user->hasPermission('reports.view_all')
+            || $user->hasPermission('store.performance.view')
+        ) {
+            return 'dashboard.index';
+        }
+
+        if ($user->hasPermission('transactions.create') || $user->hasPermission('transactions.manage')) {
+            return 'pos.index';
+        }
+
+        if (
+            $user->hasPermission('products.manage')
+            || $user->hasPermission('stock.manage')
+            || $user->hasPermission('inventory.manage')
+        ) {
+            return 'products.index';
+        }
+
+        if ($user->hasPermission('menu.view')) {
+            return 'customer.menu';
+        }
+
+        return 'reports.index';
     }
 }
