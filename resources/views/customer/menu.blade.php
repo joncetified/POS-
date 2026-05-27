@@ -57,6 +57,7 @@
             .grid { grid-template-columns: 1fr; }
         }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="shell">

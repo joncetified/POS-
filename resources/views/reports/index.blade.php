@@ -30,6 +30,7 @@
         .warn { color: var(--warn); font-weight: 800; }
         @media (max-width: 860px) { .topbar, .cards, .content { grid-template-columns: 1fr; } .table-wrap { overflow-x: auto; } }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="shell">

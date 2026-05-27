@@ -25,6 +25,7 @@
         .errors { padding: 10px 12px; border-radius: 8px; color: #991b1b; background: #fee2e2; }
         .footer { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="auth-card">

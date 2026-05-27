@@ -48,6 +48,7 @@
         .logout-form .btn { width: 100%; }
         @media (max-width: 980px) { .topbar, .split, .form-grid, .category-form { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } .table-wrap { overflow-x: auto; } }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="shell">

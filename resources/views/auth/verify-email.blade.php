@@ -26,6 +26,7 @@
         .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 520px) { .split { grid-template-columns: 1fr; } }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="auth-card">

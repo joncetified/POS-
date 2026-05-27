@@ -27,6 +27,7 @@
         .pagination { margin-top: 14px; }
         @media (max-width: 760px) { .topbar { grid-template-columns: 1fr; } .table-wrap { overflow-x: auto; } }
     </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <main class="shell">
