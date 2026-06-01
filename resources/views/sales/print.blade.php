@@ -76,6 +76,9 @@
                             @if ($sale->table_number)
                                 <br><span class="muted">Meja {{ $sale->table_number }}</span>
                             @endif
+                            @if ($sale->customer_note)
+                                <br><span class="muted">Catatan: {{ $sale->customer_note }}</span>
+                            @endif
                         </td>
                         <td>
                             <div class="items">

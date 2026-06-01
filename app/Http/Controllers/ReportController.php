@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryMovement;
+use App\Models\OperationalExpense;
 use App\Models\Product;
+use App\Models\SalaryPayment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Support\CafeCatalog;
@@ -74,7 +77,14 @@ class ReportController extends Controller
             'netSales' => (clone $todaySales)->sum('total'),
             'cashTendered' => (clone $todaySales)->sum('paid_amount'),
             'changeGiven' => (clone $todaySales)->sum('change_amount'),
+            'operationalExpenses' => OperationalExpense::query()->whereDate('spent_at', today())->sum('amount'),
+            'salaryPayments' => SalaryPayment::query()->whereDate('paid_at', today())->sum('amount'),
+            'inventoryPurchases' => InventoryMovement::query()->where('type', 'in')->whereDate('occurred_at', today())->sum('total_cost'),
         ];
+        $todayFinancials['estimatedProfit'] = $todayFinancials['netSales']
+            - $todayFinancials['operationalExpenses']
+            - $todayFinancials['salaryPayments']
+            - $todayFinancials['inventoryPurchases'];
 
         return [
             'store' => CafeCatalog::store(),
@@ -105,6 +115,9 @@ class ReportController extends Controller
                 ->orderByDesc('sold_qty')
                 ->limit(8)
                 ->get(),
+            'recentOperationalExpenses' => OperationalExpense::query()->latest('spent_at')->limit(8)->get(),
+            'recentSalaryPayments' => SalaryPayment::query()->with('employee')->latest('paid_at')->limit(8)->get(),
+            'recentInventoryMovements' => InventoryMovement::query()->with('product')->latest('occurred_at')->latest('id')->limit(8)->get(),
         ];
     }
 
@@ -126,6 +139,10 @@ class ReportController extends Controller
             'Penjualan bersih' => $data['todayFinancials']['netSales'],
             'Uang diterima' => $data['todayFinancials']['cashTendered'],
             'Kembalian' => $data['todayFinancials']['changeGiven'],
+            'Biaya operasional' => $data['todayFinancials']['operationalExpenses'],
+            'Gaji terbayar' => $data['todayFinancials']['salaryPayments'],
+            'Belanja stok' => $data['todayFinancials']['inventoryPurchases'],
+            'Estimasi profit' => $data['todayFinancials']['estimatedProfit'],
         ] as $label => $value) {
             $html .= '<tr><td>' . e($label) . '</td><td>' . e($money($value)) . '</td></tr>';
         }
@@ -137,9 +154,9 @@ class ReportController extends Controller
         }
         $html .= '</table>';
 
-        $html .= '<h2>Transaksi Hari Ini</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Meja</th><th>Metode</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
+        $html .= '<h2>Transaksi Hari Ini</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Catatan</th><th>Meja</th><th>Metode</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
         foreach ($data['todaySales'] as $sale) {
-            $html .= '<tr><td>' . e($sale->invoice_number) . '</td><td>' . e($sale->customer_name ?: 'Umum') . '</td><td>' . e($sale->table_number ?: '-') . '</td><td>' . e($sale->payment_method) . '</td><td>' . e($money($sale->subtotal)) . '</td><td>' . e($money($sale->discount)) . '</td><td>' . e($money($sale->tax)) . '</td><td>' . e($money($sale->total)) . '</td><td>' . e($money($sale->paid_amount)) . '</td><td>' . e($money($sale->change_amount)) . '</td><td>' . e($sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</td></tr>';
+            $html .= '<tr><td>' . e($sale->invoice_number) . '</td><td>' . e($sale->customer_name ?: 'Umum') . '</td><td>' . e($sale->customer_note ?: '-') . '</td><td>' . e($sale->table_number ?: '-') . '</td><td>' . e($sale->payment_method) . '</td><td>' . e($money($sale->subtotal)) . '</td><td>' . e($money($sale->discount)) . '</td><td>' . e($money($sale->tax)) . '</td><td>' . e($money($sale->total)) . '</td><td>' . e($money($sale->paid_amount)) . '</td><td>' . e($money($sale->change_amount)) . '</td><td>' . e($sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</td></tr>';
         }
         $html .= '</table>';
 
@@ -170,6 +187,10 @@ class ReportController extends Controller
             'Penjualan bersih: ' . $money($data['todayFinancials']['netSales']),
             'Uang diterima   : ' . $money($data['todayFinancials']['cashTendered']),
             'Kembalian       : ' . $money($data['todayFinancials']['changeGiven']),
+            'Biaya operasional: ' . $money($data['todayFinancials']['operationalExpenses']),
+            'Gaji terbayar   : ' . $money($data['todayFinancials']['salaryPayments']),
+            'Belanja stok    : ' . $money($data['todayFinancials']['inventoryPurchases']),
+            'Estimasi profit : ' . $money($data['todayFinancials']['estimatedProfit']),
             '',
             'METODE PEMBAYARAN',
         ];
@@ -183,6 +204,9 @@ class ReportController extends Controller
         foreach ($data['todaySales'] as $sale) {
             $table = $sale->table_number ? ' | Meja ' . $sale->table_number : '';
             $lines[] = $sale->invoice_number . ' | ' . ($sale->customer_name ?: 'Umum') . $table . ' | ' . $sale->payment_method . ' | Total ' . $money($sale->total);
+            if ($sale->customer_note) {
+                $lines[] = '  Catatan: ' . $sale->customer_note;
+            }
         }
 
         $lines[] = '';

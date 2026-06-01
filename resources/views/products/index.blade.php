@@ -59,15 +59,29 @@
                 <p class="muted">Kelola menu, harga, status aktif, dan stok produk cafe.</p>
             </div>
             <div class="actions">
-                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
                 @endif
-                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.qr_tables'))
                     <a class="btn" href="{{ route('customer.qr.index') }}">QR Meja</a>
                 @endif
-                @if (auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                @if (auth()->user()->hasPermission('page.sales'))
+                    <a class="btn" href="{{ route('sales.index') }}">Transaksi</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.reports'))
                     <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.operations'))
+                    <a class="btn" href="{{ route('operations.index') }}">Operasional</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.settings'))
+                    <a class="btn" href="{{ route('settings.index') }}">Settings</a>
+                @endif
+                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                    <a class="btn" href="{{ route('access-control.index') }}">Akses User</a>
                 @endif
                 <form class="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Order - {{ $store['name'] }}</title>
+    <title>Transaksi - {{ $store['name'] }}</title>
     <style>
         :root { --bg: #f3f5f7; --surface: #fff; --soft: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; }
         * { box-sizing: border-box; }
@@ -34,21 +34,31 @@
         <section class="topbar">
             <div>
                 <p class="muted">{{ $store['name'] }}</p>
-                <h1>Order</h1>
+                <h1>Transaksi</h1>
             </div>
             <div class="actions">
-                <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                <a class="btn" href="{{ route('sales.print') }}" target="_blank" rel="noopener">Print</a>
-                <a class="btn" href="{{ route('sales.pdf') }}">PDF</a>
-                <a class="btn" href="{{ route('sales.excel') }}">Excel</a>
-                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                @if (auth()->user()->hasPermission('page.dashboard'))
+                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.sales_export'))
+                    <a class="btn" href="{{ route('sales.print') }}" target="_blank" rel="noopener">Print</a>
+                    <a class="btn" href="{{ route('sales.pdf') }}">PDF</a>
+                    <a class="btn" href="{{ route('sales.excel') }}">Excel</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
                 @endif
-                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                @if (auth()->user()->hasPermission('page.products'))
                     <a class="btn" href="{{ route('products.index') }}">Produk</a>
                 @endif
-                @if (auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                @if (auth()->user()->hasPermission('page.reports'))
                     <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.settings'))
+                    <a class="btn" href="{{ route('settings.index') }}">Settings</a>
+                @endif
+                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                    <a class="btn" href="{{ route('access-control.index') }}">Akses User</a>
                 @endif
                 <form class="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -79,6 +89,9 @@
                                     <br><span class="muted">{{ $sale->order_type }}</span>
                                     @if ($sale->table_number)
                                         <br><span class="muted">Meja {{ $sale->table_number }}</span>
+                                    @endif
+                                    @if ($sale->customer_note)
+                                        <br><span class="muted">Catatan: {{ $sale->customer_note }}</span>
                                     @endif
                                 </td>
                                 <td>

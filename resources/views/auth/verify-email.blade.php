@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Verifikasi Email - {{ config('app.name') }}</title>
+    <title>Verifikasi Email - {{ $store['name'] }}</title>
     <style>
         :root { --bg: #f3f5f7; --surface: #fff; --soft: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; }
         * { box-sizing: border-box; }
@@ -31,7 +31,7 @@
 <body>
     <main class="auth-card">
         <div>
-            <p class="muted">{{ config('app.name') }}</p>
+            <p class="muted">{{ $store['name'] }}</p>
             <h1>Verifikasi Email</h1>
         </div>
 

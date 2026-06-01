@@ -8,6 +8,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -60,16 +62,53 @@ class User extends Authenticatable
         return $this->role->label();
     }
 
+    public function permissionOverrides(): HasMany
+    {
+        return $this->hasMany(UserPermission::class);
+    }
+
     /**
      * @return list<string>
      */
     public function permissions(): array
     {
-        return $this->role->permissions();
+        $permissions = collect($this->role->permissions());
+
+        $this->permissionOverrideMap()->each(function (bool $allowed, string $permission) use (&$permissions) {
+            $permissions = $allowed
+                ? $permissions->push($permission)
+                : $permissions->reject(fn (string $value) => $value === $permission);
+        });
+
+        return $permissions->unique()->values()->all();
     }
 
     public function hasPermission(string $permission): bool
     {
+        if ($this->role === UserRole::SuperAdmin) {
+            return true;
+        }
+
+        $override = $this->permissionOverrideMap()->get($permission);
+
+        if ($override !== null) {
+            return $override;
+        }
+
         return $this->role->can($permission);
+    }
+
+    /**
+     * @return Collection<string, bool>
+     */
+    private function permissionOverrideMap(): Collection
+    {
+        $overrides = $this->relationLoaded('permissionOverrides')
+            ? $this->permissionOverrides
+            : $this->permissionOverrides()->get(['permission', 'allowed']);
+
+        return $overrides->mapWithKeys(fn (UserPermission $override) => [
+            $override->permission => $override->allowed,
+        ]);
     }
 }

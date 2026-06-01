@@ -113,6 +113,13 @@ textarea,
     color: var(--cafe-ink) !important;
 }
 
+.customer-note {
+    width: 100%;
+    min-height: 72px !important;
+    resize: vertical;
+    line-height: 1.35;
+}
+
 input:focus,
 select:focus,
 textarea:focus,
@@ -268,6 +275,75 @@ tbody tr:hover {
     color: var(--cafe-sage) !important;
 }
 
+/* Access control */
+.access-grid {
+    gap: 14px !important;
+}
+
+.access-card {
+    border-top: 5px solid var(--cafe-sage) !important;
+}
+
+.access-card:nth-child(4n + 2) {
+    border-top-color: var(--cafe-gold) !important;
+}
+
+.access-card:nth-child(4n + 3) {
+    border-top-color: var(--cafe-berry) !important;
+}
+
+.access-card:nth-child(4n) {
+    border-top-color: var(--cafe-blue) !important;
+}
+
+.permission-option {
+    background: #fff7ea !important;
+    border-color: var(--cafe-line) !important;
+}
+
+.permission-option:has(input:checked) {
+    border-color: var(--cafe-sage) !important;
+    background: var(--cafe-sage-2) !important;
+}
+
+.role-badge {
+    border-color: var(--cafe-line) !important;
+    background: #fff7ea !important;
+    color: var(--cafe-roast) !important;
+}
+
+.lock-badge {
+    background: #fff3d6 !important;
+    border-color: var(--cafe-gold) !important;
+    color: var(--cafe-roast) !important;
+}
+
+/* Website settings */
+.preview-card,
+.logo-preview,
+.contact-list div {
+    border-color: var(--cafe-line) !important;
+}
+
+.preview-card {
+    background: linear-gradient(180deg, #fffdf8, #effaf5) !important;
+}
+
+.logo-preview {
+    background: conic-gradient(from 210deg, var(--cafe-roast), var(--cafe-gold), var(--cafe-sage), var(--cafe-berry), var(--cafe-roast)) !important;
+    color: #fff !important;
+}
+
+.logo-preview img,
+.brand-mark img,
+.receipt-logo {
+    display: block;
+}
+
+.contact-list div {
+    background: #fff7ea !important;
+}
+
 /* Shared staff pages */
 .shell {
     width: min(1240px, calc(100% - 28px)) !important;
@@ -323,6 +399,20 @@ tbody tr:hover {
     min-width: 760px;
 }
 
+.dashboard-shell .table-wrap table {
+    min-width: 100% !important;
+    table-layout: fixed;
+}
+
+.dashboard-shell th,
+.dashboard-shell td {
+    overflow-wrap: anywhere;
+}
+
+.dashboard-shell .status {
+    white-space: nowrap;
+}
+
 .pagination {
     overflow-x: auto;
 }
@@ -330,14 +420,14 @@ tbody tr:hover {
 /* POS screen */
 .app-shell {
     min-height: 100vh !important;
-    grid-template-columns: 236px minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     background: transparent !important;
 }
 
 .sidebar {
-    position: sticky;
-    top: 0;
-    height: 100vh;
+    display: none !important;
+    position: static;
+    height: auto;
     background: linear-gradient(180deg, #fffaf1, #f6ead8) !important;
     border-right-color: var(--cafe-line) !important;
     box-shadow: 12px 0 28px rgba(63, 36, 16, 0.05);
@@ -362,15 +452,32 @@ tbody tr:hover {
 }
 
 .workspace {
-    grid-template-rows: 72px minmax(0, 1fr) 30px !important;
+    grid-template-rows: auto minmax(0, 1fr) 30px !important;
 }
 
 .app-shell .topbar {
     background: linear-gradient(90deg, var(--cafe-roast), var(--cafe-roast-2)) !important;
+    grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto !important;
+    gap: 16px !important;
+    min-height: 74px !important;
+    padding-block: 10px !important;
+}
+
+.top-nav {
+    position: relative;
+    z-index: 1;
+}
+
+.top-nav a,
+.top-nav button {
+    min-height: 42px !important;
+    min-width: max-content !important;
+    border-radius: 8px !important;
+    font-weight: 850 !important;
 }
 
 .content {
-    grid-template-columns: minmax(0, 1fr) minmax(390px, 41%) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(390px, 39%) !important;
     gap: 14px !important;
     padding: 14px !important;
 }
@@ -654,6 +761,10 @@ body {
 .app-shell .topbar {
     position: relative;
     overflow: hidden;
+}
+
+.app-shell .topbar {
+    overflow: visible !important;
 }
 
 .shell > .topbar::after,

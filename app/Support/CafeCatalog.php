@@ -3,12 +3,17 @@
 namespace App\Support;
 
 use App\Models\Category;
+use App\Models\CompanySetting;
 use App\Models\Product;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class CafeCatalog
 {
-    public static function store(): array
+    /**
+     * @return array<string, string|null>
+     */
+    public static function defaultStore(): array
     {
         $names = [
             'Kopi Senja Loka',
@@ -26,6 +31,39 @@ class CafeCatalog
             'name' => $name,
             'cashier' => config('store.cashier', 'Barista 01'),
             'address' => config('store.address', 'Jl. Kopi Nusantara No. 8, Jakarta'),
+            'manager' => config('store.manager', 'Manager Operasional'),
+            'contact_email' => config('store.contact_email'),
+            'contact_phone' => config('store.contact_phone'),
+            'contact_whatsapp' => config('store.contact_whatsapp'),
+            'logo_path' => null,
+            'logo_url' => null,
+        ];
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public static function store(): array
+    {
+        $defaults = self::defaultStore();
+
+        if (! Schema::hasTable('company_settings')) {
+            return $defaults;
+        }
+
+        $settings = CompanySetting::current($defaults);
+        $logoPath = $settings->logo_path;
+
+        return [
+            'name' => $settings->company_name ?: $defaults['name'],
+            'cashier' => $defaults['cashier'],
+            'address' => $settings->address ?: $defaults['address'],
+            'manager' => $settings->manager_name ?: $defaults['manager'],
+            'contact_email' => $settings->contact_email,
+            'contact_phone' => $settings->contact_phone,
+            'contact_whatsapp' => $settings->contact_whatsapp,
+            'logo_path' => $logoPath,
+            'logo_url' => $logoPath ? asset('storage/' . $logoPath) : null,
         ];
     }
 

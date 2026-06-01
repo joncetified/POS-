@@ -41,7 +41,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <main class="shell">
+    <main class="shell dashboard-shell">
         <section class="topbar">
             <div>
                 <p class="muted">{{ $store['name'] }}</p>
@@ -49,15 +49,30 @@
                 <p class="muted">Ringkasan operasional cafe hari ini, open bill meja, stok, dan transaksi paid.</p>
             </div>
             <div class="actions">
-                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.qr_tables'))
                     <a class="btn" href="{{ route('customer.qr.index') }}">QR Meja</a>
                 @endif
-                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                @if (auth()->user()->hasPermission('page.products'))
                     <a class="btn" href="{{ route('products.index') }}">Produk</a>
                 @endif
-                <a class="btn" href="{{ route('sales.index') }}">Order</a>
-                <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @if (auth()->user()->hasPermission('page.sales'))
+                    <a class="btn" href="{{ route('sales.index') }}">Transaksi</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.reports'))
+                    <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.operations'))
+                    <a class="btn" href="{{ route('operations.index') }}">Operasional</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.settings'))
+                    <a class="btn" href="{{ route('settings.index') }}">Settings</a>
+                @endif
+                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                    <a class="btn" href="{{ route('access-control.index') }}">Akses User</a>
+                @endif
                 <form class="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="btn" type="submit">Logout</button>
@@ -86,6 +101,11 @@
                 <strong>{{ $lowStockCount }}</strong>
                 <span>{{ $activeProducts }} produk aktif</span>
             </article>
+            <article class="card">
+                <p class="muted">Estimasi profit hari ini</p>
+                <strong>Rp {{ number_format($todayEstimatedProfit, 0, ',', '.') }}</strong>
+                <span class="muted">Biaya Rp {{ number_format($todayOperationalCost + $todaySalaryCost + $todayInventoryCost, 0, ',', '.') }}</span>
+            </article>
         </section>
 
         <section class="grid">
@@ -109,7 +129,12 @@
                                 @foreach ($openOrders as $order)
                                     <tr>
                                         <td><strong>{{ $order->table_number ?: '-' }}</strong></td>
-                                        <td>{{ $order->customer_name ?: 'Umum' }}</td>
+                                        <td>
+                                            {{ $order->customer_name ?: 'Umum' }}
+                                            @if ($order->customer_note)
+                                                <br><span class="muted">Catatan: {{ $order->customer_note }}</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @foreach ($order->items as $item)
                                                 {{ $item->product_name }} x {{ $item->quantity }}<br>

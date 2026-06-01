@@ -91,6 +91,76 @@ class UserRoleTest extends TestCase
         }
     }
 
+    public function test_super_admin_can_manage_user_page_access_from_database(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+        $cashier = User::factory()->cashier()->create();
+
+        $this->actingAs($superAdmin)
+            ->patch(route('access-control.update', $cashier), [
+                'permissions' => ['page.reports', 'page.reports_export'],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('user_permissions', [
+            'user_id' => $cashier->id,
+            'permission' => 'page.reports',
+            'allowed' => true,
+        ]);
+
+        $this->assertDatabaseHas('user_permissions', [
+            'user_id' => $cashier->id,
+            'permission' => 'page.pos',
+            'allowed' => false,
+        ]);
+
+        $cashier->refresh();
+
+        $this->actingAs($cashier)->get(route('reports.index'))->assertOk();
+        $this->actingAs($cashier)->get(route('pos.index'))->assertForbidden();
+    }
+
+    public function test_admin_cannot_manage_page_access(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $cashier = User::factory()->cashier()->create();
+
+        $this->actingAs($admin)
+            ->get(route('access-control.index'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->patch(route('access-control.update', $cashier), [
+                'permissions' => ['page.dashboard', 'page.pos', 'page.products', 'page.reports'],
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('user_permissions', [
+            'user_id' => $cashier->id,
+        ]);
+    }
+
+    public function test_super_admin_page_access_is_locked(): void
+    {
+        $actor = User::factory()->superAdmin()->create();
+        $target = User::factory()->superAdmin()->create();
+
+        $this->actingAs($actor)
+            ->patch(route('access-control.update', $target), [
+                'permissions' => [],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('user_permissions', [
+            'user_id' => $target->id,
+        ]);
+
+        $this->assertTrue($target->refresh()->hasPermission('page.pos'));
+        $this->assertTrue($target->hasPermission('unknown.future_permission'));
+    }
+
     public function test_report_exports_are_available_to_report_roles(): void
     {
         $manager = User::factory()->manager()->create();

@@ -13,6 +13,7 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'customer_name',
+        'customer_note',
         'table_number',
         'cashier_name',
         'order_type',

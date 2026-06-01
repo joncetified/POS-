@@ -40,18 +40,31 @@
                 <h1>Laporan</h1>
             </div>
             <div class="actions">
-                <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                <a class="btn" href="{{ route('reports.print') }}" target="_blank" rel="noopener">Print</a>
-                <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
-                <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
-                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                @if (auth()->user()->hasPermission('page.dashboard'))
+                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.reports_export'))
+                    <a class="btn" href="{{ route('reports.print') }}" target="_blank" rel="noopener">Print</a>
+                    <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
+                    <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
                 @endif
-                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                @if (auth()->user()->hasPermission('page.products'))
                     <a class="btn" href="{{ route('products.index') }}">Produk</a>
                 @endif
-                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('cashiers.monitor') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view'))
-                    <a class="btn" href="{{ route('sales.index') }}">Order</a>
+                @if (auth()->user()->hasPermission('page.sales'))
+                    <a class="btn" href="{{ route('sales.index') }}">Transaksi</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.operations'))
+                    <a class="btn" href="{{ route('operations.index') }}">Operasional</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.settings'))
+                    <a class="btn" href="{{ route('settings.index') }}">Settings</a>
+                @endif
+                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                    <a class="btn" href="{{ route('access-control.index') }}">Akses User</a>
                 @endif
                 <form class="logout-form" method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -76,6 +89,10 @@
             <div class="card">
                 <p class="muted">PPN hari ini</p>
                 <strong>Rp {{ number_format($todayFinancials['taxes'], 0, ',', '.') }}</strong>
+            </div>
+            <div class="card">
+                <p class="muted">Estimasi profit hari ini</p>
+                <strong>Rp {{ number_format($todayFinancials['estimatedProfit'], 0, ',', '.') }}</strong>
             </div>
         </section>
 
@@ -108,6 +125,22 @@
                             <tr>
                                 <td>Kembalian</td>
                                 <td>Rp {{ number_format($todayFinancials['changeGiven'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Biaya operasional</td>
+                                <td>Rp {{ number_format($todayFinancials['operationalExpenses'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Gaji terbayar</td>
+                                <td>Rp {{ number_format($todayFinancials['salaryPayments'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td>Belanja stok</td>
+                                <td>Rp {{ number_format($todayFinancials['inventoryPurchases'], 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Estimasi profit</strong></td>
+                                <td><strong>Rp {{ number_format($todayFinancials['estimatedProfit'], 0, ',', '.') }}</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -192,6 +225,40 @@
                                 </tr>
                             @empty
                                 <tr><td colspan="3" class="muted">Tidak ada stok menipis.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="panel">
+                <h2>Biaya Operasional Terakhir</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Tanggal</th><th>Kategori</th><th>Nominal</th></tr></thead>
+                        <tbody>
+                            @forelse ($recentOperationalExpenses as $expense)
+                                <tr><td>{{ $expense->spent_at->format('d/m/Y') }}</td><td>{{ $expense->category }}<br><span class="muted">{{ $expense->description }}</span></td><td>Rp {{ number_format($expense->amount, 0, ',', '.') }}</td></tr>
+                            @empty
+                                <tr><td colspan="3" class="muted">Belum ada biaya operasional.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Stock Movement Terakhir</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Tanggal</th><th>Produk</th><th>Tipe</th><th>Stok</th></tr></thead>
+                        <tbody>
+                            @forelse ($recentInventoryMovements as $movement)
+                                <tr><td>{{ $movement->occurred_at->format('d/m/Y') }}</td><td>{{ $movement->product?->name ?: '-' }}</td><td>{{ strtoupper($movement->type) }}</td><td>{{ $movement->stock_before }} -> {{ $movement->stock_after }}</td></tr>
+                            @empty
+                                <tr><td colspan="4" class="muted">Belum ada pergerakan stok.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

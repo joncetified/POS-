@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Mail\RegistrationVerificationCode;
 use App\Models\User;
+use App\Support\CafeCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,9 @@ class AuthController extends Controller
 {
     public function showLogin(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'store' => CafeCatalog::store(),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
@@ -49,7 +52,9 @@ class AuthController extends Controller
 
     public function showRegister(): View
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'store' => CafeCatalog::store(),
+        ]);
     }
 
     public function register(Request $request): RedirectResponse
@@ -80,6 +85,7 @@ class AuthController extends Controller
     public function showVerification(Request $request): View
     {
         return view('auth.verify-email', [
+            'store' => CafeCatalog::store(),
             'email' => $this->pendingUser($request)?->email,
         ]);
     }
@@ -173,32 +179,21 @@ class AuthController extends Controller
 
     private function homeRouteFor(User $user): string
     {
-        if (
-            $user->hasPermission('dashboard.view')
-            || $user->hasPermission('profits.view')
-            || $user->hasPermission('reports.view_store')
-            || $user->hasPermission('reports.view_all')
-            || $user->hasPermission('store.performance.view')
-        ) {
-            return 'dashboard.index';
+        foreach ([
+            'page.pos' => 'pos.index',
+            'page.dashboard' => 'dashboard.index',
+            'page.products' => 'products.index',
+            'page.customer_menu' => 'customer.menu',
+            'page.reports' => 'reports.index',
+            'page.sales' => 'sales.index',
+            'page.settings' => 'settings.index',
+            'page.qr_tables' => 'customer.qr.index',
+        ] as $permission => $routeName) {
+            if ($user->hasPermission($permission)) {
+                return $routeName;
+            }
         }
 
-        if ($user->hasPermission('transactions.create') || $user->hasPermission('transactions.manage')) {
-            return 'pos.index';
-        }
-
-        if (
-            $user->hasPermission('products.manage')
-            || $user->hasPermission('stock.manage')
-            || $user->hasPermission('inventory.manage')
-        ) {
-            return 'products.index';
-        }
-
-        if ($user->hasPermission('menu.view')) {
-            return 'customer.menu';
-        }
-
-        return 'reports.index';
+        return 'dashboard.index';
     }
 }

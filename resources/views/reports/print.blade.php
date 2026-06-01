@@ -88,7 +88,12 @@
                 @forelse ($todaySales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
-                        <td>{{ $sale->customer_name ?: 'Umum' }}</td>
+                        <td>
+                            {{ $sale->customer_name ?: 'Umum' }}
+                            @if ($sale->customer_note)
+                                <br><span class="muted">Catatan: {{ $sale->customer_note }}</span>
+                            @endif
+                        </td>
                         <td>{{ $sale->table_number ?: '-' }}</td>
                         <td>{{ $sale->payment_method }}</td>
                         <td class="right">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>

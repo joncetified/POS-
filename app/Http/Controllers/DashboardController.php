@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryMovement;
+use App\Models\OperationalExpense;
 use App\Models\Product;
+use App\Models\SalaryPayment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Support\CafeCatalog;
@@ -28,6 +31,9 @@ class DashboardController extends Controller
         $todayOrders = (clone $todaySales)->count();
         $todayTax = (clone $todaySales)->sum('tax');
         $todayDiscount = (clone $todaySales)->sum('discount');
+        $todayOperationalCost = OperationalExpense::query()->whereDate('spent_at', today())->sum('amount');
+        $todaySalaryCost = SalaryPayment::query()->whereDate('paid_at', today())->sum('amount');
+        $todayInventoryCost = InventoryMovement::query()->where('type', 'in')->whereDate('occurred_at', today())->sum('total_cost');
 
         return view('dashboard.index', [
             'store' => CafeCatalog::store(),
@@ -35,6 +41,10 @@ class DashboardController extends Controller
             'todayOrders' => $todayOrders,
             'todayTax' => $todayTax,
             'todayDiscount' => $todayDiscount,
+            'todayOperationalCost' => $todayOperationalCost,
+            'todaySalaryCost' => $todaySalaryCost,
+            'todayInventoryCost' => $todayInventoryCost,
+            'todayEstimatedProfit' => $todayRevenue - $todayOperationalCost - $todaySalaryCost - $todayInventoryCost,
             'averageOrder' => $todayOrders > 0 ? (int) round($todayRevenue / $todayOrders) : 0,
             'openOrders' => $openOrders,
             'openOrdersTotal' => $openOrders->sum('total'),

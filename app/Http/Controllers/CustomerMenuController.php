@@ -38,6 +38,7 @@ class CustomerMenuController extends Controller
     {
         $validated = $request->validate([
             'customer_name' => ['nullable', 'string', 'max:120'],
+            'customer_note' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -91,6 +92,7 @@ class CustomerMenuController extends Controller
                 $sale = Sale::query()->create([
                     'invoice_number' => $this->nextOrderNumber(),
                     'customer_name' => $validated['customer_name'] ?? null,
+                    'customer_note' => $validated['customer_note'] ?? null,
                     'table_number' => $tableNumber,
                     'cashier_name' => 'Customer QR',
                     'order_type' => 'Dine in',
@@ -107,6 +109,10 @@ class CustomerMenuController extends Controller
                 $sale->load('items');
             } elseif (! empty($validated['customer_name'])) {
                 $sale->customer_name = $validated['customer_name'];
+            }
+
+            if (array_key_exists('customer_note', $validated)) {
+                $sale->customer_note = $validated['customer_note'];
             }
 
             foreach ($incomingLines as $line) {
@@ -157,6 +163,7 @@ class CustomerMenuController extends Controller
             'order' => [
                 'id' => $sale->id,
                 'table_number' => $sale->table_number,
+                'customer_note' => $sale->customer_note,
                 'total' => $sale->total,
             ],
         ], 201);

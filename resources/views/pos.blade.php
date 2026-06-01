@@ -37,17 +37,11 @@
         .app-shell {
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 232px minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .sidebar {
-            min-height: 100vh;
-            background: #fffaf2;
-            border-right: 1px solid var(--line);
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            gap: 20px;
-            padding: 22px 12px;
+            display: none;
         }
 
         .brand {
@@ -69,6 +63,13 @@
             box-shadow: inset 0 -14px 22px rgba(0, 0, 0, 0.14);
             font-size: 1.5rem;
             font-weight: 950;
+            overflow: hidden;
+        }
+
+        .brand-mark img, .receipt-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .brand h1 {
@@ -119,14 +120,16 @@
         .workspace {
             min-width: 0;
             display: grid;
-            grid-template-rows: 78px minmax(0, 1fr) 30px;
+            grid-template-rows: auto minmax(0, 1fr) 30px;
         }
 
         .topbar {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto;
+            gap: 16px;
             align-items: center;
-            padding: 0 24px;
+            min-height: 74px;
+            padding: 10px 24px;
             color: #fff;
             background: linear-gradient(90deg, #3a1704, #5f2b08 58%, #3a1704);
             box-shadow: 0 6px 20px rgba(56, 28, 7, 0.12);
@@ -138,6 +141,43 @@
             gap: 12px;
             font-size: 1.15rem;
             font-weight: 900;
+        }
+
+        .top-nav {
+            min-width: 0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+
+        .top-nav a,
+        .top-nav button {
+            min-height: 42px;
+            min-width: max-content;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 13px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 850;
+        }
+
+        .top-nav a.active,
+        .top-nav a:hover,
+        .top-nav button:hover {
+            color: var(--brown);
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .top-nav form {
+            margin: 0;
         }
 
         .top-actions {
@@ -169,7 +209,7 @@
         .content {
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 44%;
+            grid-template-columns: minmax(0, 1fr) minmax(390px, 39%);
             gap: 16px;
             padding: 18px;
         }
@@ -599,7 +639,7 @@
 
         .payment-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
         }
 
@@ -832,6 +872,59 @@
             gap: 10px;
         }
 
+        .qris-panel {
+            width: min(380px, 100%);
+            border-radius: 8px;
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+            background: #fff;
+            color: var(--ink);
+            box-shadow: var(--shadow);
+        }
+
+        .qris-panel h2 {
+            font-size: 1.1rem;
+        }
+
+        .qris-box {
+            min-height: 260px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            padding: 14px;
+            background: #fffaf2;
+            text-align: center;
+        }
+
+        .qris-box img {
+            width: min(240px, 100%);
+            aspect-ratio: 1;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 6px;
+        }
+
+        .qris-code {
+            max-height: 140px;
+            overflow: auto;
+            overflow-wrap: anywhere;
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+
+        .qris-status {
+            min-height: 38px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            color: var(--brown);
+            background: #fff8ed;
+            font-weight: 850;
+            text-align: center;
+        }
+
         @media (max-width: 1320px) {
             .content { grid-template-columns: minmax(0, 1fr); }
             .cart-panel { min-height: 720px; }
@@ -854,7 +947,7 @@
             .brand h1 { font-size: 1rem; }
             .nav { display: flex; overflow-x: auto; }
             .nav a, .logout-btn { min-height: 42px; min-width: max-content; }
-            .workspace { min-height: calc(100vh - 64px); }
+            .workspace { min-height: 100vh; }
             .topbar, .bottom-bar { padding-inline: 14px; }
             .content { padding: 12px; }
             .panel-head { grid-template-columns: 1fr; }
@@ -866,6 +959,7 @@
 
         @media (max-width: 560px) {
             .topbar { grid-template-columns: 1fr; gap: 8px; padding-block: 12px; }
+            .top-nav { justify-content: flex-start; }
             .top-actions { justify-content: space-between; }
             .user-chip { grid-template-columns: 38px minmax(0, 1fr); padding-left: 0; border-left: 0; }
             .product-grid { grid-template-columns: 1fr; }
@@ -877,8 +971,9 @@
         @media print {
             @page { size: 80mm auto; margin: 4mm; }
             html, body { width: 80mm; min-height: 0; background: #fff; }
-            body > *:not(.modal) { display: none !important; }
-            .modal {
+            body > *:not(#receipt-modal) { display: none !important; }
+            #qris-modal { display: none !important; }
+            #receipt-modal {
                 position: static;
                 display: block !important;
                 width: 80mm;
@@ -902,7 +997,13 @@
     <div class="app-shell">
         <aside class="sidebar">
             <a class="brand" href="{{ route('pos.index') }}">
-                <div class="brand-mark">{{ strtoupper(substr($store['name'], 0, 1)) }}</div>
+                <div class="brand-mark">
+                    @if ($store['logo_url'])
+                        <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo">
+                    @else
+                        {{ strtoupper(substr($store['name'], 0, 1)) }}
+                    @endif
+                </div>
                 <div>
                     <h1>{{ $store['name'] }}</h1>
                     <p class="small">Cafe POS</p>
@@ -911,21 +1012,27 @@
 
             <nav class="nav" aria-label="Menu utama">
                 <a class="active" href="{{ route('pos.index') }}"><span class="nav-icon">▣</span> POS</a>
-                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('cashiers.monitor') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                @if (auth()->user()->hasPermission('page.dashboard'))
                     <a href="{{ route('dashboard.index') }}"><span class="nav-icon">▤</span> Dashboard</a>
                 @endif
-                @if (auth()->user()->hasPermission('products.manage') || auth()->user()->hasPermission('stock.manage') || auth()->user()->hasPermission('inventory.manage'))
+                @if (auth()->user()->hasPermission('page.products'))
                     <a href="{{ route('products.index') }}"><span class="nav-icon">□</span> Produk</a>
                     <a href="{{ route('products.index') }}"><span class="nav-icon">◇</span> Stok</a>
                 @endif
-                @if (auth()->user()->hasPermission('transactions.create') || auth()->user()->hasPermission('transactions.manage'))
+                @if (auth()->user()->hasPermission('page.qr_tables'))
                     <a href="{{ route('customer.qr.index') }}"><span class="nav-icon">▦</span> QR Meja</a>
                 @endif
-                @if (auth()->user()->hasPermission('transactions.manage') || auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('cashiers.monitor') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view'))
+                @if (auth()->user()->hasPermission('page.sales'))
                     <a href="{{ route('sales.index') }}"><span class="nav-icon">↳</span> Transaksi</a>
                 @endif
-                @if (auth()->user()->hasPermission('reports.view_store') || auth()->user()->hasPermission('reports.view_all') || auth()->user()->hasPermission('dashboard.view') || auth()->user()->hasPermission('profits.view') || auth()->user()->hasPermission('store.performance.view'))
+                @if (auth()->user()->hasPermission('page.reports'))
                     <a href="{{ route('reports.index') }}"><span class="nav-icon">◔</span> Laporan</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.settings'))
+                    <a href="{{ route('settings.index') }}"><span class="nav-icon">S</span> Settings</a>
+                @endif
+                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                    <a href="{{ route('access-control.index') }}"><span class="nav-icon">☑</span> Akses User</a>
                 @endif
             </nav>
 
@@ -939,8 +1046,36 @@
             <header class="topbar">
                 <div class="top-title">
                     <span>▦</span>
-                    <span>POS Kasir</span>
+                    <span>Kasir</span>
                 </div>
+                <nav class="top-nav" aria-label="Menu utama">
+                    @if (auth()->user()->hasPermission('page.dashboard'))
+                        <a href="{{ route('dashboard.index') }}">Dashboard</a>
+                    @endif
+                    <a class="active" href="{{ route('pos.index') }}">Kasir</a>
+                    @if (auth()->user()->hasPermission('page.qr_tables'))
+                        <a href="{{ route('customer.qr.index') }}">QR Meja</a>
+                    @endif
+                    @if (auth()->user()->hasPermission('page.products'))
+                        <a href="{{ route('products.index') }}">Produk</a>
+                    @endif
+                    @if (auth()->user()->hasPermission('page.sales'))
+                        <a href="{{ route('sales.index') }}">Transaksi</a>
+                    @endif
+                    @if (auth()->user()->hasPermission('page.reports'))
+                        <a href="{{ route('reports.index') }}">Laporan</a>
+                    @endif
+                    @if (auth()->user()->hasPermission('page.settings'))
+                        <a href="{{ route('settings.index') }}">Settings</a>
+                    @endif
+                    @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+                        <a href="{{ route('access-control.index') }}">Akses User</a>
+                    @endif
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit">Logout</button>
+                    </form>
+                </nav>
                 <div class="top-actions">
                     <span>{{ now()->timezone('Asia/Jakarta')->format('d M Y') }}</span>
                     <span id="clock">{{ now()->timezone('Asia/Jakarta')->format('H:i') }}</span>
@@ -1008,6 +1143,7 @@
                             <input id="customer" class="customer-input" type="text" placeholder="Nama pelanggan">
                             <input id="table-number" class="customer-input" type="text" placeholder="Meja nomor">
                         </div>
+                        <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
                         <div id="saved-orders" class="saved-orders" hidden></div>
 
                         <div class="discount-row">
@@ -1030,9 +1166,6 @@
                         <div class="payment-grid">
                             <button class="pay-btn active" type="button" data-payment="Tunai"><span>▣</span>Tunai</button>
                             <button class="pay-btn" type="button" data-payment="QRIS"><span>▦</span>QRIS</button>
-                            <button class="pay-btn" type="button" data-payment="Debit/Kredit"><span>▭</span>Debit/Kredit</button>
-                            <button class="pay-btn" type="button" data-payment="E-Wallet"><span>▱</span>E-Wallet</button>
-                            <button class="pay-btn" type="button" data-payment="Lainnya"><span>•••</span>Lainnya</button>
                         </div>
 
                         <div class="payment-status">
@@ -1075,6 +1208,9 @@
     <div id="receipt-modal" class="modal" aria-hidden="true">
         <section class="receipt">
             <div class="receipt-header">
+                @if ($store['logo_url'])
+                    <img class="receipt-logo" src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo" style="width: 54px; height: 54px; border-radius: 8px; margin: 0 auto 8px;">
+                @endif
                 <h2 id="receipt-ticket">TRX-0001</h2>
                 <strong>{{ $store['name'] }}</strong>
                 <span>{{ $store['address'] }}</span>
@@ -1087,9 +1223,30 @@
         </section>
     </div>
 
+    <div id="qris-modal" class="modal" aria-hidden="true">
+        <section class="qris-panel">
+            <div>
+                <h2>Scan QRIS</h2>
+                <p class="small">Minta pelanggan scan kode ini lalu tunggu status pembayaran.</p>
+            </div>
+            <div class="qris-box">
+                <img id="qris-image" alt="Kode QRIS" hidden>
+                <div id="qris-code" class="qris-code" hidden></div>
+            </div>
+            <div class="receipt-line">
+                <span>Total</span>
+                <strong id="qris-amount">Rp 0</strong>
+            </div>
+            <div id="qris-status" class="qris-status">Menunggu pembayaran...</div>
+            <button id="qris-cancel" class="clear-btn" type="button">Batalkan</button>
+        </section>
+    </div>
+
     <script>
         const products = @json($products);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const qrisChargeUrl = '{{ route('payments.qris.charge', [], false) }}';
+        const qrisFinalizeUrl = '{{ route('payments.qris.finalize', [], false) }}';
         const taxRate = 0.11;
         const state = {
             category: 'Semua',
@@ -1099,6 +1256,8 @@
             cart: new Map(),
             savedOrders: [],
             currentOrderId: null,
+            qrisOrderId: null,
+            qrisPollTimer: null,
         };
 
         const openOrdersUrl = '{{ route('orders.open', [], false) }}';
@@ -1129,11 +1288,18 @@
             paymentStatusText: byId('payment-status-text'),
             paymentReference: byId('payment-reference'),
             customer: byId('customer'),
+            customerNote: byId('customer-note'),
             tableNumber: byId('table-number'),
             toast: byId('toast'),
             modal: byId('receipt-modal'),
             receiptTicket: byId('receipt-ticket'),
             receiptBody: byId('receipt-body'),
+            qrisModal: byId('qris-modal'),
+            qrisImage: byId('qris-image'),
+            qrisCode: byId('qris-code'),
+            qrisAmount: byId('qris-amount'),
+            qrisStatus: byId('qris-status'),
+            qrisCancel: byId('qris-cancel'),
         };
 
         const paymentCopy = {
@@ -1144,23 +1310,8 @@
             },
             QRIS: {
                 title: 'QRIS dipilih',
-                text: 'Nominal bayar otomatis pas. Minta pelanggan scan QRIS, lalu isi referensi jika ada.',
-                reference: true,
-            },
-            'Debit/Kredit': {
-                title: 'Debit/Kredit dipilih',
-                text: 'Nominal bayar otomatis pas. Proses kartu di mesin EDC, lalu isi approval code jika ada.',
-                reference: true,
-            },
-            'E-Wallet': {
-                title: 'E-Wallet dipilih',
-                text: 'Nominal bayar otomatis pas. Konfirmasi pembayaran wallet sebelum klik Bayar.',
-                reference: true,
-            },
-            Lainnya: {
-                title: 'Pembayaran lain dipilih',
-                text: 'Nominal bayar otomatis pas. Isi catatan atau referensi pembayaran jika diperlukan.',
-                reference: true,
+                text: 'Nominal bayar otomatis pas. Sistem akan membuat QRIS dinamis saat tombol bayar ditekan.',
+                reference: false,
             },
         };
 
@@ -1324,7 +1475,10 @@
             nodes.savedOrders.hidden = false;
             nodes.savedOrders.innerHTML = state.savedOrders.map((order) => `
                 <div class="saved-order">
-                    <strong>${escapeHtml(order.label)}</strong>
+                    <div>
+                        <strong>${escapeHtml(order.label)}</strong>
+                        ${order.customerNote ? `<p class="small">Catatan: ${escapeHtml(order.customerNote)}</p>` : ''}
+                    </div>
                     <button type="button" data-load-order="${escapeHtml(order.id)}">Muat</button>
                     <button type="button" data-delete-order="${escapeHtml(order.id)}">Hapus</button>
                 </div>
@@ -1371,6 +1525,7 @@
             nodes.cash.value = 0;
             nodes.paymentReference.value = '';
             nodes.customer.value = '';
+            nodes.customerNote.value = '';
             nodes.tableNumber.value = '';
             renderCart();
         }
@@ -1381,6 +1536,7 @@
             return {
                 order_id: state.currentOrderId,
                 customer_name: nodes.customer.value || null,
+                customer_note: nodes.customerNote.value || null,
                 table_number: nodes.tableNumber.value || null,
                 cashier_name: '{{ $shift['cashier'] }}',
                 order_type: state.orderType,
@@ -1467,6 +1623,7 @@
 
             state.currentOrderId = order.id;
             nodes.customer.value = order.customer || '';
+            nodes.customerNote.value = order.customerNote || '';
             nodes.tableNumber.value = order.tableNumber || '';
             nodes.discountPercent.value = order.discountPercent || 0;
             nodes.discount.value = order.discount || 0;
@@ -1516,6 +1673,26 @@
             window.setTimeout(() => nodes.toast.classList.remove('show'), 1800);
         }
 
+        function checkoutPayload(data, overrides = {}) {
+            return {
+                order_id: state.currentOrderId,
+                customer_name: nodes.customer.value || null,
+                customer_note: nodes.customerNote.value || null,
+                table_number: nodes.tableNumber.value || null,
+                cashier_name: '{{ $shift['cashier'] }}',
+                order_type: state.orderType,
+                payment_method: state.payment,
+                payment_reference: nodes.paymentReference.value || null,
+                discount: data.discount,
+                paid_amount: state.payment === 'Tunai' ? data.cash : Math.round(data.total),
+                items: data.items.map((item) => ({
+                    product_id: item.id,
+                    quantity: item.qty,
+                })),
+                ...overrides,
+            };
+        }
+
         async function checkout() {
             const data = totals();
 
@@ -1526,6 +1703,11 @@
 
             if (state.payment === 'Tunai' && data.cash < data.total) {
                 showToast('Nominal bayar kurang');
+                return;
+            }
+
+            if (state.payment === 'QRIS') {
+                await startQrisCheckout(data);
                 return;
             }
 
@@ -1540,21 +1722,7 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                     },
-                    body: JSON.stringify({
-                        order_id: state.currentOrderId,
-                        customer_name: nodes.customer.value || null,
-                        table_number: nodes.tableNumber.value || null,
-                        cashier_name: '{{ $shift['cashier'] }}',
-                        order_type: state.orderType,
-                        payment_method: state.payment,
-                        payment_reference: nodes.paymentReference.value || null,
-                        discount: data.discount,
-                        paid_amount: state.payment === 'Tunai' ? data.cash : Math.round(data.total),
-                        items: data.items.map((item) => ({
-                            product_id: item.id,
-                            quantity: item.qty,
-                        })),
-                    }),
+                    body: JSON.stringify(checkoutPayload(data)),
                 });
 
                 const payload = await response.json();
@@ -1575,6 +1743,126 @@
             }
         }
 
+        async function startQrisCheckout(data) {
+            byId('checkout').disabled = true;
+            byId('checkout').textContent = 'Membuat QRIS...';
+
+            try {
+                const response = await fetch(qrisChargeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify(checkoutPayload(data, {
+                        payment_method: undefined,
+                        payment_reference: undefined,
+                        paid_amount: undefined,
+                    })),
+                });
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'QRIS gagal dibuat'];
+                    showToast(errors[0]);
+                    resetCheckoutButton();
+                    return;
+                }
+
+                state.qrisOrderId = payload.order_id;
+                showQrisModal(payload);
+                pollQrisPayment(payload.order_id);
+            } catch (error) {
+                showToast('Koneksi ke server gagal');
+                resetCheckoutButton();
+            }
+        }
+
+        function showQrisModal(payload) {
+            nodes.qrisAmount.textContent = rupiah(payload.amount || 0);
+            nodes.qrisStatus.textContent = 'Menunggu pembayaran...';
+            nodes.qrisImage.hidden = true;
+            nodes.qrisCode.hidden = true;
+
+            if (payload.qr_url) {
+                nodes.qrisImage.src = payload.qr_url;
+                nodes.qrisImage.hidden = false;
+            } else if (payload.qr_string) {
+                nodes.qrisCode.textContent = payload.qr_string;
+                nodes.qrisCode.hidden = false;
+            } else {
+                nodes.qrisCode.textContent = 'QRIS berhasil dibuat, tetapi kode QR tidak dikirim oleh Midtrans.';
+                nodes.qrisCode.hidden = false;
+            }
+
+            nodes.qrisModal.classList.add('open');
+            nodes.qrisModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function pollQrisPayment(midtransOrderId) {
+            clearQrisPoll();
+            state.qrisPollTimer = window.setInterval(() => finalizeQrisPayment(midtransOrderId), 3000);
+            window.setTimeout(() => finalizeQrisPayment(midtransOrderId), 1200);
+        }
+
+        async function finalizeQrisPayment(midtransOrderId) {
+            try {
+                const response = await fetch(qrisFinalizeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ midtrans_order_id: midtransOrderId }),
+                });
+                const payload = await response.json();
+
+                if (response.status === 202) {
+                    nodes.qrisStatus.textContent = 'Menunggu pembayaran...';
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Pembayaran QRIS gagal diverifikasi'];
+                    nodes.qrisStatus.textContent = errors[0];
+                    showToast(errors[0]);
+                    closeQrisModal();
+                    return;
+                }
+
+                clearQrisPoll();
+                nodes.qrisModal.classList.remove('open');
+                nodes.qrisModal.setAttribute('aria-hidden', 'true');
+                state.qrisOrderId = null;
+                showReceipt(payload.sale);
+                await loadSavedOrdersFromServer();
+            } catch (error) {
+                nodes.qrisStatus.textContent = 'Koneksi ke server gagal, mencoba lagi...';
+            }
+        }
+
+        function clearQrisPoll() {
+            if (state.qrisPollTimer) {
+                window.clearInterval(state.qrisPollTimer);
+                state.qrisPollTimer = null;
+            }
+        }
+
+        function closeQrisModal() {
+            clearQrisPoll();
+            state.qrisOrderId = null;
+            nodes.qrisModal.classList.remove('open');
+            nodes.qrisModal.setAttribute('aria-hidden', 'true');
+            resetCheckoutButton();
+        }
+
+        function resetCheckoutButton() {
+            byId('checkout').disabled = false;
+            byId('checkout').textContent = '▱ Bayar';
+        }
+
         function showReceipt(sale) {
             nodes.receiptTicket.textContent = sale.invoice_number;
             const itemRows = sale.items.map((item) => `
@@ -1589,6 +1877,9 @@
             const reference = sale.payment_reference
                 ? `<div class="receipt-line"><span>Referensi</span><strong>${escapeHtml(sale.payment_reference)}</strong></div>`
                 : '';
+            const customerNote = sale.customer_note
+                ? `<div class="receipt-line"><span>Catatan</span><strong>${escapeHtml(sale.customer_note)}</strong></div>`
+                : '';
 
             nodes.receiptBody.innerHTML = `
                 <div class="receipt-section">
@@ -1597,6 +1888,7 @@
                     <div class="receipt-line"><span>Pelanggan</span><strong>${escapeHtml(sale.customer_name || 'Umum')}</strong></div>
                     <div class="receipt-line"><span>Meja</span><strong>${escapeHtml(sale.table_number || '-')}</strong></div>
                     <div class="receipt-line"><span>Kasir</span><strong>${escapeHtml(sale.cashier_name || '-')}</strong></div>
+                    ${customerNote}
                 </div>
                 <div class="receipt-section">
                     ${itemRows}
@@ -1688,6 +1980,7 @@
         byId('save-order').addEventListener('click', () => saveCurrentOrder());
         byId('hold-order').addEventListener('click', () => saveCurrentOrder({ clearAfterSave: true }));
         byId('checkout').addEventListener('click', checkout);
+        nodes.qrisCancel.addEventListener('click', closeQrisModal);
         byId('close-receipt').addEventListener('click', () => {
             nodes.modal.classList.remove('open');
             nodes.modal.setAttribute('aria-hidden', 'true');

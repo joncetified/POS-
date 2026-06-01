@@ -9,7 +9,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -17,7 +20,7 @@ use Illuminate\View\View;
 class SaleController extends Controller
 {
     private const TAX_RATE = 0.11;
-    private const PAYMENT_METHODS = ['Tunai', 'QRIS', 'Debit/Kredit', 'E-Wallet', 'Lainnya'];
+    private const PAYMENT_METHODS = ['Tunai', 'QRIS'];
     private const OPEN_STATUSES = ['open', 'parked'];
 
     public function index(): View
@@ -78,6 +81,7 @@ class SaleController extends Controller
         $validated = $request->validate([
             'order_id' => ['nullable', 'integer', 'exists:sales,id'],
             'customer_name' => ['nullable', 'string', 'max:120'],
+            'customer_note' => ['nullable', 'string', 'max:255'],
             'table_number' => ['required', 'string', 'max:20'],
             'cashier_name' => ['nullable', 'string', 'max:80'],
             'order_type' => ['required', 'string', 'max:40'],
@@ -105,6 +109,7 @@ class SaleController extends Controller
 
             $sale->fill([
                 'customer_name' => $validated['customer_name'] ?? null,
+                'customer_note' => $validated['customer_note'] ?? null,
                 'table_number' => $validated['table_number'],
                 'cashier_name' => $validated['cashier_name'] ?? CafeCatalog::store()['cashier'],
                 'order_type' => $validated['order_type'],
@@ -141,21 +146,121 @@ class SaleController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
-            'customer_name' => ['nullable', 'string', 'max:120'],
-            'table_number' => ['nullable', 'string', 'max:20'],
-            'cashier_name' => ['nullable', 'string', 'max:80'],
-            'order_type' => ['required', 'string', 'max:40'],
-            'payment_method' => ['required', 'string', 'max:40', Rule::in(self::PAYMENT_METHODS)],
-            'payment_reference' => ['nullable', 'string', 'max:80'],
-            'discount' => ['nullable', 'integer', 'min:0'],
-            'paid_amount' => ['required', 'integer', 'min:0'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        $validated = $request->validate($this->checkoutRules());
+
+        $sale = $this->createPaidSale($validated);
+
+        return response()->json([
+            'message' => 'Transaksi berhasil disimpan.',
+            'sale' => $this->serializePaidSale($sale),
+        ], 201);
+    }
+
+    public function qrisCharge(Request $request): JsonResponse
+    {
+        $validated = $request->validate($this->qrisOrderRules());
+        $lines = $this->buildOrderLines($validated['items'], false);
+        $totals = $this->calculateTotals($lines, (int) ($validated['discount'] ?? 0));
+
+        if ($totals['total'] <= 0) {
+            throw ValidationException::withMessages([
+                'total' => 'Total QRIS harus lebih dari Rp 0.',
+            ]);
+        }
+
+        $midtransOrderId = $this->nextMidtransQrisOrderId();
+        $response = $this->midtransRequest('post', '/v2/charge', [
+            'payment_type' => 'qris',
+            'transaction_details' => [
+                'order_id' => $midtransOrderId,
+                'gross_amount' => $totals['total'],
+            ],
+            'custom_expiry' => [
+                'expiry_duration' => 15,
+                'unit' => 'minute',
+            ],
         ]);
 
+        Cache::put($this->qrisCacheKey($midtransOrderId), [
+            'validated' => $validated,
+            'gross_amount' => $totals['total'],
+        ], now()->addMinutes(20));
+
+        return response()->json([
+            'message' => 'QRIS berhasil dibuat.',
+            'order_id' => $midtransOrderId,
+            'amount' => $totals['total'],
+            'transaction_status' => $response['transaction_status'] ?? 'pending',
+            'qr_url' => $this->midtransQrUrl($response),
+            'qr_string' => $response['qr_string'] ?? data_get($response, 'qris.qr_string'),
+        ]);
+    }
+
+    public function qrisFinalize(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'midtrans_order_id' => ['required', 'string', 'max:80'],
+        ]);
+
+        $midtransOrderId = $validated['midtrans_order_id'];
+        $existingSale = Sale::query()
+            ->where('payment_reference', $midtransOrderId)
+            ->where('status', 'paid')
+            ->first();
+
+        if ($existingSale) {
+            return response()->json([
+                'message' => 'Transaksi QRIS sudah tersimpan.',
+                'sale' => $this->serializePaidSale($existingSale->load('items')),
+            ]);
+        }
+
+        $cached = Cache::get($this->qrisCacheKey($midtransOrderId));
+
+        if (!$cached) {
+            throw ValidationException::withMessages([
+                'midtrans_order_id' => 'Sesi QRIS sudah habis. Buat QRIS baru.',
+            ]);
+        }
+
+        $status = $this->midtransRequest('get', '/v2/' . rawurlencode($midtransOrderId) . '/status');
+        $transactionStatus = $status['transaction_status'] ?? null;
+        $fraudStatus = $status['fraud_status'] ?? null;
+
+        if (!$this->isMidtransPaid($transactionStatus, $fraudStatus)) {
+            return response()->json([
+                'message' => 'QRIS belum dibayar.',
+                'transaction_status' => $transactionStatus,
+                'fraud_status' => $fraudStatus,
+            ], 202);
+        }
+
+        $grossAmount = (int) round((float) ($status['gross_amount'] ?? 0));
+        if ($grossAmount !== (int) $cached['gross_amount']) {
+            throw ValidationException::withMessages([
+                'midtrans_order_id' => 'Nominal pembayaran QRIS tidak sesuai.',
+            ]);
+        }
+
+        $saleData = $cached['validated'];
+        $saleData['payment_method'] = 'QRIS';
+        $saleData['payment_reference'] = $midtransOrderId;
+        $saleData['paid_amount'] = (int) $cached['gross_amount'];
+
+        $sale = $this->createPaidSale($saleData);
+        Cache::forget($this->qrisCacheKey($midtransOrderId));
+
+        return response()->json([
+            'message' => 'Pembayaran QRIS berhasil.',
+            'sale' => $this->serializePaidSale($sale),
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     */
+    private function createPaidSale(array $validated): Sale
+    {
         $sale = DB::transaction(function () use ($validated) {
             $lines = $this->buildOrderLines($validated['items'], true);
             $totals = $this->calculateTotals($lines, (int) ($validated['discount'] ?? 0));
@@ -196,6 +301,7 @@ class SaleController extends Controller
             $sale->fill([
                 'invoice_number' => $invoiceNumber,
                 'customer_name' => $validated['customer_name'] ?? null,
+                'customer_note' => $validated['customer_note'] ?? null,
                 'table_number' => $validated['table_number'] ?? null,
                 'cashier_name' => $validated['cashier_name'] ?? CafeCatalog::store()['cashier'],
                 'order_type' => $validated['order_type'],
@@ -216,10 +322,132 @@ class SaleController extends Controller
             return $sale->load('items');
         });
 
-        return response()->json([
-            'message' => 'Transaksi berhasil disimpan.',
-            'sale' => $this->serializePaidSale($sale),
-        ], 201);
+        return $sale;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function checkoutRules(): array
+    {
+        return [
+            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
+            'customer_name' => ['nullable', 'string', 'max:120'],
+            'customer_note' => ['nullable', 'string', 'max:255'],
+            'table_number' => ['nullable', 'string', 'max:20'],
+            'cashier_name' => ['nullable', 'string', 'max:80'],
+            'order_type' => ['required', 'string', 'max:40'],
+            'payment_method' => ['required', 'string', 'max:40', Rule::in(self::PAYMENT_METHODS)],
+            'payment_reference' => ['nullable', 'string', 'max:80'],
+            'discount' => ['nullable', 'integer', 'min:0'],
+            'paid_amount' => ['required', 'integer', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function qrisOrderRules(): array
+    {
+        return [
+            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
+            'customer_name' => ['nullable', 'string', 'max:120'],
+            'customer_note' => ['nullable', 'string', 'max:255'],
+            'table_number' => ['nullable', 'string', 'max:20'],
+            'cashier_name' => ['nullable', 'string', 'max:80'],
+            'order_type' => ['required', 'string', 'max:40'],
+            'discount' => ['nullable', 'integer', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function midtransRequest(string $method, string $path, array $payload = []): array
+    {
+        $serverKey = config('services.midtrans.server_key');
+
+        if (!$serverKey) {
+            throw ValidationException::withMessages([
+                'midtrans' => 'Server Key Midtrans belum dikonfigurasi.',
+            ]);
+        }
+
+        $baseUrl = rtrim(config('services.midtrans.is_production')
+            ? config('services.midtrans.production_url')
+            : config('services.midtrans.sandbox_url'), '/');
+
+        try {
+            $request = Http::withBasicAuth($serverKey, '')
+                ->acceptJson()
+                ->asJson()
+                ->timeout(20);
+
+            $response = $method === 'get'
+                ? $request->get($baseUrl . $path)
+                : $request->post($baseUrl . $path, $payload);
+        } catch (\Throwable $exception) {
+            throw ValidationException::withMessages([
+                'midtrans' => 'Koneksi ke Midtrans gagal: ' . $exception->getMessage(),
+            ]);
+        }
+
+        $data = $response->json() ?: [];
+
+        if ($response->failed()) {
+            $message = $data['status_message']
+                ?? $data['message']
+                ?? 'Request Midtrans gagal.';
+
+            throw ValidationException::withMessages([
+                'midtrans' => $message,
+            ]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function midtransQrUrl(array $response): ?string
+    {
+        foreach ($response['actions'] ?? [] as $action) {
+            $name = $action['name'] ?? '';
+
+            if (in_array($name, ['generate-qr-code', 'generate-qris'], true)) {
+                return $action['url'] ?? null;
+            }
+        }
+
+        return $response['qr_url'] ?? null;
+    }
+
+    private function isMidtransPaid(?string $transactionStatus, ?string $fraudStatus): bool
+    {
+        if ($transactionStatus === 'settlement') {
+            return true;
+        }
+
+        return $transactionStatus === 'capture'
+            && in_array($fraudStatus, [null, 'accept'], true);
+    }
+
+    private function nextMidtransQrisOrderId(): string
+    {
+        return 'POS-QRIS-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(6));
+    }
+
+    private function qrisCacheKey(string $midtransOrderId): string
+    {
+        return 'midtrans:qris:' . $midtransOrderId;
     }
 
     /**
@@ -365,8 +593,6 @@ class SaleController extends Controller
     {
         $prefix = match ($paymentMethod) {
             'QRIS' => 'QRIS',
-            'Debit/Kredit' => 'CARD',
-            'E-Wallet' => 'EWALLET',
             default => 'PAY',
         };
 
@@ -409,6 +635,7 @@ class SaleController extends Controller
             'id' => $sale->id,
             'label' => ($sale->table_number ? 'Meja ' . $sale->table_number : ($sale->customer_name ?: 'Order')) . ' - Rp ' . number_format($sale->total, 0, ',', '.'),
             'customer' => $sale->customer_name,
+            'customerNote' => $sale->customer_note,
             'tableNumber' => $sale->table_number,
             'discount' => $sale->discount,
             'discountPercent' => 0,
@@ -437,6 +664,7 @@ class SaleController extends Controller
         return [
             'invoice_number' => $sale->invoice_number,
             'customer_name' => $sale->customer_name,
+            'customer_note' => $sale->customer_note,
             'table_number' => $sale->table_number,
             'cashier_name' => $sale->cashier_name,
             'order_type' => $sale->order_type,
@@ -470,10 +698,10 @@ class SaleController extends Controller
         $html .= '<table border="1"><tr><th>Total Order</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th></tr>';
         $html .= '<tr><td>' . $totals['orders'] . '</td><td>' . e($money($totals['subtotal'])) . '</td><td>' . e($money($totals['discount'])) . '</td><td>' . e($money($totals['tax'])) . '</td><td>' . e($money($totals['total'])) . '</td><td>' . e($money($totals['paid'])) . '</td><td>' . e($money($totals['change'])) . '</td></tr></table>';
 
-        $html .= '<h2>Daftar Order Paid</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Meja</th><th>Item</th><th>Metode</th><th>Referensi</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
+        $html .= '<h2>Daftar Order Paid</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Catatan</th><th>Meja</th><th>Item</th><th>Metode</th><th>Referensi</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
         foreach ($sales as $sale) {
             $items = $sale->items->map(fn ($item) => $item->product_name . ' x ' . $item->quantity)->implode(', ');
-            $html .= '<tr><td>' . e($sale->invoice_number) . '</td><td>' . e($sale->customer_name ?: 'Umum') . '</td><td>' . e($sale->table_number ?: '-') . '</td><td>' . e($items) . '</td><td>' . e($sale->payment_method) . '</td><td>' . e($sale->payment_reference ?: '-') . '</td><td>' . e($money($sale->subtotal)) . '</td><td>' . e($money($sale->discount)) . '</td><td>' . e($money($sale->tax)) . '</td><td>' . e($money($sale->total)) . '</td><td>' . e($money($sale->paid_amount)) . '</td><td>' . e($money($sale->change_amount)) . '</td><td>' . e($sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</td></tr>';
+            $html .= '<tr><td>' . e($sale->invoice_number) . '</td><td>' . e($sale->customer_name ?: 'Umum') . '</td><td>' . e($sale->customer_note ?: '-') . '</td><td>' . e($sale->table_number ?: '-') . '</td><td>' . e($items) . '</td><td>' . e($sale->payment_method) . '</td><td>' . e($sale->payment_reference ?: '-') . '</td><td>' . e($money($sale->subtotal)) . '</td><td>' . e($money($sale->discount)) . '</td><td>' . e($money($sale->tax)) . '</td><td>' . e($money($sale->total)) . '</td><td>' . e($money($sale->paid_amount)) . '</td><td>' . e($money($sale->change_amount)) . '</td><td>' . e($sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</td></tr>';
         }
         $html .= '</table></body></html>';
 
@@ -504,6 +732,9 @@ class SaleController extends Controller
         foreach ($this->salesQuery()->get() as $sale) {
             $table = $sale->table_number ? ' | Meja ' . $sale->table_number : '';
             $lines[] = $sale->invoice_number . ' | ' . ($sale->customer_name ?: 'Umum') . $table . ' | ' . $sale->payment_method . ' | Total ' . $money($sale->total);
+            if ($sale->customer_note) {
+                $lines[] = '  Catatan: ' . $sale->customer_note;
+            }
             foreach ($sale->items as $item) {
                 $lines[] = '  - ' . $item->product_name . ' x ' . $item->quantity . ' = ' . $money($item->line_total);
             }

@@ -9,7 +9,7 @@
         :root { --bg: #f6f3ef; --surface: #fff; --ink: #24140c; --muted: #7c6b5c; --line: #e8ded3; --brown: #4b2308; --gold: #ffc94b; --green: #0b9f55; --red: #dc2626; }
         * { box-sizing: border-box; }
         body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        button, input { font: inherit; }
+        button, input, textarea { font: inherit; }
         .shell { width: min(1180px, calc(100% - 28px)); margin: 22px auto; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; }
         .topbar, .panel, .cart { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 14px 30px rgba(56, 28, 7, .07); }
         .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 18px; }
@@ -41,7 +41,8 @@
         .line { display: flex; justify-content: space-between; gap: 12px; }
         .total { font-size: 1.15rem; font-weight: 950; }
         .customer { display: grid; gap: 8px; }
-        .customer input { min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+        .customer input, .customer textarea { min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
+        .customer textarea { resize: vertical; min-height: 74px; }
         .empty { min-height: 110px; display: grid; place-items: center; text-align: center; color: var(--muted); }
         .notice { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; border-radius: 8px; padding: 12px; }
         .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(80px); opacity: 0; border-radius: 8px; background: var(--ink); color: #fff; padding: 12px 16px; transition: 180ms ease; z-index: 10; }
@@ -66,7 +67,7 @@
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>Menu Meja Cafe</h1>
                 @if ($canOrder)
-                    <p class="muted">Untuk makan/minum di tempat. Pesanan Meja {{ $tableNumber }} masuk ke kasir.</p>
+                    <p class="muted">Pilih menu dengan tombol +, cek ringkasan, isi catatan jika perlu, lalu kirim ke kasir.</p>
                 @else
                     <p class="muted">Ini katalog menu. Gunakan QR di meja untuk pesan makan/minum di tempat.</p>
                 @endif
@@ -120,6 +121,8 @@
 
             @if (! $canOrder)
                 <div class="notice">Pelanggan pesan dari QR yang ditempel di meja.</div>
+            @else
+                <div class="notice">Catatan seperti less sugar, tanpa es, atau alergi akan terlihat di layar kasir.</div>
             @endif
 
             <div id="cart-list" class="cart-list">
@@ -135,6 +138,7 @@
             @if ($canOrder)
                 <div class="customer">
                     <input id="customer-name" type="text" maxlength="120" placeholder="Nama pelanggan (opsional)">
+                    <textarea id="customer-note" maxlength="255" rows="3" placeholder="Catatan pesanan (opsional), contoh: less sugar, tanpa es"></textarea>
                     <button id="send-order" class="btn gold" type="button">Kirim ke Kasir</button>
                 </div>
             @endif
@@ -248,6 +252,7 @@
                     },
                     body: JSON.stringify({
                         customer_name: byId('customer-name').value || null,
+                        customer_note: byId('customer-note').value || null,
                         items: data.items.map((item) => ({
                             product_id: item.id,
                             quantity: item.qty,
@@ -263,6 +268,7 @@
                 }
 
                 cart.clear();
+                byId('customer-note').value = '';
                 render();
                 showToast('Pesanan meja sudah masuk ke kasir');
             } catch (error) {

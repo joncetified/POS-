@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
+        'sandbox_url' => env('MIDTRANS_SANDBOX_URL', 'https://api.sandbox.midtrans.com'),
+        'production_url' => env('MIDTRANS_PRODUCTION_URL', 'https://api.midtrans.com'),
+    ],
+
 ];
