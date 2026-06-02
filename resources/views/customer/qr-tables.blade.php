@@ -32,12 +32,30 @@
 <body>
     <main class="shell">
         <section class="topbar">
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
+            </div>
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
+                @if (auth()->user()->hasPermission('page.dashboard'))
+                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
+                @endif
+                @if (auth()->user()->hasPermission('page.pos'))
+                    <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
+                @endif
+                <button class="btn" type="button" onclick="window.print()">Print QR</button>
+            </div>
+        </section>
+
+        <section class="panel page-heading">
             <div>
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>QR Pesanan Meja</h1>
-                <p class="muted">Halaman staff untuk print QR. Pelanggan hanya membuka menu setelah scan QR yang ditempel di meja.</p>
+                <p class="muted">Print QR dan tempel di meja agar pelanggan bisa pesan langsung ke kasir.</p>
             </div>
-            <button class="btn" type="button" onclick="window.print()">Print QR</button>
+            <div class="export-actions">
+                <button class="btn" type="button" onclick="window.print()">Print QR</button>
+            </div>
         </section>
 
         <section class="grid">

@@ -20,6 +20,7 @@ class Product extends Model
         'unit',
         'tag',
         'color',
+        'image_path',
         'is_active',
     ];
 

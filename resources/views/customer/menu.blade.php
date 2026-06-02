@@ -92,6 +92,9 @@
                     <div class="grid">
                         @forelse ($products->where('category_id', $category->id) as $product)
                             <article class="item">
+                                @if ($product->image_path)
+                                    <img class="menu-product-image" src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
+                                @endif
                                 <div class="item-top">
                                     <h3>{{ $product->name }}</h3>
                                     <p class="stock">{{ $product->sku }} / Stok {{ $product->stock }} {{ $product->unit }}</p>

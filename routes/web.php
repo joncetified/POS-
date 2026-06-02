@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OperationController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
@@ -28,6 +29,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
     Route::match(['put', 'patch'], '/access-control/{user}', [AccessControlController::class, 'update'])->name('access-control.update');

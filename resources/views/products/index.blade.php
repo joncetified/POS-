@@ -53,12 +53,11 @@
 <body>
     <main class="shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Produk</h1>
-                <p class="muted">Kelola menu, harga, status aktif, dan stok produk cafe.</p>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
                 @endif
@@ -116,7 +115,7 @@
                 @if ($categories->isEmpty())
                     <p class="muted">Buat kategori dulu sebelum menambahkan produk.</p>
                 @else
-                    <form class="form-grid" method="POST" action="{{ route('products.store') }}">
+                    <form class="form-grid" method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="field">
                             <label for="category_id">Kategori</label>
@@ -154,6 +153,10 @@
                             <label for="color">Warna</label>
                             <input id="color" name="color" value="#0f766e" required>
                         </div>
+                        <div class="field">
+                            <label for="image">Gambar produk</label>
+                            <input id="image" name="image" type="file" accept="image/*">
+                        </div>
                         <input type="hidden" name="is_active" value="1">
                         <button class="btn primary" type="submit">Simpan Produk</button>
                     </form>
@@ -170,6 +173,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Gambar</th>
                             <th>Produk</th>
                             <th>Kategori</th>
                             <th>Harga / Stok</th>
@@ -181,7 +185,16 @@
                         @forelse ($products as $product)
                             <tr>
                                 <td>
-                                    <form id="update-{{ $product->id }}" method="POST" action="{{ route('products.update', $product) }}">
+                                    <div class="product-image-preview">
+                                        @if ($product->image_path)
+                                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
+                                        @else
+                                            <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <form id="update-{{ $product->id }}" method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
                                         @csrf
                                         @method('PUT')
                                         <div class="product-fields">
@@ -193,6 +206,7 @@
                                             <input name="color" value="{{ $product->color }}" required aria-label="Warna">
                                         </div>
                                         <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
+                                        <input name="image" type="file" accept="image/*" style="margin-top: 8px;" aria-label="Gambar produk">
                                         <input type="hidden" name="is_active" value="0">
                                     </form>
                                 </td>
@@ -220,17 +234,17 @@
                                 </td>
                                 <td>
                                     <div class="row-actions">
-                                        <button form="update-{{ $product->id }}" class="btn primary" type="submit">Update</button>
+                                        <button form="update-{{ $product->id }}" class="btn primary" type="submit">Edit / Simpan</button>
                                         <form method="POST" action="{{ route('products.destroy', $product) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn danger" type="submit">Nonaktif</button>
+                                            <button class="btn danger" type="submit" onclick="return confirm('Hapus produk ini permanen?')">Hapus</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="muted">Belum ada produk.</td></tr>
+                            <tr><td colspan="6" class="muted">Belum ada produk.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

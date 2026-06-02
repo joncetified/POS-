@@ -47,12 +47,12 @@
 <body>
     <main class="shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Operasional / ERP</h1>
-                <p class="muted">Kontrol biaya, gaji, dan stok operasional cafe dalam satu halaman.</p>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
+                <span class="staff-page-title">Operasional / ERP</span>
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
                 @endif

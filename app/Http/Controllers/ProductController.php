@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Support\CafeCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -27,23 +28,43 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Product::query()->create($this->validated($request));
+        $data = $this->validated($request);
+
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        Product::query()->create($data);
 
         return back()->with('status', 'Produk berhasil ditambahkan.');
     }
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        $product->update($this->validated($request, $product));
+        $data = $this->validated($request, $product);
+
+        if ($request->hasFile('image')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
 
         return back()->with('status', 'Produk berhasil diperbarui.');
     }
 
     public function destroy(Product $product): RedirectResponse
     {
-        $product->update(['is_active' => false]);
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
 
-        return back()->with('status', 'Produk dinonaktifkan.');
+        $product->delete();
+
+        return back()->with('status', 'Produk berhasil dihapus.');
     }
 
     private function validated(Request $request, ?Product $product = null): array
@@ -59,6 +80,7 @@ class ProductController extends Controller
             'unit' => ['required', 'string', 'max:30'],
             'tag' => ['nullable', 'string', 'max:40'],
             'color' => ['required', 'string', 'max:16'],
+            'image' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
         ]) + ['is_active' => false];
     }

@@ -1080,7 +1080,13 @@
                     <span>{{ now()->timezone('Asia/Jakarta')->format('d M Y') }}</span>
                     <span id="clock">{{ now()->timezone('Asia/Jakarta')->format('H:i') }}</span>
                     <div class="user-chip">
-                        <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                        <div class="avatar">
+                            @if (auth()->user()->avatar_path)
+                                <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                            @else
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            @endif
+                        </div>
                         <div>
                             <strong>{{ auth()->user()->name }}</strong>
                             <p class="small" style="color: rgba(255,255,255,.82);">{{ auth()->user()->roleLabel() }}</p>
@@ -1406,6 +1412,7 @@
                 return `
                     <article class="product-card">
                         <div class="product-visual" style="--tile-color: ${escapeHtml(product.color)};">
+                            ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">` : ''}
                             <span>${escapeHtml(initials(product.name))}</span>
                         </div>
                         <div class="product-info">

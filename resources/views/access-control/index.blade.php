@@ -33,6 +33,13 @@
         .role-badge { background: #f8fafc; color: var(--ink); border: 1px solid var(--line); }
         .lock-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
         .permission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .user-edit-grid { display: grid; grid-template-columns: 160px repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+        .avatar-editor { display: grid; gap: 8px; }
+        .avatar-canvas { width: 132px; height: 132px; border: 1px solid var(--line); border-radius: 18px; background: #fffaf3; object-fit: cover; }
+        .avatar-editor input[type="range"] { width: 132px; }
+        .field { display: grid; gap: 6px; }
+        .field label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
+        .field input, .field select { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface); color: var(--ink); }
         .permission-option { min-height: 86px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); cursor: pointer; }
         .permission-option input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary); }
         .permission-option strong, .permission-option span { display: block; overflow-wrap: anywhere; }
@@ -41,6 +48,7 @@
         .card-actions { display: flex; justify-content: flex-end; }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
+        @media (max-width: 980px) { .user-edit-grid { grid-template-columns: 1fr; } }
         @media (max-width: 860px) { .topbar, .permission-list { grid-template-columns: 1fr; } .actions, .card-actions { justify-content: flex-start; } .actions .btn, .actions button, .card-actions .btn { width: 100%; } }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -48,12 +56,11 @@
 <body>
     <main class="shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Akses User</h1>
-                <p class="muted">Checklist halaman yang boleh dibuka setiap user. Perubahan ini disimpan di database.</p>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
                 @endif
@@ -110,6 +117,51 @@
                         <form method="POST" action="{{ route('access-control.update', $account) }}">
                             @csrf
                             @method('PATCH')
+                            <div class="user-edit-grid">
+                                <div class="avatar-editor" data-avatar-editor>
+                                    <canvas class="avatar-canvas" width="512" height="512" data-avatar-canvas></canvas>
+                                    <input type="file" accept="image/*" data-avatar-input aria-label="Foto user">
+                                    <input type="range" min="1" max="3" step="0.05" value="1" data-avatar-zoom aria-label="Zoom crop foto">
+                                    <input type="hidden" name="avatar_crop" data-avatar-crop>
+                                    <span class="muted">Pilih foto, lalu geser zoom untuk crop kotak.</span>
+                                    @if ($account->avatar_path)
+                                        <input type="hidden" data-avatar-current value="{{ asset('storage/' . $account->avatar_path) }}">
+                                    @endif
+                                </div>
+
+                                <div class="field">
+                                    <label>Nama</label>
+                                    <input name="name" value="{{ old('name', $account->name) }}" required>
+                                </div>
+                                <div class="field">
+                                    <label>Username</label>
+                                    <input name="username" value="{{ old('username', $account->username) }}" required>
+                                </div>
+                                <div class="field">
+                                    <label>Email</label>
+                                    <input name="email" type="email" value="{{ old('email', $account->email) }}" required>
+                                </div>
+                                <div class="field">
+                                    <label>Role</label>
+                                    <select name="role" @disabled($locked)>
+                                        @foreach (\App\Enums\UserRole::options() as $value => $label)
+                                            <option value="{{ $value }}" @selected($account->role->value === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @if ($locked)
+                                        <input type="hidden" name="role" value="{{ $account->role->value }}">
+                                    @endif
+                                </div>
+                                <div class="field">
+                                    <label>Password baru</label>
+                                    <input name="password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak diganti">
+                                </div>
+                                <div class="field">
+                                    <label>Konfirmasi password</label>
+                                    <input name="password_confirmation" type="password" autocomplete="new-password" placeholder="Ulangi password baru">
+                                </div>
+                            </div>
+
                             <div class="permission-list">
                                 @foreach ($pages as $permission => $page)
                                     <label class="permission-option @if ($locked) locked @endif">
@@ -128,18 +180,85 @@
                                 @endforeach
                             </div>
 
-                            @if (! $locked)
-                                <div class="card-actions" style="margin-top: 12px;">
-                                    <button class="btn primary" type="submit">Simpan Akses</button>
-                                </div>
-                            @else
+                            @if ($locked)
                                 <p class="muted" style="margin-top: 10px;">Akses Super Admin selalu penuh supaya tidak ada akun utama yang terkunci.</p>
                             @endif
+                            <div class="card-actions" style="margin-top: 12px;">
+                                <button class="btn primary" type="submit">Simpan User</button>
+                            </div>
                         </form>
                     </article>
                 @endforeach
             </div>
         </section>
     </main>
+    <script>
+        document.querySelectorAll('[data-avatar-editor]').forEach((editor) => {
+            const input = editor.querySelector('[data-avatar-input]');
+            const zoom = editor.querySelector('[data-avatar-zoom]');
+            const canvas = editor.querySelector('[data-avatar-canvas]');
+            const output = editor.querySelector('[data-avatar-crop]');
+            const current = editor.querySelector('[data-avatar-current]')?.value;
+            const context = canvas.getContext('2d');
+            let image = new Image();
+            let loaded = false;
+
+            function draw() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = '#fff3ec';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (!loaded) {
+                    context.fillStyle = '#ff965f';
+                    context.font = '700 44px sans-serif';
+                    context.textAlign = 'center';
+                    context.fillText('Foto', canvas.width / 2, canvas.height / 2 + 12);
+                    return;
+                }
+
+                const scale = Number(zoom.value || 1);
+                const cover = Math.max(canvas.width / image.width, canvas.height / image.height) * scale;
+                const width = image.width * cover;
+                const height = image.height * cover;
+                const x = (canvas.width - width) / 2;
+                const y = (canvas.height - height) / 2;
+
+                context.drawImage(image, x, y, width, height);
+                output.value = canvas.toDataURL('image/jpeg', 0.88);
+            }
+
+            function load(src, setCrop = false) {
+                image = new Image();
+                image.onload = () => {
+                    loaded = true;
+                    draw();
+                    if (!setCrop) output.value = '';
+                };
+                image.src = src;
+            }
+
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = () => load(String(reader.result), true);
+                reader.readAsDataURL(file);
+            });
+
+            zoom.addEventListener('input', () => {
+                draw();
+                if (loaded && input.files?.length) {
+                    output.value = canvas.toDataURL('image/jpeg', 0.88);
+                }
+            });
+
+            if (current) {
+                load(current);
+            } else {
+                draw();
+            }
+        });
+    </script>
 </body>
 </html>

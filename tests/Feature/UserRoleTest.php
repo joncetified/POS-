@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UserRoleTest extends TestCase
@@ -159,6 +161,74 @@ class UserRoleTest extends TestCase
 
         $this->assertTrue($target->refresh()->hasPermission('page.pos'));
         $this->assertTrue($target->hasPermission('unknown.future_permission'));
+    }
+
+    public function test_super_admin_can_edit_user_profile_avatar_role_and_password(): void
+    {
+        Storage::fake('public');
+
+        $superAdmin = User::factory()->superAdmin()->create();
+        $cashier = User::factory()->cashier()->create();
+        $avatar = 'data:image/jpeg;base64,' . base64_encode('cropped-avatar');
+
+        $this->actingAs($superAdmin)
+            ->patch(route('access-control.update', $cashier), [
+                'name' => 'Kasir Baru',
+                'username' => 'kasir_baru',
+                'email' => 'kasir-baru@example.test',
+                'role' => UserRole::Manager->value,
+                'avatar_crop' => $avatar,
+                'password' => 'new-password-123',
+                'password_confirmation' => 'new-password-123',
+                'permissions' => ['page.dashboard', 'page.reports'],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $cashier->refresh();
+
+        $this->assertSame('Kasir Baru', $cashier->name);
+        $this->assertSame('kasir_baru', $cashier->username);
+        $this->assertSame('kasir-baru@example.test', $cashier->email);
+        $this->assertSame(UserRole::Manager, $cashier->role);
+        $this->assertTrue(Hash::check('new-password-123', $cashier->password));
+        $this->assertNotNull($cashier->avatar_path);
+        Storage::disk('public')->assertExists($cashier->avatar_path);
+
+        $this->assertDatabaseHas('user_permissions', [
+            'user_id' => $cashier->id,
+            'permission' => 'page.reports',
+            'allowed' => true,
+        ]);
+    }
+
+    public function test_authenticated_user_can_update_own_profile_avatar_and_password(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->superAdmin()->create([
+            'password' => Hash::make('old-password-123'),
+        ]);
+
+        $avatar = 'data:image/jpeg;base64,' . base64_encode('my-face-photo');
+
+        $this->actingAs($user)
+            ->put(route('profile.update'), [
+                'name' => 'Super Admin Baru',
+                'avatar_crop' => $avatar,
+                'current_password' => 'old-password-123',
+                'password' => 'new-password-456',
+                'password_confirmation' => 'new-password-456',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $user->refresh();
+
+        $this->assertSame('Super Admin Baru', $user->name);
+        $this->assertTrue(Hash::check('new-password-456', $user->password));
+        $this->assertNotNull($user->avatar_path);
+        Storage::disk('public')->assertExists($user->avatar_path);
     }
 
     public function test_report_exports_are_available_to_report_roles(): void

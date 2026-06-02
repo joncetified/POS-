@@ -35,18 +35,13 @@
 <body>
     <main class="shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Laporan</h1>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.reports_export'))
-                    <a class="btn" href="{{ route('reports.print') }}" target="_blank" rel="noopener">Print</a>
-                    <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
-                    <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
                 @endif
                 @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn" href="{{ route('pos.index') }}">Kasir</a>
@@ -71,6 +66,21 @@
                     <button class="btn" type="submit">Logout</button>
                 </form>
             </div>
+        </section>
+
+        <section class="panel page-heading">
+            <div>
+                <p class="muted">{{ $store['name'] }}</p>
+                <h1>Laporan</h1>
+                <p class="muted">Ringkasan penjualan, pembayaran, stok, dan biaya operasional.</p>
+            </div>
+            @if (auth()->user()->hasPermission('page.reports_export'))
+                <div class="export-actions">
+                    <a class="btn" href="{{ route('reports.print') }}" target="_blank" rel="noopener">Print</a>
+                    <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
+                    <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
+                </div>
+            @endif
         </section>
 
         <section class="cards">

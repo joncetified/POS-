@@ -37,6 +37,7 @@ class PosController extends Controller
                 'unit' => $product->unit,
                 'tag' => $product->tag,
                 'color' => $product->color,
+                'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,
             ])
             ->values();
 

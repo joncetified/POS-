@@ -43,12 +43,11 @@
 <body>
     <main class="shell dashboard-shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Dashboard</h1>
-                <p class="muted">Ringkasan operasional cafe hari ini, open bill meja, stok, dan transaksi paid.</p>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.pos'))
                     <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
                 @endif

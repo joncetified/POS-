@@ -476,7 +476,7 @@ tbody tr:hover {
     font-weight: 850 !important;
 }
 
-.content {
+.app-shell .content {
     grid-template-columns: minmax(0, 1fr) minmax(390px, 39%) !important;
     gap: 14px !important;
     padding: 14px !important;
@@ -616,7 +616,7 @@ tbody tr:hover {
 }
 
 @media (max-width: 1120px) {
-    .content {
+    .app-shell .content {
         grid-template-columns: 1fr !important;
     }
 
@@ -668,7 +668,7 @@ tbody tr:hover {
     }
 
     .app-shell .topbar,
-    .content {
+    .app-shell .content {
         padding: 12px !important;
     }
 
@@ -1185,4 +1185,1601 @@ body::after {
         box-shadow: none !important;
         border: 0 !important;
     }
+}
+
+/* Purr Coffee redesign, driven by the supplied reference image. */
+:root {
+    --purr-bg: #ffc4a5;
+    --purr-bg-soft: #ffe1cf;
+    --purr-app: rgba(255, 255, 255, 0.92);
+    --purr-panel: rgba(255, 255, 255, 0.78);
+    --purr-card: #ffffff;
+    --purr-soft: #fff6f1;
+    --purr-line: rgba(238, 214, 200, 0.82);
+    --purr-ink: #2d211d;
+    --purr-muted: #9b8b84;
+    --purr-accent: #ff965f;
+    --purr-accent-2: #ff7f45;
+    --purr-accent-soft: #fff0e7;
+    --purr-shadow: 0 22px 60px rgba(146, 82, 48, 0.15);
+    --purr-shadow-soft: 0 14px 34px rgba(146, 82, 48, 0.09);
+}
+
+html {
+    background: var(--purr-bg) !important;
+}
+
+body {
+    color: var(--purr-ink) !important;
+    background:
+        linear-gradient(135deg, rgba(255, 203, 176, 0.96), rgba(255, 226, 210, 0.72)),
+        var(--purr-bg) !important;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+body::before {
+    content: "" !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: -2 !important;
+    background:
+        linear-gradient(90deg, rgba(255, 195, 162, 0.46), rgba(255, 238, 226, 0.72)),
+        url("/images/purr-coffee-ui.png") center / cover no-repeat !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+body::after {
+    content: "" !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+    background:
+        radial-gradient(circle at 12% 78%, rgba(255, 255, 255, 0.4), transparent 19%),
+        radial-gradient(circle at 92% 18%, rgba(255, 255, 255, 0.34), transparent 20%),
+        linear-gradient(115deg, transparent 0 42%, rgba(255, 255, 255, 0.18) 42.12% 42.3%, transparent 42.45%),
+        linear-gradient(20deg, transparent 0 30%, rgba(255, 255, 255, 0.18) 30.1% 30.24%, transparent 30.4%) !important;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--purr-ink) !important;
+    font-weight: 860 !important;
+}
+
+.muted,
+.small,
+label {
+    color: var(--purr-muted) !important;
+}
+
+.shell,
+.page {
+    width: min(1320px, calc(100% - 54px)) !important;
+    margin: 44px auto !important;
+    gap: 18px !important;
+}
+
+.auth-card,
+.shell > .topbar,
+.shell > .panel,
+.panel,
+.page,
+.cart,
+.catalog .panel,
+.products-panel,
+.cart-panel,
+.receipt,
+.access-card,
+.preview-card,
+.logo-preview {
+    border: 1px solid rgba(255, 255, 255, 0.82) !important;
+    border-radius: 24px !important;
+    background: var(--purr-app) !important;
+    box-shadow: var(--purr-shadow) !important;
+    backdrop-filter: blur(18px) !important;
+}
+
+.shell > .topbar,
+.page .top,
+.auth-card {
+    overflow: hidden !important;
+}
+
+.shell > .topbar::after,
+.app-shell .topbar::after {
+    height: 0 !important;
+    background: transparent !important;
+}
+
+.shell > .topbar {
+    min-height: 104px !important;
+    padding: 22px 26px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+.shell > .topbar h1,
+.app-shell h1,
+.page h1,
+.auth-card h1 {
+    font-size: clamp(1.45rem, 2.1vw, 2.25rem) !important;
+}
+
+.actions {
+    gap: 10px !important;
+}
+
+.btn,
+.actions .btn,
+.actions button,
+.logout-btn,
+.clear-btn,
+.save-btn,
+.park-btn,
+.checkout-btn,
+.add-btn,
+.pay-btn,
+.chip,
+.category-menu,
+.qty button,
+.qty-control button,
+.cart-row button,
+.saved-order button,
+.receipt-actions button {
+    min-height: 42px !important;
+    border: 1px solid var(--purr-line) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    color: var(--purr-ink) !important;
+    box-shadow: none !important;
+    font-weight: 820 !important;
+}
+
+.btn.primary,
+.actions .btn.primary,
+.checkout-btn,
+.park-btn,
+.save-btn,
+.category-menu,
+.pay-btn.active,
+.chip.active,
+.receipt-actions .checkout-btn {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--purr-accent), var(--purr-accent-2)) !important;
+    color: #fff !important;
+    box-shadow: 0 12px 24px rgba(255, 132, 76, 0.25) !important;
+}
+
+.btn.danger,
+.remove-btn,
+.clear-btn {
+    border-color: #ffd4c7 !important;
+    background: #fff3ee !important;
+    color: #d75f3b !important;
+}
+
+.actions > a,
+.actions > form .btn,
+.actions > form button {
+    border-color: var(--purr-line) !important;
+    background: rgba(255, 255, 255, 0.76) !important;
+    color: var(--purr-ink) !important;
+}
+
+.actions > a:hover,
+.actions > form button:hover,
+.btn:hover,
+.chip:hover,
+.pay-btn:hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(255, 150, 95, 0.5) !important;
+    background: var(--purr-accent-soft) !important;
+}
+
+input,
+select,
+textarea,
+.searchbox,
+.money-input,
+.customer-input {
+    min-height: 44px !important;
+    border: 1px solid var(--purr-line) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    color: var(--purr-ink) !important;
+}
+
+textarea,
+.customer-note {
+    border-radius: 18px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.customer-input:focus {
+    border-color: var(--purr-accent) !important;
+    box-shadow: 0 0 0 4px rgba(255, 150, 95, 0.16) !important;
+}
+
+.cards {
+    gap: 14px !important;
+}
+
+.cards .card,
+.card,
+.grid > .card,
+.item,
+.product-card,
+.cart-row,
+.saved-orders,
+.payment-status,
+.pay-row,
+.permission-option,
+.role-badge,
+.lock-badge,
+.contact-list div {
+    border: 1px solid var(--purr-line) !important;
+    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: var(--purr-shadow-soft) !important;
+}
+
+.cards .card,
+.grid > .card {
+    border-top: 0 !important;
+    min-height: 116px !important;
+}
+
+.card strong,
+.price,
+.item .price {
+    color: var(--purr-accent-2) !important;
+}
+
+.status,
+.good,
+.badge {
+    border-color: #ffddcd !important;
+    background: #fff1e9 !important;
+    color: #cf6f3d !important;
+}
+
+.warn {
+    color: #d27a35 !important;
+}
+
+.errors {
+    border-color: #ffd2c5 !important;
+    background: #fff1ed !important;
+    color: #bc4b31 !important;
+}
+
+.empty,
+.notice {
+    border: 1px dashed #f0cdbd !important;
+    border-radius: 20px !important;
+    background: rgba(255, 247, 242, 0.78) !important;
+    color: var(--purr-muted) !important;
+}
+
+.table-wrap {
+    border: 1px solid var(--purr-line) !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.62) !important;
+    box-shadow: none !important;
+    overflow: auto !important;
+}
+
+table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+th {
+    background: #fff5ee !important;
+    color: var(--purr-muted) !important;
+}
+
+td,
+th {
+    border-bottom-color: var(--purr-line) !important;
+}
+
+tbody tr:hover {
+    background: rgba(255, 242, 234, 0.7) !important;
+}
+
+.pagination nav,
+.pagination div {
+    color: var(--purr-muted) !important;
+}
+
+/* Auth pages */
+.auth-card {
+    width: min(470px, calc(100% - 26px)) !important;
+    padding: 34px !important;
+}
+
+.auth-card::before {
+    content: "Purr' Coffee" !important;
+    width: 94px !important;
+    height: 94px !important;
+    border-radius: 28px !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent),
+        url("/images/purr-coffee-ui.png") 72% 66% / 520% auto no-repeat,
+        #ffad7e !important;
+    box-shadow: 0 20px 40px rgba(255, 150, 95, 0.28) !important;
+}
+
+.auth-card .btn {
+    background: linear-gradient(135deg, var(--purr-accent), var(--purr-accent-2)) !important;
+    color: #fff !important;
+}
+
+.auth-card a {
+    color: var(--purr-accent-2) !important;
+}
+
+/* POS app: match the reference dashboard structure. */
+.app-shell {
+    width: min(1380px, calc(100% - 56px)) !important;
+    min-height: calc(100vh - 88px) !important;
+    margin: 44px auto !important;
+    display: grid !important;
+    grid-template-columns: 210px minmax(0, 1fr) !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255, 255, 255, 0.86) !important;
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: var(--purr-shadow) !important;
+    backdrop-filter: blur(18px) !important;
+}
+
+.sidebar {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    gap: 20px !important;
+    min-height: 0 !important;
+    padding: 26px 18px !important;
+    border-right: 1px solid var(--purr-line) !important;
+    background: rgba(255, 255, 255, 0.68) !important;
+    box-shadow: none !important;
+}
+
+.brand {
+    place-items: start !important;
+    text-align: left !important;
+    padding: 0 0 10px !important;
+}
+
+.brand-mark {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 20px !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        #ffad7e !important;
+    color: transparent !important;
+    box-shadow: 0 16px 30px rgba(255, 150, 95, 0.22) !important;
+}
+
+.brand h1 {
+    color: var(--purr-ink) !important;
+    font-size: 1.1rem !important;
+}
+
+.nav {
+    gap: 8px !important;
+}
+
+.nav a,
+.logout-btn {
+    min-height: 46px !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    color: #675750 !important;
+}
+
+.nav a.active,
+.nav a:hover,
+.logout-btn:hover {
+    background: #fff0e7 !important;
+    color: var(--purr-accent-2) !important;
+}
+
+.nav-icon {
+    color: var(--purr-accent-2) !important;
+}
+
+.workspace {
+    min-width: 0 !important;
+    grid-template-rows: 90px minmax(0, 1fr) 0 !important;
+    background: rgba(251, 251, 251, 0.72) !important;
+}
+
+.app-shell .topbar {
+    min-height: 90px !important;
+    padding: 18px 28px !important;
+    grid-template-columns: minmax(150px, auto) minmax(0, 1fr) auto !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--purr-line) !important;
+    background: rgba(255, 255, 255, 0.52) !important;
+    color: var(--purr-ink) !important;
+    box-shadow: none !important;
+}
+
+.top-title {
+    color: var(--purr-ink) !important;
+}
+
+.top-nav a,
+.top-nav button {
+    min-height: 40px !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.74) !important;
+    color: #6a5a53 !important;
+}
+
+.top-nav a.active,
+.top-nav a:hover,
+.top-nav button:hover {
+    background: var(--purr-accent) !important;
+    color: #fff !important;
+}
+
+.user-chip {
+    border-left-color: var(--purr-line) !important;
+}
+
+.avatar {
+    background:
+        url("/images/purr-coffee-ui.png") 82% 67% / 620% auto no-repeat,
+        #ffd1ba !important;
+    color: var(--purr-accent-2) !important;
+}
+
+.avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+}
+
+.app-shell .content {
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 360px) !important;
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+.products-panel,
+.cart-panel {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.products-panel {
+    padding: 28px !important;
+    gap: 18px !important;
+}
+
+.cart-panel {
+    padding: 28px 24px !important;
+    border-left: 1px solid var(--purr-line) !important;
+    background: rgba(255, 255, 255, 0.46) !important;
+}
+
+.panel-head {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 38%) auto !important;
+}
+
+.panel-head h2,
+.cart-title h2 {
+    font-size: 1.18rem !important;
+}
+
+.searchbox {
+    min-height: 46px !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+.chips {
+    gap: 10px !important;
+}
+
+.chip {
+    min-height: 40px !important;
+    padding: 0 20px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.product-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
+    gap: 18px !important;
+    padding: 2px !important;
+}
+
+.product-card {
+    min-height: 180px !important;
+    grid-template-rows: none !important;
+    grid-template-columns: 116px minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+    padding: 16px !important;
+    background: rgba(255, 255, 255, 0.84) !important;
+}
+
+.product-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 22px 42px rgba(255, 150, 95, 0.16) !important;
+}
+
+.product-visual {
+    min-height: 142px !important;
+    border-radius: 18px !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08)),
+        url("/images/purr-coffee-ui.png") 71% 67% / 520% auto no-repeat,
+        #fff4ee !important;
+    box-shadow: none !important;
+}
+
+.product-card:nth-child(2n) .product-visual {
+    background-position: 82% 69% !important;
+}
+
+.product-card:nth-child(3n) .product-visual {
+    background-position: 61% 70% !important;
+}
+
+.product-card:nth-child(5n) .product-visual {
+    background-position: 90% 68% !important;
+}
+
+.product-visual::before {
+    display: none !important;
+}
+
+.product-visual span {
+    inset: auto 8px 8px auto !important;
+    background: rgba(255, 150, 95, 0.92) !important;
+    color: #fff !important;
+}
+
+.product-info {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    padding: 2px 0 2px 16px !important;
+    align-content: center !important;
+}
+
+.product-info h3 {
+    white-space: normal !important;
+    font-size: 1rem !important;
+}
+
+.add-btn {
+    width: 118px !important;
+    height: 40px !important;
+    border-radius: 999px !important;
+    font-size: 0 !important;
+}
+
+.add-btn::after {
+    content: "Add to Cart" !important;
+    font-size: 0.78rem !important;
+}
+
+.cart-head,
+.checkout-area {
+    border-color: var(--purr-line) !important;
+    background: transparent !important;
+}
+
+.cart-title {
+    align-items: center !important;
+}
+
+.badge {
+    color: #fff !important;
+    background: var(--purr-accent) !important;
+}
+
+.cart-header-row {
+    display: none !important;
+}
+
+.cart-row {
+    grid-template-columns: minmax(0, 1fr) 82px 88px 96px 28px !important;
+    min-height: 84px !important;
+    border: 0 !important;
+    padding: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+.cart-product {
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+}
+
+.cart-thumb {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 18px !important;
+    background:
+        url("/images/purr-coffee-ui.png") 72% 68% / 560% auto no-repeat,
+        #fff1e8 !important;
+    color: transparent !important;
+}
+
+.qty-control {
+    border-radius: 999px !important;
+    border-color: var(--purr-line) !important;
+}
+
+.payment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.pay-btn {
+    min-height: 44px !important;
+    gap: 2px !important;
+}
+
+.action-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.checkout-btn {
+    min-height: 54px !important;
+}
+
+.bottom-bar {
+    display: none !important;
+}
+
+.toast {
+    border-radius: 999px !important;
+    background: #2d211d !important;
+}
+
+.receipt {
+    border-radius: 28px !important;
+}
+
+/* Customer menu gets the same card/product language. */
+.customer .item,
+.catalog .item,
+.item {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.catalog .item::after,
+.customer .item::after {
+    content: "" !important;
+    position: absolute !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    width: 74px !important;
+    height: 74px !important;
+    border-radius: 22px !important;
+    background:
+        url("/images/purr-coffee-ui.png") 75% 68% / 620% auto no-repeat,
+        #fff3ec !important;
+    opacity: 0.9 !important;
+    pointer-events: none !important;
+}
+
+.catalog .item > *,
+.customer .item > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.catalog .item .item-top,
+.customer .item .item-top {
+    padding-right: 82px !important;
+}
+
+/* Operational, product, report, access and settings pages. */
+.split,
+.grid,
+.content {
+    gap: 18px !important;
+}
+
+.form-grid {
+    gap: 12px !important;
+}
+
+.swatch,
+.icon-cell,
+.logo-preview {
+    border-radius: 18px !important;
+}
+
+.logo-preview,
+.brand-mark,
+.auth-card::before {
+    background:
+        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        #ffb184 !important;
+}
+
+.access-card,
+.cards .card:nth-child(n),
+.grid > .card:nth-child(n),
+.product-card:nth-child(n),
+.item:nth-child(n) {
+    border-top: 1px solid var(--purr-line) !important;
+}
+
+@media (max-width: 1180px) {
+    .app-shell {
+        width: min(100% - 24px, 960px) !important;
+        grid-template-columns: 1fr !important;
+    }
+
+    .sidebar {
+        display: none !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: 1fr !important;
+    }
+
+    .cart-panel {
+        border-left: 0 !important;
+        border-top: 1px solid var(--purr-line) !important;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .shell,
+    .page,
+    .app-shell {
+        width: calc(100% - 18px) !important;
+        margin: 9px auto 18px !important;
+        border-radius: 22px !important;
+    }
+
+    .shell > .topbar,
+    .app-shell .topbar,
+    .panel-head,
+    .customer-row,
+    .discount-row,
+    .pay-row,
+    .action-row,
+    .payment-grid,
+    .cards,
+    .grid,
+    .split,
+    .form-grid,
+    .category-form {
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .topbar {
+        min-height: auto !important;
+        padding: 16px !important;
+    }
+
+    .products-panel,
+    .cart-panel {
+        padding: 16px !important;
+    }
+
+    .product-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .product-card {
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+        min-height: 158px !important;
+    }
+
+    .product-visual {
+        min-height: 124px !important;
+    }
+
+    .add-btn {
+        width: 100% !important;
+    }
+
+    .cart-row {
+        grid-template-columns: 1fr !important;
+        align-items: start !important;
+    }
+
+    .catalog .item .item-top,
+    .customer .item .item-top {
+        padding-right: 0 !important;
+    }
+
+    .catalog .item::after,
+    .customer .item::after {
+        opacity: 0.22 !important;
+    }
+}
+
+@media print {
+    body,
+    html {
+        background: #fff !important;
+    }
+
+    body::before,
+    body::after {
+        display: none !important;
+    }
+}
+
+/* Final stability pass: keep the reference style without breaking the POS layout. */
+.app-shell {
+    height: min(860px, calc(100vh - 48px)) !important;
+    min-height: 700px !important;
+    margin: 24px auto !important;
+}
+
+.app-shell .content {
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 390px) !important;
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+.app-shell .workspace,
+.app-shell .products-panel,
+.app-shell .cart-panel,
+.app-shell .product-grid,
+.app-shell .cart-table {
+    min-height: 0 !important;
+}
+
+.app-shell .products-panel,
+.app-shell .cart-panel {
+    overflow: hidden !important;
+}
+
+.app-shell .topbar {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 14px !important;
+}
+
+.app-shell .top-nav {
+    display: none !important;
+}
+
+.app-shell .top-title {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.app-shell .top-actions {
+    justify-content: flex-end !important;
+}
+
+.app-shell .top-nav,
+.app-shell .chips {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.app-shell .top-nav::-webkit-scrollbar,
+.app-shell .chips::-webkit-scrollbar {
+    display: none !important;
+}
+
+.app-shell .top-nav a,
+.app-shell .top-nav button {
+    flex: 0 0 auto !important;
+}
+
+.app-shell .product-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr)) !important;
+    gap: 18px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.app-shell .product-card {
+    min-width: 0 !important;
+    min-height: 172px !important;
+    display: grid !important;
+    grid-template-columns: 124px minmax(0, 1fr) !important;
+    gap: 16px !important;
+    padding: 16px !important;
+}
+
+.app-shell .product-visual {
+    width: 124px !important;
+    min-height: 140px !important;
+}
+
+.app-shell .product-info {
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    gap: 10px !important;
+    padding: 2px 0 !important;
+    align-content: stretch !important;
+}
+
+.app-shell .product-info h3 {
+    max-width: 100% !important;
+    margin-bottom: 6px !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    line-height: 1.22 !important;
+    font-size: 1rem !important;
+}
+
+.app-shell .product-info .price {
+    display: block !important;
+    margin: 4px 0 !important;
+    line-height: 1.25 !important;
+}
+
+.app-shell .product-info .small {
+    margin-top: 2px !important;
+    line-height: 1.25 !important;
+}
+
+.app-shell .add-btn {
+    width: min(134px, 100%) !important;
+    justify-self: end !important;
+    align-self: end !important;
+}
+
+.app-shell .cart-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+}
+
+.app-shell .cart-row > * {
+    min-width: 0 !important;
+}
+
+.app-shell .cart-product {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+}
+
+.app-shell .cart-table {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.app-shell .payment-grid,
+.app-shell .action-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.app-shell .checkout-btn {
+    grid-column: 1 / -1 !important;
+}
+
+.app-shell .saved-orders {
+    max-height: 112px !important;
+}
+
+.app-shell .payment-status,
+.app-shell .pay-row {
+    grid-template-columns: 1fr !important;
+}
+
+.shell > .topbar,
+.shell > .panel,
+.page {
+    overflow: hidden !important;
+}
+
+.shell:not(.dashboard-shell) .content,
+.page .content {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1280px) {
+    .app-shell {
+        width: calc(100% - 24px) !important;
+        grid-template-columns: 180px minmax(0, 1fr) !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: minmax(0, 1fr) 340px !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 980px) {
+    .app-shell {
+        height: auto !important;
+        min-height: 0 !important;
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .sidebar {
+        display: none !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .product-grid {
+        overflow: visible !important;
+    }
+
+    .app-shell .cart-panel {
+        border-left: 0 !important;
+        border-top: 1px solid var(--purr-line) !important;
+    }
+
+    .shell:not(.dashboard-shell) .content,
+    .page .content {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Calm reference pass: remove the noisy multicolor admin styling everywhere. */
+.shell > .topbar {
+    display: grid !important;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr) !important;
+    gap: 18px !important;
+    align-items: start !important;
+    min-height: 118px !important;
+    padding: 26px 28px !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 249, 245, 0.92)) !important;
+}
+
+.shell > .topbar h1 {
+    margin-top: 8px !important;
+    color: #4e2715 !important;
+    line-height: 1.05 !important;
+}
+
+.shell > .topbar .muted {
+    color: #a58f84 !important;
+}
+
+.shell .actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    align-content: start !important;
+    gap: 8px !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+.shell .actions > a:nth-child(n),
+.shell .actions > form:nth-child(n) .btn,
+.shell .actions > form:nth-child(n) button,
+.page .actions > a:nth-child(n),
+.page .actions > form:nth-child(n) .btn,
+.page .actions > form:nth-child(n) button {
+    min-height: 38px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 999px !important;
+    padding: 9px 15px !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: #5e4339 !important;
+    box-shadow: none !important;
+    font-size: 0.9rem !important;
+    font-weight: 760 !important;
+    line-height: 1 !important;
+}
+
+.shell .actions > a:nth-child(n):hover,
+.shell .actions > form:nth-child(n) button:hover,
+.page .actions > a:nth-child(n):hover,
+.page .actions > form:nth-child(n) button:hover {
+    border-color: #ffac80 !important;
+    background: #fff0e8 !important;
+    color: #d86635 !important;
+}
+
+.shell .actions > a[href="/"],
+.shell .actions > a[href$="/"],
+.shell .actions > a[href*="products"],
+.shell .actions > a[href*="reports"],
+.shell .actions > a[href*="sales"],
+.shell .actions > a[href*="settings"],
+.shell .actions > a[href*="access-control"],
+.shell .logout-form .btn {
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: #5e4339 !important;
+}
+
+.shell .actions > a.btn.primary,
+.shell .actions > a[href="/"]:hover,
+.shell .actions > a[href$="/"]:hover {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, #ff9b65, #ff7f45) !important;
+    color: #fff !important;
+}
+
+.cards .card:nth-child(n),
+.grid > .card:nth-child(n),
+.access-card:nth-child(n),
+.product-card:nth-child(n),
+.item:nth-child(n),
+.catalog .panel:nth-child(n) .item {
+    border-top: 1px solid #f1d8ca !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+}
+
+.shell > .panel,
+.panel,
+.page,
+.table-wrap {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.table-wrap {
+    border-radius: 22px !important;
+}
+
+.table-wrap table {
+    min-width: 820px !important;
+}
+
+th {
+    padding: 15px 12px !important;
+    background: #fff3ec !important;
+    color: #a48e83 !important;
+    font-size: 0.76rem !important;
+    font-weight: 820 !important;
+}
+
+td {
+    padding: 15px 12px !important;
+    color: #372a25 !important;
+}
+
+td .muted,
+td span.muted {
+    color: #9b8b84 !important;
+}
+
+tbody tr:nth-child(odd) {
+    background: rgba(255, 249, 245, 0.56) !important;
+}
+
+tbody tr:hover {
+    background: #fff0e8 !important;
+}
+
+.btn,
+.actions .btn,
+.actions button {
+    text-shadow: none !important;
+}
+
+.app-shell .top-nav a:nth-child(n),
+.app-shell .top-nav button:nth-child(n),
+.app-shell .chips .chip:nth-child(n),
+.app-shell .payment-grid .pay-btn:nth-child(n) {
+    border-color: #f1d8ca !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: #5e4339 !important;
+}
+
+.app-shell .top-nav a.active,
+.app-shell .top-nav a:hover,
+.app-shell .top-nav button:hover,
+.app-shell .chips .chip.active,
+.app-shell .chips .chip:hover,
+.app-shell .payment-grid .pay-btn.active {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, #ff9b65, #ff7f45) !important;
+    color: #fff !important;
+}
+
+.app-shell .nav a:nth-child(n) {
+    border-left: 0 !important;
+}
+
+.app-shell .nav a.active {
+    border-left: 4px solid #ff965f !important;
+}
+
+@media (max-width: 900px) {
+    .shell > .topbar {
+        grid-template-columns: 1fr !important;
+        min-height: 0 !important;
+    }
+
+    .shell .actions {
+        justify-content: flex-start !important;
+    }
+}
+
+/* Staff pages use the same clear app shell as the POS screen. */
+.shell:has(> .topbar .actions) {
+    width: min(1380px, calc(100% - 48px)) !important;
+    min-height: calc(100vh - 48px) !important;
+    margin: 24px auto !important;
+    display: grid !important;
+    grid-template-columns: 210px minmax(0, 1fr) !important;
+    grid-auto-rows: min-content !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255, 255, 255, 0.86) !important;
+    border-radius: 28px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: var(--purr-shadow) !important;
+    backdrop-filter: blur(18px) !important;
+}
+
+.shell:has(> .topbar .actions) > .topbar {
+    grid-column: 1 !important;
+    grid-row: 1 / span 50 !important;
+    align-self: stretch !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    align-content: start !important;
+    gap: 22px !important;
+    min-height: calc(100vh - 48px) !important;
+    padding: 28px 18px !important;
+    border: 0 !important;
+    border-right: 1px solid var(--purr-line) !important;
+    border-radius: 0 !important;
+    background: rgba(255, 255, 255, 0.62) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.shell:has(> .topbar .actions) > *:not(.topbar) {
+    grid-column: 2 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
+}
+
+.shell:has(> .topbar .actions) > .panel,
+.shell:has(> .topbar .actions) > .cards,
+.shell:has(> .topbar .actions) > .grid,
+.shell:has(> .topbar .actions) > .split,
+.shell:has(> .topbar .actions) > .content {
+    padding: 24px !important;
+    background: rgba(255, 252, 249, 0.74) !important;
+}
+
+.shell:has(> .topbar .actions) > .page-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 16px !important;
+    align-items: center !important;
+    padding: 26px 24px !important;
+    border-bottom: 1px solid var(--purr-line) !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.page-heading h1 {
+    margin: 4px 0 !important;
+    color: #4e2715 !important;
+    font-size: clamp(1.6rem, 2.2vw, 2.35rem) !important;
+    line-height: 1.05 !important;
+}
+
+.export-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+}
+
+.export-actions .btn {
+    min-height: 38px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 999px !important;
+    padding: 9px 15px !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    color: #5e4339 !important;
+    box-shadow: none !important;
+}
+
+.export-actions .btn:hover {
+    border-color: #ffac80 !important;
+    background: #fff0e8 !important;
+    color: #d86635 !important;
+}
+
+.shell:has(> .topbar .actions) > .topbar > div:first-child {
+    display: grid !important;
+    gap: 5px !important;
+    padding: 0 0 12px !important;
+}
+
+.shell:has(> .topbar .actions) > .topbar > div:first-child::before {
+    content: "" !important;
+    width: 58px !important;
+    height: 58px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 20px !important;
+    background:
+        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        #ffb184 !important;
+    box-shadow: 0 16px 30px rgba(255, 150, 95, 0.18) !important;
+}
+
+.shell:has(> .topbar .actions) .staff-brand-wrap::before {
+    display: none !important;
+}
+
+.staff-brand {
+    display: grid !important;
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    color: var(--purr-ink) !important;
+    text-decoration: none !important;
+}
+
+.staff-brand-mark {
+    width: 58px !important;
+    height: 58px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 20px !important;
+    background:
+        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        #ffb184 !important;
+    color: #fff !important;
+    font-weight: 900 !important;
+    box-shadow: 0 16px 30px rgba(255, 150, 95, 0.18) !important;
+}
+
+.staff-brand-mark img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+.staff-brand strong {
+    display: block !important;
+    overflow-wrap: anywhere !important;
+    color: var(--purr-ink) !important;
+    font-size: 1.08rem !important;
+    line-height: 1.08 !important;
+    font-weight: 900 !important;
+}
+
+.staff-brand small {
+    display: block !important;
+    margin-top: 4px !important;
+    color: #9b8b84 !important;
+    font-size: 0.82rem !important;
+}
+
+.staff-page-title {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+}
+
+.shell:has(> .topbar .actions) > .topbar h1 {
+    margin: 4px 0 0 !important;
+    color: var(--purr-ink) !important;
+    font-size: 1.12rem !important;
+    line-height: 1.12 !important;
+}
+
+.shell:has(> .topbar .actions) > .topbar .muted {
+    font-size: 0.84rem !important;
+}
+
+.shell:has(> .topbar .actions) .actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-content: start !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
+    overflow: visible !important;
+}
+
+.shell:has(> .topbar .actions) .actions > a:nth-child(n),
+.shell:has(> .topbar .actions) .actions > form:nth-child(n) .btn,
+.shell:has(> .topbar .actions) .actions > form:nth-child(n) button {
+    width: 100% !important;
+    min-height: 46px !important;
+    justify-content: flex-start !important;
+    border: 0 !important;
+    border-left: 4px solid transparent !important;
+    border-radius: 16px !important;
+    padding: 0 14px !important;
+    background: transparent !important;
+    color: #675750 !important;
+    font-size: 0.95rem !important;
+    font-weight: 820 !important;
+}
+
+.shell:has(> .topbar .actions) .actions > a:nth-child(n):hover,
+.shell:has(> .topbar .actions) .actions > form:nth-child(n) button:hover {
+    border-left-color: var(--purr-accent) !important;
+    background: #fff0e7 !important;
+    color: var(--purr-accent-2) !important;
+}
+
+.shell:has(> .topbar .actions) .actions > a.btn.primary,
+.shell:has(> .topbar .actions) .actions > a[aria-current="page"],
+.shell:has(> .topbar .actions) .actions > a.active {
+    border-left-color: var(--purr-accent) !important;
+    background: #fff0e7 !important;
+    color: var(--purr-accent-2) !important;
+}
+
+.legacy-actions {
+    display: none !important;
+}
+
+.shell:has(> .topbar .actions) .logout-form {
+    margin-top: 18px !important;
+}
+
+.shell:has(> .topbar .actions) .table-wrap {
+    background: rgba(255, 255, 255, 0.86) !important;
+}
+
+.shell:has(> .topbar .actions) .content .table-wrap table {
+    min-width: 100% !important;
+}
+
+.shell:has(> .topbar .actions) .cards {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+}
+
+.shell:has(> .topbar .actions).dashboard-shell .cards {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1100px) {
+    .shell:has(> .topbar .actions) {
+        width: calc(100% - 20px) !important;
+        min-height: 0 !important;
+        grid-template-columns: 1fr !important;
+        overflow: visible !important;
+    }
+
+    .shell:has(> .topbar .actions) > .topbar {
+        grid-column: 1 !important;
+        grid-row: auto !important;
+        min-height: 0 !important;
+        border-right: 0 !important;
+        border-bottom: 1px solid var(--purr-line) !important;
+        border-radius: 28px 28px 0 0 !important;
+    }
+
+    .shell:has(> .topbar .actions) > *:not(.topbar) {
+        grid-column: 1 !important;
+    }
+
+    .shell:has(> .topbar .actions) .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .shell:has(> .topbar .actions) .cards,
+    .shell:has(> .topbar .actions).dashboard-shell .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 620px) {
+    .shell:has(> .topbar .actions) {
+        width: calc(100% - 12px) !important;
+        margin: 6px auto !important;
+    }
+
+    .shell:has(> .topbar .actions) .actions,
+    .shell:has(> .topbar .actions) .cards,
+    .shell:has(> .topbar .actions).dashboard-shell .cards {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Product image management. */
+.app-shell .product-visual {
+    position: relative !important;
+}
+
+.app-shell .product-visual img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+.app-shell .product-visual:has(img) {
+    background: #fff4ee !important;
+}
+
+.app-shell .product-visual:has(img) span {
+    z-index: 1 !important;
+}
+
+.product-image-preview {
+    width: 96px !important;
+    height: 78px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #fff3ec !important;
+}
+
+.product-image-preview img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+.product-image-preview span {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    background:
+        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        var(--color, #ffb184) !important;
+    color: #fff !important;
+    font-weight: 900 !important;
+}
+
+.menu-product-image {
+    width: 92px !important;
+    height: 92px !important;
+    border-radius: 20px !important;
+    object-fit: cover !important;
+    border: 1px solid #f1d8ca !important;
+    background: #fff3ec !important;
+}
+
+.item:has(.menu-product-image)::after {
+    display: none !important;
+}
+
+.row-actions {
+    min-width: 220px !important;
 }

@@ -48,12 +48,11 @@
 <body>
     <main class="shell">
         <section class="topbar">
-            <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Settings Website</h1>
-                <p class="muted">Identitas perusahaan, logo, alamat, manager, dan kontak.</p>
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
             </div>
-            <div class="actions">
+            @include('partials.staff-nav')
+            <div class="actions legacy-actions" hidden>
                 @if (auth()->user()->hasPermission('page.dashboard'))
                     <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
                 @endif

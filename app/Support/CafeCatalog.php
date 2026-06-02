@@ -15,17 +15,7 @@ class CafeCatalog
      */
     public static function defaultStore(): array
     {
-        $names = [
-            'Kopi Senja Loka',
-            'Ruang Seduh Tiga',
-            'Akarasa Coffee',
-            'Kedai Bara Pagi',
-            'Nala Brew House',
-            'Teras Rasa Cafe',
-        ];
-
-        $seed = config('app.key') ?: base_path();
-        $name = config('store.name') ?: $names[abs(crc32($seed)) % count($names)];
+        $name = config('store.name') ?: "Purr' Coffee";
 
         return [
             'name' => $name,
