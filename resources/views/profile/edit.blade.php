@@ -19,14 +19,17 @@
         h1, h2, p { margin: 0; }
         .muted { color: var(--muted); }
         .panel { padding: 18px; display: grid; gap: 14px; }
-        .profile-form { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; align-items: start; }
-        .avatar-editor { display: grid; gap: 10px; }
-        .avatar-canvas { width: 190px; height: 190px; border: 1px solid var(--line); border-radius: 28px; background: #fffaf3; object-fit: cover; }
-        .avatar-editor input[type="range"] { width: 190px; }
+        .profile-form { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 26px; align-items: start; }
+        .avatar-editor { display: grid; gap: 12px; align-content: start; width: 100%; max-width: 260px; }
+        .avatar-canvas { width: 220px; height: 220px; max-width: 100%; border: 1px solid var(--line); border-radius: 28px; background: #fffaf3; object-fit: cover; }
+        .avatar-editor input[type="file"] { width: 100%; max-width: 220px; min-height: 42px; padding: 8px; overflow: hidden; text-overflow: ellipsis; }
+        .avatar-editor input[type="range"] { width: 220px; max-width: 100%; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .profile-fields { display: grid; gap: 16px; min-width: 0; }
         .field { display: grid; gap: 6px; }
         label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
         input { min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
+        .profile-actions { display: flex; justify-content: flex-start; padding-top: 2px; }
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
         .errors { background: #fee2e2; color: #991b1b; }
@@ -75,32 +78,34 @@
                     @endif
                 </div>
 
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Nama tampilan</label>
-                        <input name="name" value="{{ old('name', $user->name) }}" required>
+                <div class="profile-fields">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Nama tampilan</label>
+                            <input name="name" value="{{ old('name', $user->name) }}" required>
+                        </div>
+                        <div class="field">
+                            <label>Username</label>
+                            <input value="{{ $user->username }}" disabled>
+                        </div>
+                        <div class="field">
+                            <label>Email</label>
+                            <input value="{{ $user->email }}" disabled>
+                        </div>
+                        <div class="field">
+                            <label>Password sekarang</label>
+                            <input name="current_password" type="password" autocomplete="current-password" placeholder="Wajib jika ganti password">
+                        </div>
+                        <div class="field">
+                            <label>Password baru</label>
+                            <input name="password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak diganti">
+                        </div>
+                        <div class="field">
+                            <label>Konfirmasi password baru</label>
+                            <input name="password_confirmation" type="password" autocomplete="new-password">
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Username</label>
-                        <input value="{{ $user->username }}" disabled>
-                    </div>
-                    <div class="field">
-                        <label>Email</label>
-                        <input value="{{ $user->email }}" disabled>
-                    </div>
-                    <div class="field">
-                        <label>Password sekarang</label>
-                        <input name="current_password" type="password" autocomplete="current-password" placeholder="Wajib jika ganti password">
-                    </div>
-                    <div class="field">
-                        <label>Password baru</label>
-                        <input name="password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak diganti">
-                    </div>
-                    <div class="field">
-                        <label>Konfirmasi password baru</label>
-                        <input name="password_confirmation" type="password" autocomplete="new-password">
-                    </div>
-                    <div style="display: flex; align-items: end;">
+                    <div class="profile-actions">
                         <button class="btn primary" type="submit">Simpan Profil Saya</button>
                     </div>
                 </div>
