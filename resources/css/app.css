@@ -2546,6 +2546,12 @@ tbody tr:hover {
     text-decoration: none !important;
 }
 
+.staff-brand-stack {
+    display: grid !important;
+    gap: 14px !important;
+    min-width: 0 !important;
+}
+
 .staff-brand-mark {
     width: 58px !important;
     height: 58px !important;
@@ -2583,6 +2589,54 @@ tbody tr:hover {
     margin-top: 4px !important;
     color: #9b8b84 !important;
     font-size: 0.82rem !important;
+}
+
+.staff-user-profile {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    gap: 11px !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 18px !important;
+    background: #fff3ec !important;
+    color: var(--purr-ink) !important;
+    text-decoration: none !important;
+}
+
+.staff-user-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+    background: #ff8b55 !important;
+    color: #fff !important;
+    font-weight: 900 !important;
+}
+
+.staff-user-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.staff-user-profile strong {
+    display: block !important;
+    overflow-wrap: anywhere !important;
+    font-size: 0.95rem !important;
+    line-height: 1.15 !important;
+    font-weight: 900 !important;
+}
+
+.staff-user-profile small {
+    display: block !important;
+    margin-top: 3px !important;
+    color: #9b8b84 !important;
+    font-size: 0.76rem !important;
+    line-height: 1.25 !important;
 }
 
 .staff-page-title {

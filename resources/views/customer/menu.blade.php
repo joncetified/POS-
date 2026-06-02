@@ -48,6 +48,9 @@
         .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(80px); opacity: 0; border-radius: 8px; background: var(--ink); color: #fff; padding: 12px 16px; transition: 180ms ease; z-index: 10; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .logout-form { margin: 0; }
+        .customer-account { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; border: 1px solid #ead9c6; border-radius: 8px; padding: 6px 10px; background: #fffaf2; color: var(--brown); text-decoration: none; font-weight: 850; }
+        .customer-account-avatar { width: 30px; height: 30px; display: grid; place-items: center; overflow: hidden; border-radius: 9px; background: var(--brown); color: #fff; font-size: .8rem; font-weight: 950; }
+        .customer-account-avatar img { width: 100%; height: 100%; object-fit: cover; }
         @media (max-width: 900px) {
             .shell { grid-template-columns: 1fr; }
             .cart { position: static; }
@@ -77,6 +80,16 @@
                     <span class="badge">Meja {{ $tableNumber }}</span>
                 @endif
                 @auth
+                    <a class="customer-account" href="{{ route('profile.edit') }}">
+                        <span class="customer-account-avatar">
+                            @if (auth()->user()->avatar_path)
+                                <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                            @else
+                                {{ collect(explode(' ', auth()->user()->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
+                            @endif
+                        </span>
+                        Profil Saya
+                    </a>
                     <form class="logout-form" method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="btn secondary" type="submit">Logout</button>

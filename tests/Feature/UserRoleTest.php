@@ -163,13 +163,16 @@ class UserRoleTest extends TestCase
         $this->assertTrue($target->hasPermission('unknown.future_permission'));
     }
 
-    public function test_super_admin_can_edit_user_profile_avatar_role_and_password(): void
+    public function test_access_control_does_not_edit_other_user_profile_photo_or_password(): void
     {
-        Storage::fake('public');
-
         $superAdmin = User::factory()->superAdmin()->create();
-        $cashier = User::factory()->cashier()->create();
-        $avatar = 'data:image/jpeg;base64,' . base64_encode('cropped-avatar');
+        $cashier = User::factory()->cashier()->create([
+            'name' => 'Kasir Lama',
+            'username' => 'kasir_lama',
+            'email' => 'kasir-lama@example.test',
+            'password' => Hash::make('old-password-123'),
+            'avatar_path' => 'avatars/existing.jpg',
+        ]);
 
         $this->actingAs($superAdmin)
             ->patch(route('access-control.update', $cashier), [
@@ -177,7 +180,7 @@ class UserRoleTest extends TestCase
                 'username' => 'kasir_baru',
                 'email' => 'kasir-baru@example.test',
                 'role' => UserRole::Manager->value,
-                'avatar_crop' => $avatar,
+                'avatar_crop' => 'data:image/jpeg;base64,' . base64_encode('cropped-avatar'),
                 'password' => 'new-password-123',
                 'password_confirmation' => 'new-password-123',
                 'permissions' => ['page.dashboard', 'page.reports'],
@@ -187,13 +190,12 @@ class UserRoleTest extends TestCase
 
         $cashier->refresh();
 
-        $this->assertSame('Kasir Baru', $cashier->name);
-        $this->assertSame('kasir_baru', $cashier->username);
-        $this->assertSame('kasir-baru@example.test', $cashier->email);
+        $this->assertSame('Kasir Lama', $cashier->name);
+        $this->assertSame('kasir_lama', $cashier->username);
+        $this->assertSame('kasir-lama@example.test', $cashier->email);
+        $this->assertSame('avatars/existing.jpg', $cashier->avatar_path);
+        $this->assertTrue(Hash::check('old-password-123', $cashier->password));
         $this->assertSame(UserRole::Manager, $cashier->role);
-        $this->assertTrue(Hash::check('new-password-123', $cashier->password));
-        $this->assertNotNull($cashier->avatar_path);
-        Storage::disk('public')->assertExists($cashier->avatar_path);
 
         $this->assertDatabaseHas('user_permissions', [
             'user_id' => $cashier->id,

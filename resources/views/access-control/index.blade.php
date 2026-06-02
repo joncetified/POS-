@@ -29,14 +29,14 @@
         .access-grid { display: grid; gap: 14px; }
         .access-card { padding: 16px; display: grid; gap: 14px; }
         .access-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+        .access-user-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; }
+        .access-avatar { width: 54px; height: 54px; display: grid; place-items: center; overflow: hidden; border-radius: 18px; background: #ff8b55; color: #fff; font-weight: 900; }
+        .access-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .role-badge, .lock-badge { display: inline-flex; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; font-size: .78rem; font-weight: 900; }
         .role-badge { background: #f8fafc; color: var(--ink); border: 1px solid var(--line); }
         .lock-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
         .permission-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-        .user-edit-grid { display: grid; grid-template-columns: 160px repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
-        .avatar-editor { display: grid; gap: 8px; }
-        .avatar-canvas { width: 132px; height: 132px; border: 1px solid var(--line); border-radius: 18px; background: #fffaf3; object-fit: cover; }
-        .avatar-editor input[type="range"] { width: 132px; }
+        .access-role-grid { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: 12px; align-items: end; }
         .field { display: grid; gap: 6px; }
         .field label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
         .field input, .field select { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface); color: var(--ink); }
@@ -48,7 +48,7 @@
         .card-actions { display: flex; justify-content: flex-end; }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
-        @media (max-width: 980px) { .user-edit-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 980px) { .access-role-grid { grid-template-columns: 1fr; } }
         @media (max-width: 860px) { .topbar, .permission-list { grid-template-columns: 1fr; } .actions, .card-actions { justify-content: flex-start; } .actions .btn, .actions button, .card-actions .btn { width: 100%; } }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -102,9 +102,18 @@
                     @php($locked = $account->role === \App\Enums\UserRole::SuperAdmin)
                     <article class="access-card">
                         <div class="access-head">
-                            <div>
-                                <h3>{{ $account->name }}</h3>
-                                <p class="muted">{{ $account->username }} · {{ $account->email }}</p>
+                            <div class="access-user-row">
+                                <span class="access-avatar">
+                                    @if ($account->avatar_path)
+                                        <img src="{{ asset('storage/' . $account->avatar_path) }}" alt="{{ $account->name }}">
+                                    @else
+                                        {{ collect(explode(' ', $account->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
+                                    @endif
+                                </span>
+                                <span>
+                                    <h3>{{ $account->name }}</h3>
+                                    <p class="muted">{{ $account->username }} &middot; {{ $account->email }}</p>
+                                </span>
                             </div>
                             <div>
                                 <span class="role-badge">{{ $account->roleLabel() }}</span>
@@ -117,30 +126,7 @@
                         <form method="POST" action="{{ route('access-control.update', $account) }}">
                             @csrf
                             @method('PATCH')
-                            <div class="user-edit-grid">
-                                <div class="avatar-editor" data-avatar-editor>
-                                    <canvas class="avatar-canvas" width="512" height="512" data-avatar-canvas></canvas>
-                                    <input type="file" accept="image/*" data-avatar-input aria-label="Foto user">
-                                    <input type="range" min="1" max="3" step="0.05" value="1" data-avatar-zoom aria-label="Zoom crop foto">
-                                    <input type="hidden" name="avatar_crop" data-avatar-crop>
-                                    <span class="muted">Pilih foto, lalu geser zoom untuk crop kotak.</span>
-                                    @if ($account->avatar_path)
-                                        <input type="hidden" data-avatar-current value="{{ asset('storage/' . $account->avatar_path) }}">
-                                    @endif
-                                </div>
-
-                                <div class="field">
-                                    <label>Nama</label>
-                                    <input name="name" value="{{ old('name', $account->name) }}" required>
-                                </div>
-                                <div class="field">
-                                    <label>Username</label>
-                                    <input name="username" value="{{ old('username', $account->username) }}" required>
-                                </div>
-                                <div class="field">
-                                    <label>Email</label>
-                                    <input name="email" type="email" value="{{ old('email', $account->email) }}" required>
-                                </div>
+                            <div class="access-role-grid">
                                 <div class="field">
                                     <label>Role</label>
                                     <select name="role" @disabled($locked)>
@@ -152,14 +138,7 @@
                                         <input type="hidden" name="role" value="{{ $account->role->value }}">
                                     @endif
                                 </div>
-                                <div class="field">
-                                    <label>Password baru</label>
-                                    <input name="password" type="password" autocomplete="new-password" placeholder="Kosongkan jika tidak diganti">
-                                </div>
-                                <div class="field">
-                                    <label>Konfirmasi password</label>
-                                    <input name="password_confirmation" type="password" autocomplete="new-password" placeholder="Ulangi password baru">
-                                </div>
+                                <p class="muted">Nama, foto, dan password diubah masing-masing user lewat Profil Saya.</p>
                             </div>
 
                             <div class="permission-list">
@@ -192,73 +171,5 @@
             </div>
         </section>
     </main>
-    <script>
-        document.querySelectorAll('[data-avatar-editor]').forEach((editor) => {
-            const input = editor.querySelector('[data-avatar-input]');
-            const zoom = editor.querySelector('[data-avatar-zoom]');
-            const canvas = editor.querySelector('[data-avatar-canvas]');
-            const output = editor.querySelector('[data-avatar-crop]');
-            const current = editor.querySelector('[data-avatar-current]')?.value;
-            const context = canvas.getContext('2d');
-            let image = new Image();
-            let loaded = false;
-
-            function draw() {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.fillStyle = '#fff3ec';
-                context.fillRect(0, 0, canvas.width, canvas.height);
-
-                if (!loaded) {
-                    context.fillStyle = '#ff965f';
-                    context.font = '700 44px sans-serif';
-                    context.textAlign = 'center';
-                    context.fillText('Foto', canvas.width / 2, canvas.height / 2 + 12);
-                    return;
-                }
-
-                const scale = Number(zoom.value || 1);
-                const cover = Math.max(canvas.width / image.width, canvas.height / image.height) * scale;
-                const width = image.width * cover;
-                const height = image.height * cover;
-                const x = (canvas.width - width) / 2;
-                const y = (canvas.height - height) / 2;
-
-                context.drawImage(image, x, y, width, height);
-                output.value = canvas.toDataURL('image/jpeg', 0.88);
-            }
-
-            function load(src, setCrop = false) {
-                image = new Image();
-                image.onload = () => {
-                    loaded = true;
-                    draw();
-                    if (!setCrop) output.value = '';
-                };
-                image.src = src;
-            }
-
-            input.addEventListener('change', () => {
-                const file = input.files?.[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = () => load(String(reader.result), true);
-                reader.readAsDataURL(file);
-            });
-
-            zoom.addEventListener('input', () => {
-                draw();
-                if (loaded && input.files?.length) {
-                    output.value = canvas.toDataURL('image/jpeg', 0.88);
-                }
-            });
-
-            if (current) {
-                load(current);
-            } else {
-                draw();
-            }
-        });
-    </script>
 </body>
 </html>
