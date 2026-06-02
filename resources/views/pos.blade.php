@@ -996,6 +996,11 @@
 <body>
     <div class="app-shell">
         <aside class="sidebar">
+            <div class="staff-brand-wrap">
+                @include('partials.staff-brand', ['store' => $store])
+            </div>
+            @include('partials.staff-nav')
+
             <a class="brand" href="{{ route('pos.index') }}">
                 <div class="brand-mark">
                     @if ($store['logo_url'])
@@ -1995,15 +2000,17 @@
         });
         byId('print-receipt').addEventListener('click', () => window.print());
 
-        window.setInterval(() => {
-            byId('clock').textContent = new Intl.DateTimeFormat('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'Asia/Jakarta',
-            }).format(new Date());
-        }, 1000);
+        if (byId('clock')) {
+            window.setInterval(() => {
+                byId('clock').textContent = new Intl.DateTimeFormat('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                    timeZone: 'Asia/Jakarta',
+                }).format(new Date());
+            }, 1000);
+        }
 
         loadSavedOrdersFromServer();
         renderProducts();
