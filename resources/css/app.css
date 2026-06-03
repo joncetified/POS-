@@ -3479,18 +3479,28 @@ tbody tr:hover {
     }
 
     .app-shell .saved-orders {
-        max-height: 92px !important;
+        max-height: 142px !important;
+        min-height: 72px !important;
         overflow: auto !important;
+        gap: 8px !important;
+        padding: 6px !important;
     }
 
     .app-shell .saved-order {
-        grid-template-columns: minmax(0, 1fr) 72px 72px !important;
-        gap: 6px !important;
-        min-height: 34px !important;
+        grid-template-columns: minmax(0, 1fr) 76px 76px !important;
+        gap: 8px !important;
+        min-height: 52px !important;
+        align-items: center !important;
+        padding: 6px 0 !important;
+    }
+
+    .app-shell .saved-order .small {
+        line-height: 1.25 !important;
+        margin-top: 3px !important;
     }
 
     .app-shell .saved-order button {
-        min-height: 32px !important;
+        min-height: 36px !important;
         padding: 0 8px !important;
     }
 
