@@ -3298,7 +3298,7 @@ tbody tr:hover {
     }
 }
 
-/* POS viewport fit: keep the cashier screen compact at 100% desktop zoom. */
+/* POS viewport fit: keep the cashier screen usable at 100% desktop zoom. */
 @media (min-width: 981px) {
     html:has(.app-shell),
     body:has(.app-shell) {
@@ -3307,12 +3307,12 @@ tbody tr:hover {
     }
 
     .app-shell {
-        width: min(1360px, calc(100vw - 52px)) !important;
-        height: calc(100vh - 24px) !important;
-        min-height: 660px !important;
-        max-height: 860px !important;
-        margin: 12px auto !important;
-        grid-template-columns: 210px minmax(0, 1fr) !important;
+        width: calc(100vw - 18px) !important;
+        height: calc(100dvh - 16px) !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 8px auto !important;
+        grid-template-columns: 190px minmax(0, 1fr) !important;
         overflow: hidden !important;
     }
 
@@ -3320,7 +3320,7 @@ tbody tr:hover {
         height: 100% !important;
         min-height: 0 !important;
         overflow-y: auto !important;
-        padding: 24px 20px !important;
+        padding: 22px 18px !important;
     }
 
     .app-shell .workspace,
@@ -3336,21 +3336,21 @@ tbody tr:hover {
     }
 
     .app-shell .content {
-        grid-template-columns: minmax(0, 1fr) minmax(340px, 360px) !important;
-        gap: 18px !important;
-        padding: 18px !important;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 390px) !important;
+        gap: 14px !important;
+        padding: 14px !important;
         overflow: hidden !important;
     }
 
     .app-shell .products-panel {
         grid-template-rows: auto auto minmax(0, 1fr) !important;
         gap: 12px !important;
-        padding: 16px !important;
+        padding: 14px !important;
         overflow: hidden !important;
     }
 
     .app-shell .panel-head {
-        grid-template-columns: minmax(180px, 1fr) minmax(210px, 31%) auto !important;
+        grid-template-columns: minmax(180px, 1fr) minmax(220px, 32%) auto !important;
         gap: 12px !important;
         align-items: end !important;
     }
@@ -3374,7 +3374,7 @@ tbody tr:hover {
     }
 
     .app-shell .product-grid {
-        grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(210px, 1fr)) !important;
         gap: 12px !important;
         padding: 0 4px 4px 0 !important;
         overflow-y: auto !important;
@@ -3424,9 +3424,9 @@ tbody tr:hover {
     }
 
     .app-shell .cart-panel {
-        grid-template-rows: auto minmax(112px, .72fr) minmax(272px, 1fr) !important;
+        grid-template-rows: auto minmax(84px, .34fr) minmax(0, 1.66fr) !important;
         gap: 12px !important;
-        padding: 16px 14px !important;
+        padding: 14px !important;
         overflow: hidden !important;
     }
 
@@ -3450,13 +3450,13 @@ tbody tr:hover {
     }
 
     .app-shell .cart-table .empty {
-        min-height: 112px !important;
-        padding: 18px !important;
+        min-height: 84px !important;
+        padding: 14px !important;
     }
 
     .app-shell .checkout-area {
         min-height: 0 !important;
-        gap: 10px !important;
+        gap: 8px !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         padding-right: 4px !important;
@@ -3470,16 +3470,16 @@ tbody tr:hover {
     .app-shell .customer-input,
     .app-shell .money-input,
     .app-shell .discount-row input {
-        min-height: 38px !important;
+        min-height: 36px !important;
     }
 
     .app-shell .customer-note {
-        min-height: 58px !important;
+        min-height: 50px !important;
         resize: vertical !important;
     }
 
     .app-shell .saved-orders {
-        max-height: 104px !important;
+        max-height: 92px !important;
         overflow: auto !important;
     }
 
@@ -3514,18 +3514,18 @@ tbody tr:hover {
 
 @media (min-width: 981px) and (max-width: 1180px) {
     .app-shell {
-        width: min(1128px, calc(100vw - 24px)) !important;
-        grid-template-columns: 188px minmax(0, 1fr) !important;
+        width: calc(100vw - 14px) !important;
+        grid-template-columns: 174px minmax(0, 1fr) !important;
     }
 
     .app-shell .content {
-        grid-template-columns: minmax(0, 1fr) 330px !important;
-        gap: 14px !important;
-        padding: 14px !important;
+        grid-template-columns: minmax(0, 1fr) 340px !important;
+        gap: 12px !important;
+        padding: 12px !important;
     }
 
     .app-shell .product-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, minmax(190px, 1fr)) !important;
     }
 
     .app-shell .cart-panel {
