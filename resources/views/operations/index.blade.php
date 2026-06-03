@@ -28,7 +28,9 @@
         .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; }
         .field { display: grid; gap: 6px; }
         label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
-        input, select, textarea { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
+        input, select, textarea { width: 100%; min-width: 0; max-width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
+        select { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .salary-form { grid-template-columns: minmax(240px, 1.2fr) minmax(130px, .7fr) minmax(130px, .7fr); }
         textarea { min-height: 42px; resize: vertical; }
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
@@ -39,7 +41,7 @@
         .table-wrap { overflow-x: auto; }
         .table-wrap table { min-width: 720px; }
         .logout-form { margin: 0; }
-        @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .topbar, .grid, .form-grid { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } }
+        @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .topbar, .grid, .form-grid, .salary-form { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } }
         @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -107,7 +109,7 @@
                     <input type="hidden" name="is_active" value="1">
                     <button class="btn primary" type="submit">Tambah Karyawan</button>
                 </form>
-                <form class="form-grid" method="POST" action="{{ route('operations.salaries.store') }}">
+                <form class="form-grid salary-form" method="POST" action="{{ route('operations.salaries.store') }}">
                     @csrf
                     <div class="field"><label>Karyawan</label><select name="employee_id" required>@foreach ($employees as $employee)<option value="{{ $employee->id }}">{{ $employee->name }} - {{ $employee->position }}</option>@endforeach</select></div>
                     <div class="field"><label>Periode</label><input name="period" type="month" value="{{ now()->format('Y-m') }}" required></div>

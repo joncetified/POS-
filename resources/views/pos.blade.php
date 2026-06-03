@@ -87,8 +87,8 @@
 
         .panel-head {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(300px, 44%) auto;
-            gap: 14px;
+            grid-template-columns: minmax(190px, 1fr) minmax(260px, 34%) auto;
+            gap: 16px;
             align-items: center;
         }
 
@@ -101,13 +101,17 @@
         .searchbox {
             min-height: 48px;
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            gap: 10px;
+            grid-template-columns: 22px minmax(0, 1fr);
+            gap: 8px;
             align-items: center;
             border: 1px solid var(--line);
             border-radius: 8px;
-            padding: 0 12px;
+            padding: 0 14px;
             background: #fff;
+        }
+
+        .searchbox span:last-child {
+            display: none;
         }
 
         .searchbox input {
@@ -143,15 +147,19 @@
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            padding-bottom: 2px;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
         }
 
         .chip {
-            min-width: max-content;
-            padding: 0 20px;
+            flex: 0 0 auto;
+            min-width: 96px;
+            max-width: 148px;
+            padding: 0 16px;
             border: 1px solid var(--line);
             color: #4b3524;
             background: #fff;
+            line-height: 1.15;
         }
 
         .chip.active,
@@ -264,13 +272,14 @@
         .cart-panel {
             min-height: 0;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto;
+            grid-template-rows: auto minmax(120px, 0.8fr) minmax(0, 1.2fr);
             padding: 16px;
+            overflow: hidden;
         }
 
         .cart-head {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
             gap: 12px;
             align-items: center;
             padding-bottom: 14px;
@@ -281,6 +290,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            min-width: 0;
         }
 
         .badge {
@@ -301,6 +311,7 @@
             border: 1px solid var(--line);
             color: var(--ink);
             background: #fff;
+            white-space: nowrap;
         }
 
         .cart-table {
@@ -379,16 +390,20 @@
         }
 
         .checkout-area {
+            min-height: 0;
             display: grid;
             gap: 12px;
             padding-top: 12px;
             border-top: 1px solid var(--line);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
         }
 
         .saved-orders {
             display: grid;
             gap: 8px;
-            max-height: 128px;
+            max-height: 146px;
             overflow: auto;
             padding: 10px;
             border: 1px solid var(--line);
@@ -398,16 +413,15 @@
 
         .saved-order {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto auto;
+            grid-template-columns: minmax(0, 1fr) minmax(82px, auto) minmax(82px, auto);
             gap: 8px;
             align-items: center;
             min-height: 38px;
         }
 
         .saved-order strong {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            overflow-wrap: anywhere;
+            line-height: 1.25;
         }
 
         .saved-order button {
@@ -757,7 +771,7 @@
 
         @media (max-width: 1320px) {
             .content { grid-template-columns: minmax(0, 1fr); }
-            .cart-panel { min-height: 720px; }
+            .cart-panel { min-height: 760px; }
         }
 
         @media (max-width: 940px) {
@@ -830,7 +844,7 @@
                             <h2>Semua Produk</h2>
                         </div>
                         <label class="searchbox" for="search">
-                            <span>Search</span>
+                            <span aria-hidden="true">#</span>
                             <input id="search" type="search" placeholder="Cari produk...">
                             <span>#</span>
                         </label>

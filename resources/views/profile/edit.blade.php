@@ -21,7 +21,8 @@
         .panel { padding: 18px; display: grid; gap: 14px; }
         .profile-form { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 26px; align-items: start; }
         .avatar-editor { display: grid; gap: 12px; align-content: start; width: 100%; max-width: 260px; }
-        .avatar-canvas { width: 220px; height: 220px; max-width: 100%; border: 1px solid var(--line); border-radius: 28px; background: #fffaf3; object-fit: cover; }
+        .avatar-canvas { width: 220px; height: 220px; max-width: 100%; border: 1px solid var(--line); border-radius: 28px; background: #fffaf3; object-fit: cover; cursor: grab; touch-action: none; }
+        .avatar-canvas.is-dragging { cursor: grabbing; }
         .avatar-editor input[type="file"] { width: 100%; max-width: 220px; min-height: 42px; padding: 8px; overflow: hidden; text-overflow: ellipsis; }
         .avatar-editor input[type="range"] { width: 220px; max-width: 100%; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -122,6 +123,30 @@
             const context = canvas.getContext('2d');
             let image = new Image();
             let loaded = false;
+            let panX = 0;
+            let panY = 0;
+            let dragStart = null;
+
+            function coverSize() {
+                const scale = Number(zoom.value || 1);
+                const cover = Math.max(canvas.width / image.width, canvas.height / image.height) * scale;
+
+                return {
+                    width: image.width * cover,
+                    height: image.height * cover,
+                };
+            }
+
+            function clampPan() {
+                if (!loaded) return;
+
+                const size = coverSize();
+                const maxX = Math.max(0, (size.width - canvas.width) / 2);
+                const maxY = Math.max(0, (size.height - canvas.height) / 2);
+
+                panX = Math.min(maxX, Math.max(-maxX, panX));
+                panY = Math.min(maxY, Math.max(-maxY, panY));
+            }
 
             function draw() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -136,12 +161,10 @@
                     return;
                 }
 
-                const scale = Number(zoom.value || 1);
-                const cover = Math.max(canvas.width / image.width, canvas.height / image.height) * scale;
-                const width = image.width * cover;
-                const height = image.height * cover;
-                const x = (canvas.width - width) / 2;
-                const y = (canvas.height - height) / 2;
+                clampPan();
+                const { width, height } = coverSize();
+                const x = (canvas.width - width) / 2 + panX;
+                const y = (canvas.height - height) / 2 + panY;
 
                 context.drawImage(image, x, y, width, height);
                 if (input.files?.length) {
@@ -153,6 +176,8 @@
                 image = new Image();
                 image.onload = () => {
                     loaded = true;
+                    panX = 0;
+                    panY = 0;
                     draw();
                 };
                 image.src = src;
@@ -168,6 +193,39 @@
             });
 
             zoom.addEventListener('input', draw);
+
+            canvas.addEventListener('pointerdown', (event) => {
+                if (!loaded) return;
+
+                dragStart = {
+                    pointerId: event.pointerId,
+                    x: event.clientX,
+                    y: event.clientY,
+                    panX,
+                    panY,
+                };
+                canvas.classList.add('is-dragging');
+                canvas.setPointerCapture(event.pointerId);
+            });
+
+            canvas.addEventListener('pointermove', (event) => {
+                if (!dragStart || dragStart.pointerId !== event.pointerId) return;
+
+                const displayScale = canvas.width / canvas.getBoundingClientRect().width;
+                panX = dragStart.panX + ((event.clientX - dragStart.x) * displayScale);
+                panY = dragStart.panY + ((event.clientY - dragStart.y) * displayScale);
+                draw();
+            });
+
+            function endDrag(event) {
+                if (!dragStart || dragStart.pointerId !== event.pointerId) return;
+
+                canvas.classList.remove('is-dragging');
+                dragStart = null;
+            }
+
+            canvas.addEventListener('pointerup', endDrag);
+            canvas.addEventListener('pointercancel', endDrag);
 
             if (current) {
                 load(current);

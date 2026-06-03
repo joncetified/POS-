@@ -33,15 +33,17 @@
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
         .errors { background: #fee2e2; color: #991b1b; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { padding: 12px 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
         th { color: var(--muted); font-size: .76rem; text-transform: uppercase; }
         tbody tr:hover { background: var(--soft); }
-        .product-fields { display: grid; grid-template-columns: 110px minmax(170px, 1fr); gap: 8px; }
-        .meta-fields { display: grid; grid-template-columns: 80px 80px 98px; gap: 8px; }
+        .product-fields { display: grid; grid-template-columns: minmax(120px, .72fr) minmax(190px, 1fr); gap: 8px; }
+        .meta-fields { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(92px, .8fr) minmax(92px, .8fr); gap: 8px; }
         .swatch-row { display: grid; grid-template-columns: 26px minmax(90px, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
         .swatch { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: var(--color); }
-        .row-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 170px; }
+        .row-actions { display: grid; grid-template-columns: minmax(112px, 1fr) minmax(92px, .8fr); gap: 8px; min-width: 220px; }
+        .row-actions form { width: 100%; }
+        .row-actions .btn { width: 100%; min-width: 0; padding-inline: 10px; white-space: normal; }
         .active-label { display: inline-flex; gap: 8px; align-items: center; font-weight: 850; text-transform: none; color: var(--ink); }
         .bundle-toggle { display: inline-flex; gap: 8px; align-items: center; min-height: 42px; color: var(--ink); font-weight: 850; text-transform: none; }
         .bundle-editor { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 8px; background: #fffaf3; }
@@ -165,6 +167,14 @@
             </div>
             <div class="table-wrap">
                 <table>
+                    <colgroup>
+                        <col style="width: 104px;">
+                        <col style="width: 330px;">
+                        <col style="width: 170px;">
+                        <col style="width: 310px;">
+                        <col style="width: 92px;">
+                        <col style="width: 230px;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Gambar</th>
