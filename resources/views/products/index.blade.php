@@ -43,6 +43,11 @@
         .swatch { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: var(--color); }
         .row-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 170px; }
         .active-label { display: inline-flex; gap: 8px; align-items: center; font-weight: 850; text-transform: none; color: var(--ink); }
+        .bundle-toggle { display: inline-flex; gap: 8px; align-items: center; min-height: 42px; color: var(--ink); font-weight: 850; text-transform: none; }
+        .bundle-editor { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 8px; background: #fffaf3; }
+        .bundle-row { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; align-items: center; }
+        .bundle-list { margin-top: 8px; display: grid; gap: 4px; color: var(--muted); font-size: .84rem; }
+        .badge { display: inline-flex; width: max-content; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; background: #fff0e7; color: #d86635; font-weight: 900; font-size: .78rem; }
         .pagination { margin-top: 12px; }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
@@ -127,6 +132,25 @@
                             <label for="image">Gambar produk</label>
                             <input id="image" name="image" type="file" accept="image/*">
                         </div>
+                        <label class="bundle-toggle">
+                            <input name="is_bundle" type="checkbox" value="1">
+                            Produk paket / promo
+                        </label>
+                        <div class="bundle-editor">
+                            <strong>Isi paket</strong>
+                            @for ($i = 0; $i < 3; $i++)
+                                <div class="bundle-row">
+                                    <select name="bundle_items[{{ $i }}][product_id]" aria-label="Komponen paket {{ $i + 1 }}">
+                                        <option value="">Pilih produk komponen</option>
+                                        @foreach ($componentProducts as $component)
+                                            <option value="{{ $component->id }}">{{ $component->sku }} - {{ $component->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input name="bundle_items[{{ $i }}][quantity]" type="number" min="1" value="1" aria-label="Qty komponen {{ $i + 1 }}">
+                                </div>
+                            @endfor
+                            <p class="muted">Kosongkan jika produk biasa. Saat paket dibayar, stok komponen ikut berkurang.</p>
+                        </div>
                         <input type="hidden" name="is_active" value="1">
                         <button class="btn primary" type="submit">Simpan Produk</button>
                     </form>
@@ -177,8 +201,40 @@
                                         </div>
                                         <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
                                         <input name="image" type="file" accept="image/*" style="margin-top: 8px;" aria-label="Gambar produk">
+                                        <input type="hidden" name="is_bundle" value="0">
+                                        <label class="bundle-toggle" style="margin-top: 8px;">
+                                            <input name="is_bundle" type="checkbox" value="1" @checked($product->is_bundle)>
+                                            Produk paket / promo
+                                        </label>
+                                        <div class="bundle-editor">
+                                            @php($bundleRows = $product->bundleItems->values())
+                                            @for ($i = 0; $i < 3; $i++)
+                                                @php($bundleRow = $bundleRows->get($i))
+                                                <div class="bundle-row">
+                                                    <select name="bundle_items[{{ $i }}][product_id]" aria-label="Komponen paket {{ $i + 1 }}">
+                                                        <option value="">Pilih produk komponen</option>
+                                                        @foreach ($componentProducts as $component)
+                                                            <option value="{{ $component->id }}" @selected($bundleRow?->component_product_id === $component->id) @disabled($component->id === $product->id)>
+                                                                {{ $component->sku }} - {{ $component->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <input name="bundle_items[{{ $i }}][quantity]" type="number" min="1" value="{{ $bundleRow?->quantity ?? 1 }}" aria-label="Qty komponen {{ $i + 1 }}">
+                                                </div>
+                                            @endfor
+                                        </div>
                                         <input type="hidden" name="is_active" value="0">
                                     </form>
+                                    @if ($product->is_bundle)
+                                        <div class="bundle-list">
+                                            <span class="badge">Paket</span>
+                                            @forelse ($product->bundleItems as $item)
+                                                <span>{{ $item->component?->name ?: 'Produk terhapus' }} x {{ $item->quantity }}</span>
+                                            @empty
+                                                <span>Isi paket belum diatur.</span>
+                                            @endforelse
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <select form="update-{{ $product->id }}" name="category_id" required>

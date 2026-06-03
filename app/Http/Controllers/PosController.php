@@ -22,7 +22,7 @@ class PosController extends Controller
             ->get(['id', 'name', 'slug']);
 
         $products = Product::query()
-            ->with('category:id,name')
+            ->with(['category:id,name', 'bundleItems.component:id,name,stock'])
             ->where('is_active', true)
             ->orderBy('name')
             ->get()
@@ -33,10 +33,11 @@ class PosController extends Controller
                 'category' => $product->category?->name,
                 'category_id' => $product->category_id,
                 'price' => $product->price,
-                'stock' => $product->stock,
+                'stock' => $product->availableForSaleStock(),
                 'unit' => $product->unit,
                 'tag' => $product->tag,
                 'color' => $product->color,
+                'is_bundle' => $product->is_bundle,
                 'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,
             ])
             ->values();

@@ -33,10 +33,13 @@
         .status { display: inline-flex; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; background: #fff7ed; color: #9a3412; font-weight: 850; }
         .good { color: var(--primary); font-weight: 850; }
         .warn { color: var(--warn); font-weight: 850; }
+        .income-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        .income-box { border: 1px solid var(--line); border-radius: 8px; background: #fffaf3; padding: 14px; display: grid; gap: 6px; }
+        .income-box strong { font-size: 1.2rem; }
         .empty { min-height: 94px; display: grid; place-items: center; color: var(--muted); text-align: center; border: 1px dashed var(--line); border-radius: 8px; background: var(--soft); }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
-        @media (max-width: 960px) { .topbar, .grid, .cards { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } .table-wrap { overflow-x: auto; } }
+        @media (max-width: 960px) { .topbar, .grid, .cards, .income-grid { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } .table-wrap { overflow-x: auto; } }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -76,6 +79,37 @@
                 <span class="muted">Biaya Rp {{ number_format($todayOperationalCost + $todaySalaryCost + $todayInventoryCost, 0, ',', '.') }}</span>
             </article>
         </section>
+
+        @if ($canViewIncomeReport)
+            <section class="panel">
+                <div>
+                    <h2>Income Report</h2>
+                    <p class="muted">Daily / Today / Yesterday dan Monthly / This Month / Last Month.</p>
+                </div>
+                <div class="income-grid">
+                    <div class="income-box">
+                        <span class="muted">Today</span>
+                        <strong>Rp {{ number_format($incomeReport['today']['income'], 0, ',', '.') }}</strong>
+                        <span>{{ $incomeReport['today']['orders'] }} order paid</span>
+                    </div>
+                    <div class="income-box">
+                        <span class="muted">Yesterday</span>
+                        <strong>Rp {{ number_format($incomeReport['yesterday']['income'], 0, ',', '.') }}</strong>
+                        <span>{{ $incomeReport['yesterday']['orders'] }} order paid</span>
+                    </div>
+                    <div class="income-box">
+                        <span class="muted">This Month</span>
+                        <strong>Rp {{ number_format($incomeReport['thisMonth']['income'], 0, ',', '.') }}</strong>
+                        <span>{{ $incomeReport['thisMonth']['orders'] }} order paid</span>
+                    </div>
+                    <div class="income-box">
+                        <span class="muted">Last Month</span>
+                        <strong>Rp {{ number_format($incomeReport['lastMonth']['income'], 0, ',', '.') }}</strong>
+                        <span>{{ $incomeReport['lastMonth']['orders'] }} order paid</span>
+                    </div>
+                </div>
+            </section>
+        @endif
 
         <section class="grid">
             <div class="panel">

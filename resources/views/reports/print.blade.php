@@ -36,34 +36,35 @@
             <div>
                 <p class="muted">{{ $store['name'] }}</p>
                 <h1>Laporan POS Cafe</h1>
+                <p>{{ $selectedPeriod['label'] }} / {{ $selectedPeriod['start']->format('d M Y') }} - {{ $selectedPeriod['end']->format('d M Y') }}</p>
                 <p>{{ $generatedAt->timezone('Asia/Jakarta')->format('d M Y H:i') }}</p>
             </div>
             <div class="actions">
                 <button class="btn" type="button" onclick="window.print()">Print</button>
-                <a class="btn" href="{{ route('reports.pdf') }}">PDF</a>
-                <a class="btn" href="{{ route('reports.excel') }}">Excel</a>
+                <a class="btn" href="{{ route('reports.pdf', ['period' => $selectedPeriod['key']]) }}">PDF</a>
+                <a class="btn" href="{{ route('reports.excel', ['period' => $selectedPeriod['key']]) }}">Excel</a>
             </div>
         </section>
 
         <section class="summary">
-            <div class="box"><span>Penjualan Bersih</span><strong>Rp {{ number_format($todayFinancials['netSales'], 0, ',', '.') }}</strong></div>
-            <div class="box"><span>Order Hari Ini</span><strong>{{ $todayOrders }}</strong></div>
-            <div class="box"><span>PPN Hari Ini</span><strong>Rp {{ number_format($todayFinancials['taxes'], 0, ',', '.') }}</strong></div>
+            <div class="box"><span>Penjualan Bersih</span><strong>Rp {{ number_format($periodFinancials['netSales'], 0, ',', '.') }}</strong></div>
+            <div class="box"><span>Order {{ $selectedPeriod['label'] }}</span><strong>{{ $periodOrders }}</strong></div>
+            <div class="box"><span>PPN</span><strong>Rp {{ number_format($periodFinancials['taxes'], 0, ',', '.') }}</strong></div>
         </section>
 
-        <h2>Ringkasan Keuangan Hari Ini</h2>
+        <h2>Ringkasan Keuangan {{ $selectedPeriod['label'] }}</h2>
         <table>
             <tbody>
-                <tr><td>Penjualan kotor</td><td class="right">Rp {{ number_format($todayFinancials['grossSales'], 0, ',', '.') }}</td></tr>
-                <tr><td>Diskon</td><td class="right">Rp {{ number_format($todayFinancials['discounts'], 0, ',', '.') }}</td></tr>
-                <tr><td>PPN 11%</td><td class="right">Rp {{ number_format($todayFinancials['taxes'], 0, ',', '.') }}</td></tr>
-                <tr><td><strong>Penjualan bersih</strong></td><td class="right"><strong>Rp {{ number_format($todayFinancials['netSales'], 0, ',', '.') }}</strong></td></tr>
-                <tr><td>Uang diterima</td><td class="right">Rp {{ number_format($todayFinancials['cashTendered'], 0, ',', '.') }}</td></tr>
-                <tr><td>Kembalian</td><td class="right">Rp {{ number_format($todayFinancials['changeGiven'], 0, ',', '.') }}</td></tr>
+                <tr><td>Penjualan kotor</td><td class="right">Rp {{ number_format($periodFinancials['grossSales'], 0, ',', '.') }}</td></tr>
+                <tr><td>Diskon</td><td class="right">Rp {{ number_format($periodFinancials['discounts'], 0, ',', '.') }}</td></tr>
+                <tr><td>PPN 11%</td><td class="right">Rp {{ number_format($periodFinancials['taxes'], 0, ',', '.') }}</td></tr>
+                <tr><td><strong>Penjualan bersih</strong></td><td class="right"><strong>Rp {{ number_format($periodFinancials['netSales'], 0, ',', '.') }}</strong></td></tr>
+                <tr><td>Uang diterima</td><td class="right">Rp {{ number_format($periodFinancials['cashTendered'], 0, ',', '.') }}</td></tr>
+                <tr><td>Kembalian</td><td class="right">Rp {{ number_format($periodFinancials['changeGiven'], 0, ',', '.') }}</td></tr>
             </tbody>
         </table>
 
-        <h2>Metode Pembayaran</h2>
+        <h2>Metode Pembayaran {{ $selectedPeriod['label'] }}</h2>
         <table>
             <thead><tr><th>Metode</th><th>Order</th><th>Penjualan</th><th>Diterima</th><th>Kembali</th></tr></thead>
             <tbody>
@@ -76,16 +77,16 @@
                         <td class="right">Rp {{ number_format($payment->change_given, 0, ',', '.') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="5">Belum ada pembayaran hari ini.</td></tr>
+                    <tr><td colspan="5">Belum ada pembayaran di periode ini.</td></tr>
                 @endforelse
             </tbody>
         </table>
 
-        <h2>Transaksi Hari Ini</h2>
+        <h2>Transaksi {{ $selectedPeriod['label'] }}</h2>
         <table>
             <thead><tr><th>Invoice</th><th>Pelanggan</th><th>Meja</th><th>Metode</th><th>Total</th><th>Waktu</th></tr></thead>
             <tbody>
-                @forelse ($todaySales as $sale)
+                @forelse ($periodSales as $sale)
                     <tr>
                         <td>{{ $sale->invoice_number }}</td>
                         <td>
@@ -100,7 +101,7 @@
                         <td>{{ $sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="6">Belum ada transaksi hari ini.</td></tr>
+                    <tr><td colspan="6">Belum ada transaksi di periode ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

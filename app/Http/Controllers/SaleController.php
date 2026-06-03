@@ -452,7 +452,7 @@ class SaleController extends Controller
 
     /**
      * @param array<int, array<string, mixed>> $items
-     * @return Collection<int, array{product: Product, quantity: int, line_total: int}>
+     * @return Collection<int, array{product: Product, quantity: int, line_total: int, stock_decrements: array<int, int>}>
      */
     private function buildOrderLines(array $items, bool $lockStock): Collection
     {
@@ -465,16 +465,14 @@ class SaleController extends Controller
             ->values();
 
         $query = Product::query()
+            ->with('bundleItems.component')
             ->whereIn('id', $requestedItems->pluck('product_id'))
             ->where('is_active', true);
 
-        if ($lockStock) {
-            $query->lockForUpdate();
-        }
-
         $products = $query->get()->keyBy('id');
+        $stockRequirements = [];
 
-        return $requestedItems->map(function (array $item) use ($products, $lockStock) {
+        $lines = $requestedItems->map(function (array $item) use ($products, &$stockRequirements) {
             $product = $products->get((int) $item['product_id']);
             $quantity = (int) $item['quantity'];
 
@@ -484,22 +482,65 @@ class SaleController extends Controller
                 ]);
             }
 
-            if ($lockStock && $product->stock < $quantity) {
-                throw ValidationException::withMessages([
-                    'items' => "Stok {$product->name} tidak cukup. Sisa stok {$product->stock}.",
-                ]);
+            $stockDecrements = [$product->id => $quantity];
+
+            if ($product->is_bundle) {
+                if ($product->bundleItems->isEmpty()) {
+                    throw ValidationException::withMessages([
+                        'items' => "Isi paket {$product->name} belum diatur.",
+                    ]);
+                }
+
+                foreach ($product->bundleItems as $bundleItem) {
+                    if (! $bundleItem->component) {
+                        throw ValidationException::withMessages([
+                            'items' => "Komponen paket {$product->name} tidak lengkap.",
+                        ]);
+                    }
+
+                    $componentQuantity = $bundleItem->quantity * $quantity;
+                    $stockDecrements[$bundleItem->component_product_id] = ($stockDecrements[$bundleItem->component_product_id] ?? 0) + $componentQuantity;
+                }
+            }
+
+            foreach ($stockDecrements as $productId => $requiredQuantity) {
+                $stockRequirements[$productId] = ($stockRequirements[$productId] ?? 0) + $requiredQuantity;
             }
 
             return [
                 'product' => $product,
                 'quantity' => $quantity,
                 'line_total' => $product->price * $quantity,
+                'stock_decrements' => $stockDecrements,
             ];
         });
+
+        if ($lockStock && $stockRequirements !== []) {
+            $stockProducts = Product::query()
+                ->whereIn('id', array_keys($stockRequirements))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($stockRequirements as $productId => $requiredQuantity) {
+                $stockProduct = $stockProducts->get($productId);
+
+                if (! $stockProduct || $stockProduct->stock < $requiredQuantity) {
+                    $name = $stockProduct?->name ?? 'Produk';
+                    $stock = $stockProduct?->stock ?? 0;
+
+                    throw ValidationException::withMessages([
+                        'items' => "Stok {$name} tidak cukup. Butuh {$requiredQuantity}, sisa stok {$stock}.",
+                    ]);
+                }
+            }
+        }
+
+        return $lines;
     }
 
     /**
-     * @param Collection<int, array{product: Product, quantity: int, line_total: int}> $lines
+     * @param Collection<int, array{product: Product, quantity: int, line_total: int, stock_decrements: array<int, int>}> $lines
      * @return array{subtotal: int, discount: int, tax: int, total: int}
      */
     private function calculateTotals(Collection $lines, int $requestedDiscount): array
@@ -543,7 +584,7 @@ class SaleController extends Controller
     }
 
     /**
-     * @param Collection<int, array{product: Product, quantity: int, line_total: int}> $lines
+     * @param Collection<int, array{product: Product, quantity: int, line_total: int, stock_decrements: array<int, int>}> $lines
      */
     private function replaceSaleItems(Sale $sale, Collection $lines, bool $decrementStock): void
     {
@@ -564,7 +605,9 @@ class SaleController extends Controller
             ]);
 
             if ($decrementStock) {
-                $product->decrement('stock', $quantity);
+                foreach ($line['stock_decrements'] as $productId => $stockQuantity) {
+                    Product::query()->whereKey($productId)->decrement('stock', $stockQuantity);
+                }
             }
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\InventoryMovement;
 use App\Models\OperationalExpense;
 use App\Models\Product;
@@ -34,9 +35,17 @@ class DashboardController extends Controller
         $todayOperationalCost = OperationalExpense::query()->whereDate('spent_at', today())->sum('amount');
         $todaySalaryCost = SalaryPayment::query()->whereDate('paid_at', today())->sum('amount');
         $todayInventoryCost = InventoryMovement::query()->where('type', 'in')->whereDate('occurred_at', today())->sum('total_cost');
+        $canViewIncomeReport = in_array(request()->user()?->role, [UserRole::SuperAdmin, UserRole::Manager], true);
 
         return view('dashboard.index', [
             'store' => CafeCatalog::store(),
+            'canViewIncomeReport' => $canViewIncomeReport,
+            'incomeReport' => $canViewIncomeReport ? [
+                'today' => $this->incomeBetween(now()->copy()->startOfDay(), now()->copy()->endOfDay()),
+                'yesterday' => $this->incomeBetween(now()->copy()->subDay()->startOfDay(), now()->copy()->subDay()->endOfDay()),
+                'thisMonth' => $this->incomeBetween(now()->copy()->startOfMonth(), now()->copy()->endOfMonth()),
+                'lastMonth' => $this->incomeBetween(now()->copy()->subMonthNoOverflow()->startOfMonth(), now()->copy()->subMonthNoOverflow()->endOfMonth()),
+            ] : [],
             'todayRevenue' => $todayRevenue,
             'todayOrders' => $todayOrders,
             'todayTax' => $todayTax,
@@ -76,5 +85,20 @@ class DashboardController extends Controller
                 ->limit(8)
                 ->get(),
         ]);
+    }
+
+    /**
+     * @return array{orders: int, income: int}
+     */
+    private function incomeBetween($start, $end): array
+    {
+        $query = Sale::query()
+            ->where('status', 'paid')
+            ->whereBetween('paid_at', [$start, $end]);
+
+        return [
+            'orders' => (clone $query)->count(),
+            'income' => (int) (clone $query)->sum('total'),
+        ];
     }
 }

@@ -9,30 +9,31 @@ use App\Models\SalaryPayment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Support\CafeCatalog;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         CafeCatalog::ensure();
 
-        return view('reports.index', $this->reportData());
+        return view('reports.index', $this->reportData($request->query('period', 'today')));
     }
 
-    public function print(): View
+    public function print(Request $request): View
     {
         CafeCatalog::ensure();
 
-        return view('reports.print', $this->reportData());
+        return view('reports.print', $this->reportData($request->query('period', 'today')));
     }
 
-    public function excel(): Response
+    public function excel(Request $request): Response
     {
         CafeCatalog::ensure();
 
-        $data = $this->reportData();
+        $data = $this->reportData($request->query('period', 'today'));
         $filename = 'laporan-pos-' . now()->format('Ymd-His') . '.xls';
 
         return response($this->buildExcelHtml($data), 200, [
@@ -42,11 +43,11 @@ class ReportController extends Controller
         ]);
     }
 
-    public function pdf(): Response
+    public function pdf(Request $request): Response
     {
         CafeCatalog::ensure();
 
-        $data = $this->reportData();
+        $data = $this->reportData($request->query('period', 'today'));
         $filename = 'laporan-pos-' . now()->format('Ymd-His') . '.pdf';
 
         return response($this->buildPdf($data), 200, [
@@ -59,8 +60,16 @@ class ReportController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function reportData(): array
+    private function reportData(?string $period = null): array
     {
+        $periodConfig = $this->periodConfig($period);
+        $periodSales = Sale::query()
+            ->with('items')
+            ->whereBetween('paid_at', [$periodConfig['start'], $periodConfig['end']])
+            ->where('status', 'paid')
+            ->orderBy('paid_at')
+            ->get();
+
         $todaySales = Sale::query()
             ->whereDate('paid_at', today())
             ->where('status', 'paid');
@@ -85,19 +94,44 @@ class ReportController extends Controller
             - $todayFinancials['operationalExpenses']
             - $todayFinancials['salaryPayments']
             - $todayFinancials['inventoryPurchases'];
+        $periodFinancials = $this->financialsForPeriod($periodConfig['start'], $periodConfig['end']);
+        $chartSeries = $this->chartSeries($periodSales, $periodConfig);
+        $paymentChart = $periodSales
+            ->groupBy('payment_method')
+            ->map(fn ($sales, $method) => [
+                'label' => $method ?: 'Tidak diketahui',
+                'orders' => $sales->count(),
+                'total' => (int) $sales->sum('total'),
+            ])
+            ->values();
 
         return [
             'store' => CafeCatalog::store(),
             'generatedAt' => now(),
+            'periodOptions' => $this->periodOptions(),
+            'selectedPeriod' => $periodConfig,
+            'periodFinancials' => $periodFinancials,
+            'periodOrders' => $periodSales->count(),
+            'chartSeries' => $chartSeries,
+            'chartMax' => max(1, (int) $chartSeries->max('total')),
+            'paymentChart' => $paymentChart,
+            'paymentChartTotal' => max(1, (int) $paymentChart->sum('total')),
             'todayRevenue' => $todayFinancials['netSales'],
             'todayOrders' => (clone $todaySales)->count(),
             'monthRevenue' => (clone $monthSales)->sum('total'),
             'todayFinancials' => $todayFinancials,
-            'paymentSummary' => (clone $todaySales)
-                ->selectRaw('payment_method, COUNT(*) as orders_count, SUM(total) as total_sales, SUM(paid_amount) as tendered, SUM(change_amount) as change_given')
+            'paymentSummary' => $periodSales
                 ->groupBy('payment_method')
-                ->orderBy('payment_method')
-                ->get(),
+                ->map(fn ($sales, $method) => (object) [
+                    'payment_method' => $method ?: 'Tidak diketahui',
+                    'orders_count' => $sales->count(),
+                    'total_sales' => (int) $sales->sum('total'),
+                    'tendered' => (int) $sales->sum('paid_amount'),
+                    'change_given' => (int) $sales->sum('change_amount'),
+                ])
+                ->sortBy('payment_method')
+                ->values(),
+            'periodSales' => $periodSales->sortByDesc('paid_at')->values(),
             'todaySales' => (clone $todaySales)
                 ->with('items')
                 ->latest('paid_at')
@@ -109,7 +143,9 @@ class ReportController extends Controller
                 ->orderBy('stock')
                 ->get(),
             'topItems' => SaleItem::query()
-                ->whereHas('sale', fn ($query) => $query->where('status', 'paid'))
+                ->whereHas('sale', fn ($query) => $query
+                    ->where('status', 'paid')
+                    ->whereBetween('paid_at', [$periodConfig['start'], $periodConfig['end']]))
                 ->selectRaw('product_name, sku, SUM(quantity) as sold_qty, SUM(line_total) as revenue')
                 ->groupBy('product_name', 'sku')
                 ->orderByDesc('sold_qty')
@@ -122,6 +158,170 @@ class ReportController extends Controller
     }
 
     /**
+     * @return array<string, array{key: string, label: string}>
+     */
+    private function periodOptions(): array
+    {
+        return [
+            'today' => ['key' => 'today', 'label' => 'Today'],
+            'yesterday' => ['key' => 'yesterday', 'label' => 'Yesterday'],
+            'this_week' => ['key' => 'this_week', 'label' => 'This Week'],
+            'last_week' => ['key' => 'last_week', 'label' => 'Last Week'],
+            'this_month' => ['key' => 'this_month', 'label' => 'This Month'],
+            'last_month' => ['key' => 'last_month', 'label' => 'Last Month'],
+            'this_year' => ['key' => 'this_year', 'label' => 'This Year'],
+            'last_year' => ['key' => 'last_year', 'label' => 'Last Year'],
+        ];
+    }
+
+    /**
+     * @return array{key: string, label: string, start: \Illuminate\Support\Carbon, end: \Illuminate\Support\Carbon, granularity: string}
+     */
+    private function periodConfig(?string $period): array
+    {
+        $key = match ($period) {
+            'daily' => 'today',
+            'weekly' => 'this_week',
+            'monthly' => 'this_month',
+            'yearly' => 'this_year',
+            'yesterday', 'this_week', 'last_week', 'this_month', 'last_month', 'this_year', 'last_year' => $period,
+            default => 'today',
+        };
+
+        $now = now();
+
+        return match ($key) {
+            'yesterday' => [
+                'key' => $key,
+                'label' => 'Yesterday',
+                'start' => $now->copy()->subDay()->startOfDay(),
+                'end' => $now->copy()->subDay()->endOfDay(),
+                'granularity' => 'hour',
+            ],
+            'this_week' => [
+                'key' => $key,
+                'label' => 'This Week',
+                'start' => $now->copy()->startOfWeek(),
+                'end' => $now->copy()->endOfWeek(),
+                'granularity' => 'day',
+            ],
+            'last_week' => [
+                'key' => $key,
+                'label' => 'Last Week',
+                'start' => $now->copy()->subWeek()->startOfWeek(),
+                'end' => $now->copy()->subWeek()->endOfWeek(),
+                'granularity' => 'day',
+            ],
+            'this_month' => [
+                'key' => $key,
+                'label' => 'This Month',
+                'start' => $now->copy()->startOfMonth(),
+                'end' => $now->copy()->endOfMonth(),
+                'granularity' => 'day',
+            ],
+            'last_month' => [
+                'key' => $key,
+                'label' => 'Last Month',
+                'start' => $now->copy()->subMonthNoOverflow()->startOfMonth(),
+                'end' => $now->copy()->subMonthNoOverflow()->endOfMonth(),
+                'granularity' => 'day',
+            ],
+            'this_year' => [
+                'key' => $key,
+                'label' => 'This Year',
+                'start' => $now->copy()->startOfYear(),
+                'end' => $now->copy()->endOfYear(),
+                'granularity' => 'month',
+            ],
+            'last_year' => [
+                'key' => $key,
+                'label' => 'Last Year',
+                'start' => $now->copy()->subYear()->startOfYear(),
+                'end' => $now->copy()->subYear()->endOfYear(),
+                'granularity' => 'month',
+            ],
+            default => [
+                'key' => 'today',
+                'label' => 'Today',
+                'start' => $now->copy()->startOfDay(),
+                'end' => $now->copy()->endOfDay(),
+                'granularity' => 'hour',
+            ],
+        };
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function financialsForPeriod($start, $end): array
+    {
+        $sales = Sale::query()
+            ->whereBetween('paid_at', [$start, $end])
+            ->where('status', 'paid');
+
+        $financials = [
+            'grossSales' => (clone $sales)->sum('subtotal'),
+            'discounts' => (clone $sales)->sum('discount'),
+            'taxes' => (clone $sales)->sum('tax'),
+            'netSales' => (clone $sales)->sum('total'),
+            'cashTendered' => (clone $sales)->sum('paid_amount'),
+            'changeGiven' => (clone $sales)->sum('change_amount'),
+            'operationalExpenses' => OperationalExpense::query()->whereBetween('spent_at', [$start->toDateString(), $end->toDateString()])->sum('amount'),
+            'salaryPayments' => SalaryPayment::query()->whereBetween('paid_at', [$start->toDateString(), $end->toDateString()])->sum('amount'),
+            'inventoryPurchases' => InventoryMovement::query()->where('type', 'in')->whereBetween('occurred_at', [$start->toDateString(), $end->toDateString()])->sum('total_cost'),
+        ];
+        $financials['estimatedProfit'] = $financials['netSales']
+            - $financials['operationalExpenses']
+            - $financials['salaryPayments']
+            - $financials['inventoryPurchases'];
+
+        return $financials;
+    }
+
+    private function chartSeries($sales, array $periodConfig)
+    {
+        $series = collect();
+        $cursor = $periodConfig['start']->copy();
+
+        while ($cursor->lessThanOrEqualTo($periodConfig['end'])) {
+            if ($periodConfig['granularity'] === 'month') {
+                $key = $cursor->format('Y-m');
+                $label = $cursor->format('M');
+                $cursor->addMonth();
+            } elseif ($periodConfig['granularity'] === 'hour') {
+                $key = $cursor->format('Y-m-d H');
+                $label = $cursor->format('H:00');
+                $cursor->addHour();
+            } else {
+                $key = $cursor->format('Y-m-d');
+                $label = $cursor->format('d M');
+                $cursor->addDay();
+            }
+
+            $series->push(['key' => $key, 'label' => $label, 'orders' => 0, 'total' => 0]);
+        }
+
+        $grouped = $sales->groupBy(function (Sale $sale) use ($periodConfig): string {
+            return match ($periodConfig['granularity']) {
+                'month' => $sale->paid_at->format('Y-m'),
+                'hour' => $sale->paid_at->format('Y-m-d H'),
+                default => $sale->paid_at->format('Y-m-d'),
+            };
+        });
+
+        return $series->map(function (array $point) use ($grouped): array {
+            $sales = $grouped->get($point['key'], collect());
+
+            return [
+                'key' => $point['key'],
+                'label' => $point['label'],
+                'orders' => $sales->count(),
+                'total' => (int) $sales->sum('total'),
+            ];
+        });
+    }
+
+    /**
      * @param array<string, mixed> $data
      */
     private function buildExcelHtml(array $data): string
@@ -129,20 +329,20 @@ class ReportController extends Controller
         $money = fn ($value): string => 'Rp ' . number_format((int) $value, 0, ',', '.');
         $html = '<html><head><meta charset="UTF-8"></head><body>';
         $html .= '<h1>Laporan POS Cafe</h1>';
-        $html .= '<p>' . e($data['store']['name']) . ' - ' . e($data['generatedAt']->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</p>';
+        $html .= '<p>' . e($data['store']['name']) . ' - ' . e($data['selectedPeriod']['label']) . ' - ' . e($data['generatedAt']->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</p>';
 
-        $html .= '<h2>Ringkasan Keuangan Hari Ini</h2><table border="1">';
+        $html .= '<h2>Ringkasan Keuangan ' . e($data['selectedPeriod']['label']) . '</h2><table border="1">';
         foreach ([
-            'Penjualan kotor' => $data['todayFinancials']['grossSales'],
-            'Diskon' => $data['todayFinancials']['discounts'],
-            'PPN 11%' => $data['todayFinancials']['taxes'],
-            'Penjualan bersih' => $data['todayFinancials']['netSales'],
-            'Uang diterima' => $data['todayFinancials']['cashTendered'],
-            'Kembalian' => $data['todayFinancials']['changeGiven'],
-            'Biaya operasional' => $data['todayFinancials']['operationalExpenses'],
-            'Gaji terbayar' => $data['todayFinancials']['salaryPayments'],
-            'Belanja stok' => $data['todayFinancials']['inventoryPurchases'],
-            'Estimasi profit' => $data['todayFinancials']['estimatedProfit'],
+            'Penjualan kotor' => $data['periodFinancials']['grossSales'],
+            'Diskon' => $data['periodFinancials']['discounts'],
+            'PPN 11%' => $data['periodFinancials']['taxes'],
+            'Penjualan bersih' => $data['periodFinancials']['netSales'],
+            'Uang diterima' => $data['periodFinancials']['cashTendered'],
+            'Kembalian' => $data['periodFinancials']['changeGiven'],
+            'Biaya operasional' => $data['periodFinancials']['operationalExpenses'],
+            'Gaji terbayar' => $data['periodFinancials']['salaryPayments'],
+            'Belanja stok' => $data['periodFinancials']['inventoryPurchases'],
+            'Estimasi profit' => $data['periodFinancials']['estimatedProfit'],
         ] as $label => $value) {
             $html .= '<tr><td>' . e($label) . '</td><td>' . e($money($value)) . '</td></tr>';
         }
@@ -154,8 +354,8 @@ class ReportController extends Controller
         }
         $html .= '</table>';
 
-        $html .= '<h2>Transaksi Hari Ini</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Catatan</th><th>Meja</th><th>Metode</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
-        foreach ($data['todaySales'] as $sale) {
+        $html .= '<h2>Transaksi ' . e($data['selectedPeriod']['label']) . '</h2><table border="1"><tr><th>Invoice</th><th>Pelanggan</th><th>Catatan</th><th>Meja</th><th>Metode</th><th>Subtotal</th><th>Diskon</th><th>PPN</th><th>Total</th><th>Bayar</th><th>Kembali</th><th>Waktu</th></tr>';
+        foreach ($data['periodSales'] as $sale) {
             $html .= '<tr><td>' . e($sale->invoice_number) . '</td><td>' . e($sale->customer_name ?: 'Umum') . '</td><td>' . e($sale->customer_note ?: '-') . '</td><td>' . e($sale->table_number ?: '-') . '</td><td>' . e($sale->payment_method) . '</td><td>' . e($money($sale->subtotal)) . '</td><td>' . e($money($sale->discount)) . '</td><td>' . e($money($sale->tax)) . '</td><td>' . e($money($sale->total)) . '</td><td>' . e($money($sale->paid_amount)) . '</td><td>' . e($money($sale->change_amount)) . '</td><td>' . e($sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i')) . '</td></tr>';
         }
         $html .= '</table>';
@@ -178,19 +378,20 @@ class ReportController extends Controller
         $lines = [
             'LAPORAN POS CAFE',
             $data['store']['name'],
+            'Periode: ' . $data['selectedPeriod']['label'],
             'Dibuat: ' . $data['generatedAt']->timezone('Asia/Jakarta')->format('d/m/Y H:i'),
             '',
-            'RINGKASAN HARI INI',
-            'Penjualan kotor : ' . $money($data['todayFinancials']['grossSales']),
-            'Diskon          : ' . $money($data['todayFinancials']['discounts']),
-            'PPN 11%         : ' . $money($data['todayFinancials']['taxes']),
-            'Penjualan bersih: ' . $money($data['todayFinancials']['netSales']),
-            'Uang diterima   : ' . $money($data['todayFinancials']['cashTendered']),
-            'Kembalian       : ' . $money($data['todayFinancials']['changeGiven']),
-            'Biaya operasional: ' . $money($data['todayFinancials']['operationalExpenses']),
-            'Gaji terbayar   : ' . $money($data['todayFinancials']['salaryPayments']),
-            'Belanja stok    : ' . $money($data['todayFinancials']['inventoryPurchases']),
-            'Estimasi profit : ' . $money($data['todayFinancials']['estimatedProfit']),
+            'RINGKASAN ' . strtoupper($data['selectedPeriod']['label']),
+            'Penjualan kotor : ' . $money($data['periodFinancials']['grossSales']),
+            'Diskon          : ' . $money($data['periodFinancials']['discounts']),
+            'PPN 11%         : ' . $money($data['periodFinancials']['taxes']),
+            'Penjualan bersih: ' . $money($data['periodFinancials']['netSales']),
+            'Uang diterima   : ' . $money($data['periodFinancials']['cashTendered']),
+            'Kembalian       : ' . $money($data['periodFinancials']['changeGiven']),
+            'Biaya operasional: ' . $money($data['periodFinancials']['operationalExpenses']),
+            'Gaji terbayar   : ' . $money($data['periodFinancials']['salaryPayments']),
+            'Belanja stok    : ' . $money($data['periodFinancials']['inventoryPurchases']),
+            'Estimasi profit : ' . $money($data['periodFinancials']['estimatedProfit']),
             '',
             'METODE PEMBAYARAN',
         ];
@@ -200,8 +401,8 @@ class ReportController extends Controller
         }
 
         $lines[] = '';
-        $lines[] = 'TRANSAKSI HARI INI';
-        foreach ($data['todaySales'] as $sale) {
+        $lines[] = 'TRANSAKSI ' . strtoupper($data['selectedPeriod']['label']);
+        foreach ($data['periodSales'] as $sale) {
             $table = $sale->table_number ? ' | Meja ' . $sale->table_number : '';
             $lines[] = $sale->invoice_number . ' | ' . ($sale->customer_name ?: 'Umum') . $table . ' | ' . $sale->payment_method . ' | Total ' . $money($sale->total);
             if ($sale->customer_note) {

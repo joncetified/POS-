@@ -21,12 +21,14 @@ class Product extends Model
         'tag',
         'color',
         'image_path',
+        'is_bundle',
         'is_active',
     ];
 
     protected $casts = [
         'price' => 'integer',
         'stock' => 'integer',
+        'is_bundle' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -38,5 +40,38 @@ class Product extends Model
     public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    public function bundleItems(): HasMany
+    {
+        return $this->hasMany(ProductBundleItem::class, 'bundle_product_id');
+    }
+
+    public function usedInBundles(): HasMany
+    {
+        return $this->hasMany(ProductBundleItem::class, 'component_product_id');
+    }
+
+    public function availableForSaleStock(): int
+    {
+        if (! $this->is_bundle) {
+            return $this->stock;
+        }
+
+        $items = $this->relationLoaded('bundleItems')
+            ? $this->bundleItems
+            : $this->bundleItems()->with('component')->get();
+
+        if ($items->isEmpty()) {
+            return 0;
+        }
+
+        $componentStock = $items
+            ->map(fn (ProductBundleItem $item) => $item->component && $item->quantity > 0
+                ? intdiv($item->component->stock, $item->quantity)
+                : 0)
+            ->min();
+
+        return min($this->stock, (int) $componentStock);
     }
 }

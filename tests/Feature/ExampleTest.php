@@ -45,7 +45,31 @@ class ExampleTest extends TestCase
             ->assertSee('Open Bill Meja')
             ->assertSee('Stok Menipis')
             ->assertSee('QR Meja')
-            ->assertSee('Estimasi profit hari ini');
+            ->assertSee('Estimasi profit hari ini')
+            ->assertDontSee('Income Report');
+    }
+
+    public function test_dashboard_income_report_is_only_visible_to_super_admin_and_manager(): void
+    {
+        $this
+            ->actingAs(User::factory()->superAdmin()->create())
+            ->get(route('dashboard.index'))
+            ->assertOk()
+            ->assertSee('Income Report')
+            ->assertSee('Today')
+            ->assertSee('Last Month');
+
+        $this
+            ->actingAs(User::factory()->manager()->create())
+            ->get(route('dashboard.index'))
+            ->assertOk()
+            ->assertSee('Income Report');
+
+        $this
+            ->actingAs(User::factory()->admin()->create())
+            ->get(route('dashboard.index'))
+            ->assertOk()
+            ->assertDontSee('Income Report');
     }
 
     public function test_operations_page_records_expense_salary_and_inventory_movement(): void
@@ -143,6 +167,21 @@ class ExampleTest extends TestCase
         $this->actingAs($cashier)->get(route('operations.index'))->assertForbidden();
     }
 
+    public function test_reports_show_period_filter_and_income_chart(): void
+    {
+        CafeCatalog::ensure();
+
+        $this
+            ->actingAs(User::factory()->manager()->create())
+            ->get(route('reports.index', ['period' => 'this_month']))
+            ->assertOk()
+            ->assertSee('Periode Laporan')
+            ->assertSee('This Month')
+            ->assertSee('Last Month')
+            ->assertSee('Diagram Income This Month')
+            ->assertSee('Metode Pembayaran This Month');
+    }
+
     public function test_checkout_creates_sale_and_decreases_stock(): void
     {
         CafeCatalog::ensure();
@@ -188,6 +227,61 @@ class ExampleTest extends TestCase
 
         $this->assertSame(53, $product->fresh()->stock);
         $this->assertSame(1, Sale::query()->count());
+    }
+
+    public function test_checkout_bundle_product_decreases_bundle_and_component_stock(): void
+    {
+        CafeCatalog::ensure();
+
+        $espresso = Product::query()->where('sku', 'ESP-001')->firstOrFail();
+        $milkCoffee = Product::query()->where('sku', 'MLK-002')->firstOrFail();
+        $bundle = Product::query()->create([
+            'category_id' => $espresso->category_id,
+            'sku' => 'BND-001',
+            'name' => 'Paket Promo Kopi',
+            'price' => 40000,
+            'stock' => 5,
+            'unit' => 'paket',
+            'tag' => 'Promo',
+            'color' => '#ff965f',
+            'is_bundle' => true,
+            'is_active' => true,
+        ]);
+        $bundle->bundleItems()->create([
+            'component_product_id' => $espresso->id,
+            'quantity' => 2,
+        ]);
+        $bundle->bundleItems()->create([
+            'component_product_id' => $milkCoffee->id,
+            'quantity' => 1,
+        ]);
+
+        $this
+            ->actingAs(User::factory()->create())
+            ->postJson('/sales', [
+                'customer_name' => 'Promo Customer',
+                'cashier_name' => CafeCatalog::store()['cashier'],
+                'order_type' => 'Dine in',
+                'payment_method' => 'Tunai',
+                'discount' => 0,
+                'paid_amount' => 100000,
+                'items' => [
+                    ['product_id' => $bundle->id, 'quantity' => 2],
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('sale.subtotal', 80000)
+            ->assertJsonPath('sale.total', 88800);
+
+        $this->assertSame(3, $bundle->fresh()->stock);
+        $this->assertSame(38, $espresso->fresh()->stock);
+        $this->assertSame(53, $milkCoffee->fresh()->stock);
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $bundle->id,
+            'product_name' => 'Paket Promo Kopi',
+            'quantity' => 2,
+            'line_total' => 80000,
+        ]);
     }
 
     public function test_checkout_accepts_non_cash_payment_reference(): void

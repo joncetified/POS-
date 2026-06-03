@@ -54,6 +54,7 @@ class CustomerMenuController extends Controller
                 ->values();
 
             $products = Product::query()
+                ->with('bundleItems.component')
                 ->whereIn('id', $requestedItems->pluck('product_id'))
                 ->where('is_active', true)
                 ->get()
@@ -69,9 +70,9 @@ class CustomerMenuController extends Controller
                     ]);
                 }
 
-                if ($product->stock < $quantity) {
+                if ($product->availableForSaleStock() < $quantity) {
                     throw ValidationException::withMessages([
-                        'items' => "Stok {$product->name} tidak cukup. Sisa stok {$product->stock}.",
+                        'items' => "Stok {$product->name} tidak cukup. Sisa stok {$product->availableForSaleStock()}.",
                     ]);
                 }
 
@@ -121,9 +122,9 @@ class CustomerMenuController extends Controller
                 $existing = $sale->items->firstWhere('product_id', $product->id);
                 $quantity = $line['quantity'] + ($existing?->quantity ?? 0);
 
-                if ($product->stock < $quantity) {
+                if ($product->availableForSaleStock() < $quantity) {
                     throw ValidationException::withMessages([
-                        'items' => "Total order {$product->name} melebihi stok. Sisa stok {$product->stock}.",
+                        'items' => "Total order {$product->name} melebihi stok. Sisa stok {$product->availableForSaleStock()}.",
                     ]);
                 }
 
@@ -179,7 +180,7 @@ class CustomerMenuController extends Controller
             'canOrder' => $tableNumber !== null,
             'categories' => Category::query()->orderBy('sort_order')->orderBy('name')->get(),
             'products' => Product::query()
-                ->with('category')
+                ->with(['category', 'bundleItems.component'])
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),

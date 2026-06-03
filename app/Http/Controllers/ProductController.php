@@ -7,7 +7,9 @@ use App\Models\Product;
 use App\Support\CafeCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -20,9 +22,13 @@ class ProductController extends Controller
             'store' => CafeCatalog::store(),
             'categories' => Category::query()->orderBy('name')->get(),
             'products' => Product::query()
-                ->with('category')
+                ->with(['category', 'bundleItems.component'])
                 ->orderBy('name')
                 ->paginate(15),
+            'componentProducts' => Product::query()
+                ->where('is_bundle', false)
+                ->orderBy('name')
+                ->get(['id', 'name', 'sku']),
         ]);
     }
 
@@ -33,8 +39,15 @@ class ProductController extends Controller
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('products', 'public');
         }
+        unset($data['image']);
 
-        Product::query()->create($data);
+        DB::transaction(function () use ($data): void {
+            $bundleItems = $data['bundle_items'];
+            unset($data['bundle_items']);
+
+            $product = Product::query()->create($data);
+            $this->syncBundleItems($product, $bundleItems);
+        });
 
         return back()->with('status', 'Produk berhasil ditambahkan.');
     }
@@ -50,8 +63,15 @@ class ProductController extends Controller
 
             $data['image_path'] = $request->file('image')->store('products', 'public');
         }
+        unset($data['image']);
 
-        $product->update($data);
+        DB::transaction(function () use ($data, $product): void {
+            $bundleItems = $data['bundle_items'];
+            unset($data['bundle_items']);
+
+            $product->update($data);
+            $this->syncBundleItems($product, $bundleItems);
+        });
 
         return back()->with('status', 'Produk berhasil diperbarui.');
     }
@@ -81,7 +101,54 @@ class ProductController extends Controller
             'tag' => ['nullable', 'string', 'max:40'],
             'color' => ['required', 'string', 'max:16'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'is_bundle' => ['nullable', 'boolean'],
+            'bundle_items' => ['nullable', 'array'],
+            'bundle_items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],
+            'bundle_items.*.quantity' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['nullable', 'boolean'],
-        ]) + ['is_active' => false];
+        ]) + ['is_active' => false, 'is_bundle' => false, 'bundle_items' => []];
+    }
+
+    /**
+     * @param array<int, array{product_id?: int|null, quantity?: int|null}> $bundleItems
+     */
+    private function syncBundleItems(Product $product, array $bundleItems): void
+    {
+        if (! $product->is_bundle) {
+            $product->bundleItems()->delete();
+
+            return;
+        }
+
+        $items = collect($bundleItems)
+            ->filter(fn (array $item) => ! empty($item['product_id']) && ! empty($item['quantity']))
+            ->groupBy(fn (array $item) => (int) $item['product_id'])
+            ->map(fn ($items, $productId) => [
+                'component_product_id' => (int) $productId,
+                'quantity' => (int) $items->sum('quantity'),
+            ])
+            ->reject(fn (array $item) => $item['component_product_id'] === $product->id)
+            ->values();
+
+        if ($items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bundle_items' => 'Produk paket harus punya minimal satu komponen.',
+            ]);
+        }
+
+        $componentIds = $items->pluck('component_product_id');
+        $invalidComponents = Product::query()
+            ->whereIn('id', $componentIds)
+            ->where('is_bundle', true)
+            ->exists();
+
+        if ($invalidComponents) {
+            throw ValidationException::withMessages([
+                'bundle_items' => 'Komponen paket tidak boleh memakai produk paket lain.',
+            ]);
+        }
+
+        $product->bundleItems()->delete();
+        $items->each(fn (array $item) => $product->bundleItems()->create($item));
     }
 }

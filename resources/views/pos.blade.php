@@ -1130,6 +1130,7 @@
                 const inCart = state.cart.get(product.sku)?.qty || 0;
                 const remaining = product.stock - inCart;
                 const disabled = remaining <= 0 ? 'disabled' : '';
+                const productLabel = product.is_bundle ? 'Paket' : (product.tag || product.unit);
 
                 return `
                     <article class="product-card">
@@ -1141,7 +1142,7 @@
                             <div>
                                 <h3 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
                                 <span class="price">${rupiah(product.price)}</span>
-                                <p class="small">Stok ${remaining} ${escapeHtml(product.unit)}</p>
+                                <p class="small">${escapeHtml(productLabel)} / Stok ${remaining} ${escapeHtml(product.unit)}</p>
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
                         </div>
