@@ -3418,6 +3418,26 @@ tbody tr:hover {
         height: 40px !important;
     }
 
+    .app-shell .searchbox {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        padding: 0 16px !important;
+    }
+
+    .app-shell .searchbox span {
+        display: none !important;
+    }
+
+    .app-shell .searchbox input {
+        min-height: 0 !important;
+        height: 100% !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
     .app-shell .chips {
         gap: 8px !important;
         padding-bottom: 4px !important;
