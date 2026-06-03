@@ -3312,7 +3312,7 @@ tbody tr:hover {
         min-height: 0 !important;
         max-height: none !important;
         margin: 8px auto !important;
-        grid-template-columns: 190px minmax(0, 1fr) !important;
+        grid-template-columns: 220px minmax(0, 1fr) !important;
         overflow: hidden !important;
     }
 
@@ -3320,7 +3320,64 @@ tbody tr:hover {
         height: 100% !important;
         min-height: 0 !important;
         overflow-y: auto !important;
+        scrollbar-width: thin !important;
+        scrollbar-gutter: stable !important;
         padding: 22px 18px !important;
+    }
+
+    .app-shell .sidebar::-webkit-scrollbar {
+        width: 8px !important;
+    }
+
+    .app-shell .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(87, 70, 61, .32) !important;
+        border-radius: 999px !important;
+    }
+
+    .app-shell .sidebar .staff-brand-stack {
+        gap: 12px !important;
+    }
+
+    .app-shell .sidebar .staff-brand {
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .app-shell .sidebar .staff-brand-mark {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    .app-shell .sidebar .staff-brand strong,
+    .app-shell .sidebar .staff-user-profile strong {
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+        line-height: 1.08 !important;
+    }
+
+    .app-shell .sidebar .staff-brand strong {
+        font-size: 1rem !important;
+    }
+
+    .app-shell .sidebar .staff-user-profile {
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        align-items: center !important;
+    }
+
+    .app-shell .sidebar .staff-user-avatar {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    .app-shell .sidebar .staff-user-profile strong {
+        font-size: .92rem !important;
+    }
+
+    .app-shell .sidebar .staff-user-profile small {
+        line-height: 1.18 !important;
     }
 
     .app-shell .workspace,
@@ -3525,7 +3582,7 @@ tbody tr:hover {
 @media (min-width: 981px) and (max-width: 1180px) {
     .app-shell {
         width: calc(100vw - 14px) !important;
-        grid-template-columns: 174px minmax(0, 1fr) !important;
+        grid-template-columns: 216px minmax(0, 1fr) !important;
     }
 
     .app-shell .content {
