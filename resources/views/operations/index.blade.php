@@ -52,24 +52,6 @@
                 <span class="staff-page-title">Operasional / ERP</span>
             </div>
             @include('partials.staff-nav')
-            <div class="actions legacy-actions" hidden>
-                @if (auth()->user()->hasPermission('page.dashboard'))
-                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.pos'))
-                    <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.products'))
-                    <a class="btn" href="{{ route('products.index') }}">Produk</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.reports'))
-                    <a class="btn" href="{{ route('reports.index') }}">Laporan</a>
-                @endif
-                <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="btn" type="submit">Logout</button>
-                </form>
-            </div>
         </section>
 
         @if (session('status'))

@@ -2699,10 +2699,6 @@ tbody tr:hover {
     color: var(--purr-accent-2) !important;
 }
 
-.legacy-actions {
-    display: none !important;
-}
-
 .shell:has(> .topbar .actions) .logout-form {
     margin-top: 18px !important;
 }
@@ -2865,14 +2861,6 @@ tbody tr:hover {
     border-right: 1px solid #efd7c8 !important;
     background: rgba(255, 255, 255, 0.92) !important;
     box-shadow: none !important;
-}
-
-.app-shell .sidebar > .brand,
-.app-shell .sidebar > .nav,
-.app-shell .sidebar > .logout-form,
-.app-shell .workspace > .topbar,
-.app-shell .workspace > .bottom-bar {
-    display: none !important;
 }
 
 .app-shell .sidebar .staff-brand-wrap {

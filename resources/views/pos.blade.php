@@ -1000,106 +1000,9 @@
                 @include('partials.staff-brand', ['store' => $store])
             </div>
             @include('partials.staff-nav')
-
-            <a class="brand" href="{{ route('pos.index') }}">
-                <div class="brand-mark">
-                    @if ($store['logo_url'])
-                        <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo">
-                    @else
-                        {{ strtoupper(substr($store['name'], 0, 1)) }}
-                    @endif
-                </div>
-                <div>
-                    <h1>{{ $store['name'] }}</h1>
-                    <p class="small">Cafe POS</p>
-                </div>
-            </a>
-
-            <nav class="nav" aria-label="Menu utama">
-                <a class="active" href="{{ route('pos.index') }}"><span class="nav-icon">▣</span> POS</a>
-                @if (auth()->user()->hasPermission('page.dashboard'))
-                    <a href="{{ route('dashboard.index') }}"><span class="nav-icon">▤</span> Dashboard</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.products'))
-                    <a href="{{ route('products.index') }}"><span class="nav-icon">□</span> Produk</a>
-                    <a href="{{ route('products.index') }}"><span class="nav-icon">◇</span> Stok</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.qr_tables'))
-                    <a href="{{ route('customer.qr.index') }}"><span class="nav-icon">▦</span> QR Meja</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.sales'))
-                    <a href="{{ route('sales.index') }}"><span class="nav-icon">↳</span> Transaksi</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.reports'))
-                    <a href="{{ route('reports.index') }}"><span class="nav-icon">◔</span> Laporan</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.settings'))
-                    <a href="{{ route('settings.index') }}"><span class="nav-icon">S</span> Settings</a>
-                @endif
-                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
-                    <a href="{{ route('access-control.index') }}"><span class="nav-icon">☑</span> Akses User</a>
-                @endif
-            </nav>
-
-            <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="logout-btn" type="submit"><span class="nav-icon">⇱</span> Logout</button>
-            </form>
         </aside>
 
         <main class="workspace">
-            <header class="topbar">
-                <div class="top-title">
-                    <span>▦</span>
-                    <span>Kasir</span>
-                </div>
-                <nav class="top-nav" aria-label="Menu utama">
-                    @if (auth()->user()->hasPermission('page.dashboard'))
-                        <a href="{{ route('dashboard.index') }}">Dashboard</a>
-                    @endif
-                    <a class="active" href="{{ route('pos.index') }}">Kasir</a>
-                    @if (auth()->user()->hasPermission('page.qr_tables'))
-                        <a href="{{ route('customer.qr.index') }}">QR Meja</a>
-                    @endif
-                    @if (auth()->user()->hasPermission('page.products'))
-                        <a href="{{ route('products.index') }}">Produk</a>
-                    @endif
-                    @if (auth()->user()->hasPermission('page.sales'))
-                        <a href="{{ route('sales.index') }}">Transaksi</a>
-                    @endif
-                    @if (auth()->user()->hasPermission('page.reports'))
-                        <a href="{{ route('reports.index') }}">Laporan</a>
-                    @endif
-                    @if (auth()->user()->hasPermission('page.settings'))
-                        <a href="{{ route('settings.index') }}">Settings</a>
-                    @endif
-                    @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
-                        <a href="{{ route('access-control.index') }}">Akses User</a>
-                    @endif
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit">Logout</button>
-                    </form>
-                </nav>
-                <div class="top-actions">
-                    <span>{{ now()->timezone('Asia/Jakarta')->format('d M Y') }}</span>
-                    <span id="clock">{{ now()->timezone('Asia/Jakarta')->format('H:i') }}</span>
-                    <div class="user-chip">
-                        <div class="avatar">
-                            @if (auth()->user()->avatar_path)
-                                <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
-                            @else
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                            @endif
-                        </div>
-                        <div>
-                            <strong>{{ auth()->user()->name }}</strong>
-                            <p class="small" style="color: rgba(255,255,255,.82);">{{ auth()->user()->roleLabel() }}</p>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
             <section class="content">
                 <section class="products-panel" aria-label="Daftar produk">
                     <div class="panel-head">
@@ -1206,11 +1109,6 @@
                 </aside>
             </section>
 
-            <footer class="bottom-bar">
-                <strong>{{ $store['name'] }} - POS System</strong>
-                <span class="server-status">Server aktif</span>
-                <span>Versi 1.0.0</span>
-            </footer>
         </main>
     </div>
 

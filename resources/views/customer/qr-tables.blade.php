@@ -36,15 +36,6 @@
                 @include('partials.staff-brand', ['store' => $store])
             </div>
             @include('partials.staff-nav')
-            <div class="actions legacy-actions" hidden>
-                @if (auth()->user()->hasPermission('page.dashboard'))
-                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.pos'))
-                    <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
-                @endif
-                <button class="btn" type="button" onclick="window.print()">Print QR</button>
-            </div>
         </section>
 
         <section class="panel page-heading">

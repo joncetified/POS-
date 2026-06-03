@@ -52,21 +52,6 @@
                 @include('partials.staff-brand', ['store' => $store])
             </div>
             @include('partials.staff-nav')
-            <div class="actions legacy-actions" hidden>
-                @if (auth()->user()->hasPermission('page.dashboard'))
-                    <a class="btn" href="{{ route('dashboard.index') }}">Dashboard</a>
-                @endif
-                @if (auth()->user()->hasPermission('page.pos'))
-                    <a class="btn primary" href="{{ route('pos.index') }}">Kasir</a>
-                @endif
-                @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
-                    <a class="btn" href="{{ route('access-control.index') }}">Akses User</a>
-                @endif
-                <form class="logout-form" method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="btn" type="submit">Logout</button>
-                </form>
-            </div>
         </section>
 
         @if (session('status'))
