@@ -3619,3 +3619,230 @@ tbody tr:hover {
         min-height: 0 !important;
     }
 }
+
+/* Staff workspace parity: make dashboard/product/report/etc use the same shell rhythm as Kasir. */
+@media (min-width: 981px) {
+    body:has(.shell > .topbar .staff-nav) {
+        min-height: 100vh !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) {
+        width: calc(100vw - 18px) !important;
+        height: auto !important;
+        min-height: calc(100dvh - 16px) !important;
+        margin: 8px auto !important;
+        display: grid !important;
+        grid-template-columns: 220px minmax(0, 1fr) !important;
+        grid-auto-rows: min-content !important;
+        gap: 0 !important;
+        overflow: visible !important;
+        border: 1px solid var(--purr-line) !important;
+        border-radius: 28px !important;
+        background: rgba(255, 252, 249, .82) !important;
+        box-shadow: var(--purr-shadow) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar {
+        grid-column: 1 !important;
+        grid-row: 1 / span 80 !important;
+        height: 100% !important;
+        min-height: calc(100dvh - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
+        position: sticky !important;
+        top: 8px !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto minmax(0, 1fr) !important;
+        align-content: start !important;
+        align-items: start !important;
+        gap: 20px !important;
+        padding: 22px 18px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: thin !important;
+        scrollbar-gutter: stable !important;
+        border: 0 !important;
+        border-right: 1px solid var(--purr-line) !important;
+        border-radius: 0 !important;
+        background: rgba(255, 255, 255, .92) !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar::-webkit-scrollbar {
+        width: 8px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar::-webkit-scrollbar-thumb {
+        background: rgba(87, 70, 61, .32) !important;
+        border-radius: 999px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar::after,
+    .shell:has(> .topbar .staff-nav) > .topbar > div:first-child::before,
+    .shell:has(> .topbar .staff-nav) .staff-brand-wrap::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > *:not(.topbar) {
+        grid-column: 2 !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .page-heading,
+    .shell:has(> .topbar .staff-nav) > .panel,
+    .shell:has(> .topbar .staff-nav) > .cards,
+    .shell:has(> .topbar .staff-nav) > .grid,
+    .shell:has(> .topbar .staff-nav) > .split,
+    .shell:has(> .topbar .staff-nav) > .content {
+        padding: 24px !important;
+        background: rgba(255, 252, 249, .74) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .page-heading {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 16px !important;
+        align-items: center !important;
+        border-bottom: 1px solid var(--purr-line) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .page-heading h1,
+    .shell:has(> .topbar .staff-nav) > .topbar h1 {
+        margin: 0 !important;
+        color: var(--purr-ink) !important;
+        font-size: clamp(1.6rem, 2.4vw, 2.15rem) !important;
+        line-height: 1.05 !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar h1,
+    .shell:has(> .topbar .staff-nav) > .topbar p:not(.muted) {
+        display: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand-wrap,
+    .shell:has(> .topbar .staff-nav) .staff-brand-stack,
+    .shell:has(> .topbar .staff-nav) .staff-nav {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand-stack {
+        gap: 12px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand {
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand-mark,
+    .shell:has(> .topbar .staff-nav) .staff-user-avatar {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand strong,
+    .shell:has(> .topbar .staff-nav) .staff-user-profile strong {
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+        line-height: 1.08 !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand strong {
+        font-size: 1rem !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-user-profile {
+        display: grid !important;
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+        padding: 12px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-user-profile strong {
+        font-size: .92rem !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-user-profile small {
+        line-height: 1.18 !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-auto-rows: minmax(46px, auto) !important;
+        align-content: start !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav > a,
+    .shell:has(> .topbar .staff-nav) .staff-nav > .logout-form .btn,
+    .shell:has(> .topbar .staff-nav) .staff-nav > .logout-form button {
+        width: 100% !important;
+        min-height: 46px !important;
+        justify-content: flex-start !important;
+        padding: 10px 14px !important;
+        border: 0 !important;
+        border-left: 4px solid transparent !important;
+        border-radius: 14px !important;
+        background: transparent !important;
+        color: #675750 !important;
+        box-shadow: none !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav > a:hover,
+    .shell:has(> .topbar .staff-nav) .staff-nav > .logout-form .btn:hover,
+    .shell:has(> .topbar .staff-nav) .staff-nav > a.active {
+        border-left-color: var(--purr-accent) !important;
+        background: #fff0e7 !important;
+        color: var(--purr-accent-2) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .logout-form {
+        margin-top: 18px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .cards {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav).dashboard-shell > .cards {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .table-wrap {
+        background: rgba(255, 255, 255, .86) !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+    .shell:has(> .topbar .staff-nav) {
+        width: calc(100vw - 14px) !important;
+        grid-template-columns: 216px minmax(0, 1fr) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .cards,
+    .shell:has(> .topbar .staff-nav).dashboard-shell > .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
