@@ -1800,7 +1800,7 @@ tbody tr:hover {
 }
 
 .cart-row {
-    grid-template-columns: minmax(0, 1fr) 82px 88px 96px 28px !important;
+    grid-template-columns: minmax(0, 1fr) 82px 88px 96px 58px !important;
     min-height: 84px !important;
     border: 0 !important;
     padding: 10px !important;
@@ -3003,4 +3003,102 @@ tbody tr:hover {
     .app-shell .content {
         padding: 16px !important;
     }
+}
+
+/* Final overflow guards for dense staff tools. */
+.shell input,
+.shell select,
+.shell textarea,
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+.shell input[type="file"],
+.app-shell input[type="file"] {
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.shell .btn,
+.shell button,
+.app-shell button {
+    min-width: 0 !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+}
+
+.shell:has(form[id^="update-"]) .table-wrap table {
+    min-width: 1080px !important;
+}
+
+.shell:has(form[id^="update-"]) .product-fields,
+.shell:has(form[id^="update-"]) .meta-fields,
+.shell:has(form[id^="update-"]) .row-actions {
+    min-width: 0 !important;
+}
+
+.shell:has(form[id^="update-"]) .row-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+.app-shell .remove-btn {
+    min-width: 52px !important;
+    min-height: 34px !important;
+    border: 1px solid #f1d8ca !important;
+    border-radius: 999px !important;
+    background: #fff7f2 !important;
+}
+
+.table-wrap,
+.shell .panel,
+.shell .cards,
+.shell .grid,
+.shell .split,
+.shell .content,
+.app-shell .products-panel,
+.app-shell .cart-panel {
+    max-width: 100% !important;
+}
+
+.table-wrap {
+    overflow-x: auto !important;
+}
+
+.shell:has(> .topbar .staff-nav) {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+}
+
+.app-shell {
+    overflow: hidden !important;
+}
+
+.shell:has(> .topbar .staff-nav) > .topbar,
+.shell:has(> .topbar .staff-nav) .staff-brand-wrap,
+.shell:has(> .topbar .staff-nav) .staff-nav,
+.app-shell .sidebar,
+.app-shell .staff-brand-wrap,
+.app-shell .staff-nav {
+    min-width: 0 !important;
+}
+
+.shell:has(> .topbar .staff-nav) .staff-nav > a,
+.shell:has(> .topbar .staff-nav) .staff-nav > .logout-form .btn,
+.app-shell .staff-nav > a,
+.app-shell .staff-nav > .logout-form .btn {
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    text-align: left !important;
+}
+
+.shell:has(.profile-form) .avatar-editor {
+    overflow: hidden !important;
+}
+
+.shell:has(.profile-form) .avatar-editor input[type="file"] {
+    max-width: 100% !important;
 }

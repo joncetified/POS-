@@ -44,166 +44,21 @@
             display: none;
         }
 
-        .brand {
-            display: grid;
-            place-items: center;
-            text-align: center;
-            gap: 8px;
-            padding: 0 8px 12px;
-        }
-
-        .brand-mark {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            background: linear-gradient(145deg, var(--brown), #8a4b17);
-            box-shadow: inset 0 -14px 22px rgba(0, 0, 0, 0.14);
-            font-size: 1.5rem;
-            font-weight: 950;
-            overflow: hidden;
-        }
-
-        .brand-mark img, .receipt-logo {
+        .receipt-logo {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .brand h1 {
-            font-size: 1.35rem;
-            line-height: 1.05;
-            color: var(--brown);
-        }
-
         .small, .muted { color: var(--muted); }
         .small { font-size: 0.82rem; }
 
-        .nav {
-            display: grid;
-            gap: 8px;
-            align-content: start;
-        }
-
-        .nav a, .logout-btn {
-            min-height: 52px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0 16px;
-            color: #4b3524;
-            background: transparent;
-            font-weight: 750;
-            transition: 160ms ease;
-        }
-
-        .nav a.active, .nav a:hover, .logout-btn:hover {
-            background: #f2e6d5;
-            color: var(--brown);
-        }
-
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            display: grid;
-            place-items: center;
-            color: var(--brown-2);
-            font-weight: 900;
-        }
-
         .logout-form { margin: 0; }
-        .logout-btn { width: 100%; }
 
         .workspace {
             min-width: 0;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) 30px;
-        }
-
-        .topbar {
-            display: grid;
-            grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto;
-            gap: 16px;
-            align-items: center;
-            min-height: 74px;
-            padding: 10px 24px;
-            color: #fff;
-            background: linear-gradient(90deg, #3a1704, #5f2b08 58%, #3a1704);
-            box-shadow: 0 6px 20px rgba(56, 28, 7, 0.12);
-        }
-
-        .top-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.15rem;
-            font-weight: 900;
-        }
-
-        .top-nav {
-            min-width: 0;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            justify-content: center;
-            overflow-x: auto;
-            padding: 2px 0;
-        }
-
-        .top-nav a,
-        .top-nav button {
-            min-height: 42px;
-            min-width: max-content;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 13px;
-            color: #fff;
-            background: rgba(255, 255, 255, 0.08);
-            font-weight: 850;
-        }
-
-        .top-nav a.active,
-        .top-nav a:hover,
-        .top-nav button:hover {
-            color: var(--brown);
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .top-nav form {
-            margin: 0;
-        }
-
-        .top-actions {
-            display: flex;
-            gap: 18px;
-            align-items: center;
-        }
-
-        .user-chip {
-            display: grid;
-            grid-template-columns: 46px minmax(0, auto);
-            gap: 10px;
-            align-items: center;
-            padding-left: 16px;
-            border-left: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        .avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 999px;
-            display: grid;
-            place-items: center;
-            color: var(--brown);
-            background: #f7ead8;
-            font-weight: 950;
+            grid-template-rows: minmax(0, 1fr);
         }
 
         .content {
@@ -456,7 +311,7 @@
         .cart-row,
         .cart-header-row {
             display: grid;
-            grid-template-columns: minmax(170px, 1.25fr) 100px 112px 118px 30px;
+            grid-template-columns: minmax(170px, 1.25fr) 100px 112px 118px 58px;
             gap: 12px;
             align-items: center;
             min-height: 68px;
@@ -511,7 +366,7 @@
         .remove-btn {
             color: var(--danger);
             background: transparent;
-            font-size: 1.05rem;
+            font-size: 0.82rem;
             font-weight: 900;
         }
 
@@ -730,31 +585,6 @@
             font-size: 1.05rem;
         }
 
-        .bottom-bar {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto auto;
-            gap: 34px;
-            align-items: center;
-            padding: 0 24px;
-            color: #fff;
-            background: #2b1204;
-            font-size: 0.85rem;
-        }
-
-        .server-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .server-status::before {
-            content: "";
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: #22c55e;
-        }
-
         .toast {
             position: fixed;
             right: 20px;
@@ -942,30 +772,19 @@
                 align-items: center;
                 padding: 10px;
             }
-            .brand { display: flex; padding: 0; text-align: left; }
-            .brand-mark { width: 42px; height: 42px; border-radius: 10px; font-size: 1rem; }
-            .brand h1 { font-size: 1rem; }
-            .nav { display: flex; overflow-x: auto; }
-            .nav a, .logout-btn { min-height: 42px; min-width: max-content; }
             .workspace { min-height: 100vh; }
-            .topbar, .bottom-bar { padding-inline: 14px; }
             .content { padding: 12px; }
             .panel-head { grid-template-columns: 1fr; }
             .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .cart-row, .cart-header-row { grid-template-columns: minmax(150px, 1fr) 86px 104px 100px 28px; }
+            .cart-row, .cart-header-row { grid-template-columns: minmax(150px, 1fr) 86px 104px 100px 58px; }
             .payment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .pay-row, .action-row, .customer-row, .discount-row, .payment-status { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 560px) {
-            .topbar { grid-template-columns: 1fr; gap: 8px; padding-block: 12px; }
-            .top-nav { justify-content: flex-start; }
-            .top-actions { justify-content: space-between; }
-            .user-chip { grid-template-columns: 38px minmax(0, 1fr); padding-left: 0; border-left: 0; }
             .product-grid { grid-template-columns: 1fr; }
             .cart-table { overflow-x: auto; }
             .cart-row, .cart-header-row { min-width: 620px; }
-            .bottom-bar { grid-template-columns: 1fr; gap: 2px; padding-block: 8px; }
         }
 
         @media print {
@@ -1011,9 +830,9 @@
                             <h2>Semua Produk</h2>
                         </div>
                         <label class="searchbox" for="search">
-                            <span>⌕</span>
+                            <span>Search</span>
                             <input id="search" type="search" placeholder="Cari produk...">
-                            <span>▥</span>
+                            <span>#</span>
                         </label>
                         <button id="category-toggle" class="category-menu" type="button">Kategori</button>
                     </div>
@@ -1031,14 +850,14 @@
                 <aside class="cart-panel" aria-label="Nota aktif">
                     <header class="cart-head">
                         <div class="cart-title">
-                            <span class="icon-cell">▱</span>
+                            <span class="icon-cell">#</span>
                             <div>
                                 <p class="small">Nota aktif</p>
                                 <h2>Nota aktif</h2>
                             </div>
                             <span id="cart-count" class="badge">0</span>
                         </div>
-                        <button id="clear-order" class="clear-btn" type="button">⌫ Bersihkan</button>
+                        <button id="clear-order" class="clear-btn" type="button">Bersihkan</button>
                     </header>
 
                     <section class="cart-table">
@@ -1078,8 +897,8 @@
 
                         <p class="small">Metode Pembayaran</p>
                         <div class="payment-grid">
-                            <button class="pay-btn active" type="button" data-payment="Tunai"><span>▣</span>Tunai</button>
-                            <button class="pay-btn" type="button" data-payment="QRIS"><span>▦</span>QRIS</button>
+                            <button class="pay-btn active" type="button" data-payment="Tunai"><span>T</span>Tunai</button>
+                            <button class="pay-btn" type="button" data-payment="QRIS"><span>Q</span>QRIS</button>
                         </div>
 
                         <div class="payment-status">
@@ -1101,9 +920,9 @@
                         </div>
 
                         <div class="action-row">
-                            <button id="save-order" class="save-btn" type="button">▣ Simpan</button>
-                            <button id="hold-order" class="park-btn" type="button">Ⓟ Parkir</button>
-                            <button id="checkout" class="checkout-btn" type="button">▱ Bayar</button>
+                            <button id="save-order" class="save-btn" type="button">Simpan</button>
+                            <button id="hold-order" class="park-btn" type="button">Parkir</button>
+                            <button id="checkout" class="checkout-btn" type="button">Bayar</button>
                         </div>
                     </footer>
                 </aside>
@@ -1368,7 +1187,7 @@
                         <button type="button" data-inc="${escapeHtml(item.sku)}">+</button>
                     </div>
                     <strong>${rupiah(item.price * item.qty)}</strong>
-                    <button class="remove-btn" type="button" data-remove="${escapeHtml(item.sku)}">⌫</button>
+                    <button class="remove-btn" type="button" data-remove="${escapeHtml(item.sku)}">Hapus</button>
                 </article>
             `).join('');
 
@@ -1649,7 +1468,7 @@
                 showToast('Koneksi ke server gagal');
             } finally {
                 byId('checkout').disabled = false;
-                byId('checkout').textContent = '▱ Bayar';
+                byId('checkout').textContent = 'Bayar';
             }
         }
 
@@ -1770,7 +1589,7 @@
 
         function resetCheckoutButton() {
             byId('checkout').disabled = false;
-            byId('checkout').textContent = '▱ Bayar';
+            byId('checkout').textContent = 'Bayar';
         }
 
         function showReceipt(sale) {
@@ -1897,18 +1716,6 @@
             window.location.reload();
         });
         byId('print-receipt').addEventListener('click', () => window.print());
-
-        if (byId('clock')) {
-            window.setInterval(() => {
-                byId('clock').textContent = new Intl.DateTimeFormat('id-ID', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                    timeZone: 'Asia/Jakarta',
-                }).format(new Date());
-            }, 1000);
-        }
 
         loadSavedOrdersFromServer();
         renderProducts();
