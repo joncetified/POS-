@@ -3297,3 +3297,238 @@ tbody tr:hover {
         min-height: 0 !important;
     }
 }
+
+/* POS viewport fit: keep the cashier screen compact at 100% desktop zoom. */
+@media (min-width: 981px) {
+    html:has(.app-shell),
+    body:has(.app-shell) {
+        min-height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell {
+        width: min(1360px, calc(100vw - 52px)) !important;
+        height: calc(100vh - 24px) !important;
+        min-height: 660px !important;
+        max-height: 860px !important;
+        margin: 12px auto !important;
+        grid-template-columns: 210px minmax(0, 1fr) !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .sidebar {
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding: 24px 20px !important;
+    }
+
+    .app-shell .workspace,
+    .app-shell .content,
+    .app-shell .products-panel,
+    .app-shell .cart-panel {
+        height: 100% !important;
+        min-height: 0 !important;
+    }
+
+    .app-shell .workspace {
+        overflow: hidden !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 360px) !important;
+        gap: 18px !important;
+        padding: 18px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .products-panel {
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 16px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .panel-head {
+        grid-template-columns: minmax(180px, 1fr) minmax(210px, 31%) auto !important;
+        gap: 12px !important;
+        align-items: end !important;
+    }
+
+    .app-shell .searchbox,
+    .app-shell .category-menu {
+        min-height: 40px !important;
+        height: 40px !important;
+    }
+
+    .app-shell .chips {
+        gap: 8px !important;
+        padding-bottom: 4px !important;
+    }
+
+    .app-shell .chips .chip {
+        min-width: 86px !important;
+        max-width: 132px !important;
+        min-height: 38px !important;
+        padding: 0 14px !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+        gap: 12px !important;
+        padding: 0 4px 4px 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        align-content: start !important;
+    }
+
+    .app-shell .product-card {
+        min-height: 142px !important;
+        grid-template-columns: 108px minmax(0, 1fr) !important;
+        gap: 14px !important;
+        padding: 12px !important;
+    }
+
+    .app-shell .product-visual {
+        width: 108px !important;
+        min-height: 118px !important;
+        border-radius: 12px !important;
+    }
+
+    .app-shell .product-info {
+        padding: 0 !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .product-info h3 {
+        font-size: .94rem !important;
+        line-height: 1.18 !important;
+        margin-bottom: 3px !important;
+    }
+
+    .app-shell .product-info .price {
+        margin: 2px 0 !important;
+        line-height: 1.15 !important;
+    }
+
+    .app-shell .product-info .small {
+        font-size: .76rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .app-shell .add-btn {
+        width: min(116px, 100%) !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        justify-self: end !important;
+    }
+
+    .app-shell .cart-panel {
+        grid-template-rows: auto minmax(112px, .72fr) minmax(272px, 1fr) !important;
+        gap: 12px !important;
+        padding: 16px 14px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .cart-head {
+        gap: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    .app-shell .cart-title {
+        min-width: 0 !important;
+    }
+
+    .app-shell .cart-title h2 {
+        font-size: 1.22rem !important;
+        line-height: 1.08 !important;
+    }
+
+    .app-shell .cart-table {
+        min-height: 0 !important;
+        overflow: auto !important;
+    }
+
+    .app-shell .cart-table .empty {
+        min-height: 112px !important;
+        padding: 18px !important;
+    }
+
+    .app-shell .checkout-area {
+        min-height: 0 !important;
+        gap: 10px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 4px !important;
+    }
+
+    .app-shell .customer-row {
+        grid-template-columns: minmax(0, 1fr) minmax(112px, .72fr) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .customer-input,
+    .app-shell .money-input,
+    .app-shell .discount-row input {
+        min-height: 38px !important;
+    }
+
+    .app-shell .customer-note {
+        min-height: 58px !important;
+        resize: vertical !important;
+    }
+
+    .app-shell .saved-orders {
+        max-height: 104px !important;
+        overflow: auto !important;
+    }
+
+    .app-shell .saved-order {
+        grid-template-columns: minmax(0, 1fr) 72px 72px !important;
+        gap: 6px !important;
+        min-height: 34px !important;
+    }
+
+    .app-shell .saved-order button {
+        min-height: 32px !important;
+        padding: 0 8px !important;
+    }
+
+    .app-shell .discount-row {
+        grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .payment-grid,
+    .app-shell .action-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .pay-row,
+    .app-shell .payment-status {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+    .app-shell {
+        width: min(1128px, calc(100vw - 24px)) !important;
+        grid-template-columns: 188px minmax(0, 1fr) !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: minmax(0, 1fr) 330px !important;
+        gap: 14px !important;
+        padding: 14px !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .cart-panel {
+        min-height: 0 !important;
+    }
+}
