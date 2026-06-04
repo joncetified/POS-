@@ -516,7 +516,7 @@
 
         .payment-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 10px;
         }
 
@@ -947,7 +947,6 @@
                         <p class="small">Metode Pembayaran</p>
                         <div class="payment-grid">
                             <button class="pay-btn active" type="button" data-payment="Tunai"><span>T</span>Tunai</button>
-                            <button class="pay-btn" type="button" data-payment="QRIS"><span>Q</span>QRIS</button>
                         </div>
 
                         <div class="payment-status">
