@@ -6,78 +6,385 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Menu Meja - {{ $store['name'] }}</title>
     <style>
-        :root { --bg: #f6f3ef; --surface: #fff; --ink: #24140c; --muted: #7c6b5c; --line: #e8ded3; --brown: #4b2308; --gold: #ffc94b; --green: #0b9f55; --red: #dc2626; }
+        :root {
+            --page: #ffd1b8;
+            --surface: #fffdf9;
+            --soft: #fff3ec;
+            --ink: #2b201b;
+            --muted: #9a8274;
+            --line: #f0cdbd;
+            --accent: #ff8655;
+            --brown: #5b2a12;
+            --green: #287967;
+        }
         * { box-sizing: border-box; }
-        body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 18% 0%, rgba(255, 255, 255, .55), transparent 30%),
+                linear-gradient(120deg, #ffc6aa 0%, var(--page) 48%, #ffd9c7 100%);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
         button, input, textarea { font: inherit; }
-        .shell { width: min(1180px, calc(100% - 28px)); margin: 22px auto; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; }
-        .topbar, .panel, .cart { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 14px 30px rgba(56, 28, 7, .07); }
-        .topbar { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 18px; }
+        button { cursor: pointer; }
         h1, h2, h3, p { margin: 0; }
-        h1 { font-size: clamp(1.45rem, 3vw, 2.1rem); }
-        h2 { font-size: 1.1rem; }
-        h3 { font-size: 1rem; }
-        .muted { color: var(--muted); }
-        .badge { display: inline-flex; align-items: center; min-height: 34px; border-radius: 999px; padding: 6px 12px; background: #fff6e5; border: 1px solid #f2d7aa; font-weight: 900; }
-        .btn { min-height: 42px; border: 1px solid var(--brown); border-radius: 8px; padding: 9px 13px; color: #fff; background: var(--brown); cursor: pointer; font-weight: 850; }
-        .btn.secondary { color: var(--brown); background: #fffaf2; border-color: #ead9c6; }
-        .btn.gold { color: var(--ink); background: var(--gold); border-color: var(--gold); }
-        .btn:disabled { opacity: .55; cursor: not-allowed; }
-        .catalog { display: grid; gap: 14px; }
-        .panel { padding: 16px; display: grid; gap: 12px; }
-        .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-        .item { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fffaf2; display: grid; gap: 10px; min-height: 154px; }
-        .item-top { display: grid; gap: 5px; align-content: start; }
-        .price { font-weight: 950; }
-        .stock { font-size: .88rem; color: var(--muted); }
-        .qty { display: grid; grid-template-columns: 42px 1fr 42px; gap: 8px; align-items: center; margin-top: auto; }
-        .qty button { min-height: 38px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 950; }
-        .qty strong { text-align: center; }
-        .cart { position: sticky; top: 16px; align-self: start; padding: 16px; display: grid; gap: 13px; }
-        .cart-list { display: grid; gap: 9px; min-height: 120px; }
-        .cart-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 9px; }
-        .cart-row strong, .item h3 { overflow-wrap: anywhere; }
-        .summary { display: grid; gap: 7px; border-top: 1px solid var(--line); padding-top: 12px; }
-        .line { display: flex; justify-content: space-between; gap: 12px; }
-        .total { font-size: 1.15rem; font-weight: 950; }
-        .customer { display: grid; gap: 8px; }
-        .customer input, .customer textarea { min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; }
-        .customer textarea { resize: vertical; min-height: 74px; }
-        .empty { min-height: 110px; display: grid; place-items: center; text-align: center; color: var(--muted); }
-        .notice { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; border-radius: 8px; padding: 12px; }
-        .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(80px); opacity: 0; border-radius: 8px; background: var(--ink); color: #fff; padding: 12px 16px; transition: 180ms ease; z-index: 10; }
+        .customer-menu-shell {
+            width: min(1240px, calc(100% - 36px));
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 14px;
+        }
+        .menu-header,
+        .catalog,
+        .order-panel {
+            border: 1px solid rgba(240, 205, 189, .95);
+            border-radius: 8px;
+            background: rgba(255, 253, 249, .96);
+            box-shadow: 0 18px 44px rgba(91, 42, 18, .08);
+        }
+        .menu-header {
+            grid-column: 1 / -1;
+            min-height: 92px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 18px 20px;
+        }
+        .eyebrow { color: var(--muted); font-size: .86rem; }
+        h1 { font-size: clamp(1.55rem, 2.7vw, 2.45rem); line-height: 1.04; letter-spacing: 0; }
+        .header-copy { margin-top: 5px; color: var(--muted); line-height: 1.45; max-width: 760px; }
+        .header-actions { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .pill,
+        .customer-account,
+        .btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            padding: 9px 15px;
+            font-weight: 900;
+            text-decoration: none;
+        }
+        .pill { color: #fff; background: var(--accent); border-color: var(--accent); }
+        .customer-account,
+        .btn.secondary { color: var(--brown); background: var(--soft); }
+        .btn.primary { color: #fff; background: var(--accent); border-color: var(--accent); box-shadow: 0 12px 24px rgba(255, 134, 85, .22); }
+        .btn:disabled { opacity: .62; cursor: not-allowed; box-shadow: none; }
+        .customer-account { gap: 9px; }
+        .customer-account-avatar {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 10px;
+            background: var(--brown);
+            color: #fff;
+            font-size: .78rem;
+        }
+        .customer-account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .catalog {
+            min-width: 0;
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+        }
+        .catalog-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+            gap: 12px;
+            align-items: end;
+        }
+        .catalog-head h2 { font-size: 1.22rem; line-height: 1.1; }
+        .search-field {
+            width: 100%;
+            min-height: 46px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 0 16px;
+            color: var(--ink);
+            background: #fff;
+            outline: none;
+        }
+        .search-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 134, 85, .16); }
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: thin;
+        }
+        .category-tab {
+            flex: 0 0 auto;
+            min-height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--brown);
+            padding: 8px 16px;
+            font-weight: 900;
+        }
+        .category-tab.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .product-card {
+            min-width: 0;
+            min-height: 152px;
+            display: grid;
+            grid-template-columns: 124px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            padding: 14px;
+        }
+        .product-media {
+            position: relative;
+            width: 124px;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ffc4a5, #fff7ef);
+        }
+        .product-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .product-fallback {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: linear-gradient(135deg, #ff9a67, #5b2a12);
+            font-size: 1.35rem;
+            font-weight: 950;
+        }
+        .product-code {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            min-width: 38px;
+            min-height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #fff;
+            background: var(--accent);
+            font-size: .78rem;
+            font-weight: 950;
+            padding: 4px 9px;
+        }
+        .product-info { min-width: 0; display: grid; gap: 6px; }
+        .product-info h3 {
+            font-size: 1rem;
+            line-height: 1.15;
+            overflow-wrap: anywhere;
+        }
+        .meta { color: var(--muted); font-size: .82rem; line-height: 1.35; }
+        .price { color: #ff7041; font-size: 1.05rem; font-weight: 950; }
+        .qty-control {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 36px minmax(38px, 1fr) 36px;
+            gap: 7px;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .qty-control button {
+            min-height: 34px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff8f2;
+            color: var(--brown);
+            font-weight: 950;
+        }
+        .qty-control strong { text-align: center; }
+        .order-panel {
+            position: sticky;
+            top: 14px;
+            align-self: start;
+            max-height: calc(100vh - 28px);
+            min-width: 0;
+            display: grid;
+            grid-template-rows: auto minmax(130px, 1fr) auto;
+            overflow: hidden;
+        }
+        .order-head,
+        .order-form,
+        .order-list { padding: 18px; }
+        .order-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+        }
+        .order-title { display: flex; gap: 10px; align-items: center; min-width: 0; }
+        .order-mark {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--soft);
+            color: var(--brown);
+            font-weight: 950;
+        }
+        .order-count {
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: var(--accent);
+            font-weight: 950;
+        }
+        .order-list {
+            min-height: 0;
+            overflow-y: auto;
+            display: grid;
+            align-content: start;
+            gap: 10px;
+        }
+        .empty {
+            min-height: 140px;
+            display: grid;
+            place-items: center;
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            color: var(--muted);
+            text-align: center;
+            padding: 16px;
+        }
+        .cart-row {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: start;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fffaf6;
+            padding: 11px;
+        }
+        .cart-row strong { overflow-wrap: anywhere; }
+        .cart-row .amount { white-space: nowrap; }
+        .summary {
+            display: grid;
+            gap: 7px;
+            border-top: 1px solid var(--line);
+            padding-top: 12px;
+        }
+        .line { display: flex; justify-content: space-between; gap: 14px; }
+        .line strong { white-space: nowrap; }
+        .total { font-size: 1.12rem; font-weight: 950; }
+        .order-form {
+            display: grid;
+            gap: 10px;
+            border-top: 1px solid var(--line);
+            background: rgba(255, 250, 246, .82);
+        }
+        .field {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: #fff;
+            outline: none;
+        }
+        textarea.field {
+            min-height: 72px;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        .success-box {
+            display: none;
+            border: 1px solid rgba(40, 121, 103, .35);
+            border-radius: 8px;
+            background: #eefaf5;
+            color: #174e42;
+            padding: 12px;
+            line-height: 1.45;
+        }
+        .success-box.show { display: block; }
+        .notice {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--soft);
+            color: var(--brown);
+            padding: 12px;
+            line-height: 1.45;
+        }
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            z-index: 20;
+            max-width: calc(100% - 28px);
+            transform: translateX(-50%) translateY(80px);
+            opacity: 0;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            padding: 12px 16px;
+            transition: 180ms ease;
+            font-weight: 850;
+        }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .logout-form { margin: 0; }
-        .customer-account { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; border: 1px solid #ead9c6; border-radius: 8px; padding: 6px 10px; background: #fffaf2; color: var(--brown); text-decoration: none; font-weight: 850; }
-        .customer-account-avatar { width: 30px; height: 30px; display: grid; place-items: center; overflow: hidden; border-radius: 9px; background: var(--brown); color: #fff; font-size: .8rem; font-weight: 950; }
-        .customer-account-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        @media (max-width: 900px) {
-            .shell { grid-template-columns: 1fr; }
-            .cart { position: static; }
-            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        [hidden] { display: none !important; }
+        @media (max-width: 1080px) {
+            .customer-menu-shell { grid-template-columns: 1fr; }
+            .order-panel { position: static; max-height: none; grid-template-rows: auto; }
+            .order-list { max-height: 420px; }
         }
-        @media (max-width: 560px) {
-            .topbar { grid-template-columns: 1fr; }
-            .grid { grid-template-columns: 1fr; }
+        @media (max-width: 760px) {
+            .customer-menu-shell { width: min(100% - 20px, 620px); margin: 10px auto; }
+            .menu-header,
+            .catalog-head { grid-template-columns: 1fr; }
+            .header-actions { justify-content: flex-start; }
+            .product-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 460px) {
+            .menu-header,
+            .catalog,
+            .order-head,
+            .order-form,
+            .order-list { padding: 14px; }
+            .product-card { grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 10px; }
+            .product-media { width: 96px; }
         }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <main class="shell">
-        <section class="topbar">
+    <main class="customer-menu-shell">
+        <section class="menu-header">
             <div>
-                <p class="muted">{{ $store['name'] }}</p>
-                <h1>Menu Meja Cafe</h1>
-                @if ($canOrder)
-                    <p class="muted">Pilih menu dengan tombol +, cek ringkasan, isi catatan jika perlu, lalu kirim ke kasir.</p>
-                @else
-                    <p class="muted">Ini katalog menu. Gunakan QR di meja untuk pesan makan/minum di tempat.</p>
-                @endif
+                <p class="eyebrow">{{ $store['name'] }}</p>
+                <h1>{{ $canOrder ? 'Menu Meja ' . $tableNumber : 'Menu Cafe' }}</h1>
+                <p class="header-copy">
+                    @if ($canOrder)
+                        Pilih menu, cek total, isi nama atau catatan, lalu kirim ke kasir. Pembayaran diselesaikan di kasir.
+                    @else
+                        Ini katalog menu. Untuk pesan langsung, scan QR yang ditempel di meja cafe.
+                    @endif
+                </p>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="header-actions">
                 @if ($canOrder)
-                    <span class="badge">Meja {{ $tableNumber }}</span>
+                    <span class="pill">Meja {{ $tableNumber }}</span>
                 @endif
                 @auth
                     <a class="customer-account" href="{{ route('profile.edit') }}">
@@ -99,65 +406,57 @@
         </section>
 
         <section class="catalog">
-            @foreach ($categories as $category)
-                <section class="panel">
-                    <h2>{{ $category->name }}</h2>
-                    <div class="grid">
-                        @forelse ($products->where('category_id', $category->id) as $product)
-                            <article class="item">
-                                @if ($product->image_path)
-                                    <img class="menu-product-image" src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
-                                @endif
-                                <div class="item-top">
-                                    <h3>{{ $product->name }}</h3>
-                                    <p class="stock">{{ $product->sku }} / Stok {{ $product->stock }} {{ $product->unit }}</p>
-                                    <p class="price">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                                </div>
-                                @if ($canOrder)
-                                    <div class="qty">
-                                        <button type="button" data-dec="{{ $product->id }}">-</button>
-                                        <strong id="qty-{{ $product->id }}">0</strong>
-                                        <button type="button" data-add="{{ $product->id }}">+</button>
-                                    </div>
-                                @endif
-                            </article>
-                        @empty
-                            <div class="empty">Belum ada produk.</div>
-                        @endforelse
-                    </div>
-                </section>
-            @endforeach
-        </section>
-
-        <aside class="cart">
-            <div>
-                <p class="muted">Dine-in</p>
-                <h2>Pesanan Meja</h2>
+            <div class="catalog-head">
+                <div>
+                    <p class="eyebrow">{{ $store['address'] ?? 'Jl. Kopi Nusantara No. 8, Batam' }}</p>
+                    <h2>Semua Produk</h2>
+                </div>
+                <input id="search" class="search-field" type="search" placeholder="Cari produk...">
             </div>
 
-            @if (! $canOrder)
-                <div class="notice">Pelanggan pesan dari QR yang ditempel di meja.</div>
-            @else
-                <div class="notice">Catatan seperti less sugar, tanpa es, atau alergi akan terlihat di layar kasir.</div>
-            @endif
+            <div class="category-tabs" aria-label="Kategori produk">
+                <button class="category-tab active" type="button" data-category="all">Semua</button>
+                @foreach ($categories as $category)
+                    <button class="category-tab" type="button" data-category="{{ $category->id }}">{{ $category->name }}</button>
+                @endforeach
+            </div>
 
-            <div id="cart-list" class="cart-list">
+            <div id="product-grid" class="product-grid"></div>
+        </section>
+
+        <aside class="order-panel">
+            <div class="order-head">
+                <div class="order-title">
+                    <span class="order-mark">#</span>
+                    <div>
+                        <p class="eyebrow">Nota aktif</p>
+                        <h2>Pesanan Meja</h2>
+                    </div>
+                </div>
+                <span id="cart-count" class="order-count">0</span>
+            </div>
+
+            <div id="cart-list" class="order-list">
                 <div class="empty">Belum ada item pesanan.</div>
             </div>
 
-            <div class="summary">
-                <div class="line"><span>Subtotal</span><strong id="subtotal">Rp 0</strong></div>
-                <div class="line"><span>PPN 11%</span><strong id="tax">Rp 0</strong></div>
-                <div class="line total"><span>Total</span><strong id="total">Rp 0</strong></div>
-            </div>
+            <div class="order-form">
+                <div id="success-box" class="success-box" role="status" aria-live="polite"></div>
 
-            @if ($canOrder)
-                <div class="customer">
-                    <input id="customer-name" type="text" maxlength="120" placeholder="Nama pelanggan (opsional)">
-                    <textarea id="customer-note" maxlength="255" rows="3" placeholder="Catatan pesanan (opsional), contoh: less sugar, tanpa es"></textarea>
-                    <button id="send-order" class="btn gold" type="button">Kirim ke Kasir</button>
+                <div class="summary">
+                    <div class="line"><span>Subtotal</span><strong id="subtotal">Rp 0</strong></div>
+                    <div class="line"><span>PPN 11%</span><strong id="tax">Rp 0</strong></div>
+                    <div class="line total"><span>Total</span><strong id="total">Rp 0</strong></div>
                 </div>
-            @endif
+
+                @if (! $canOrder)
+                    <div class="notice">Pelanggan pesan dari QR yang ditempel di meja.</div>
+                @else
+                    <input id="customer-name" class="field" type="text" maxlength="120" placeholder="Nama pelanggan (opsional)">
+                    <textarea id="customer-note" class="field" maxlength="255" rows="3" placeholder="Catatan pesanan, contoh: less sugar, tanpa es"></textarea>
+                    <button id="send-order" class="btn primary" type="button">Kirim ke Kasir</button>
+                @endif
+            </div>
         </aside>
     </main>
 
@@ -166,10 +465,16 @@
     @php
         $menuProducts = $products->map(fn ($product) => [
             'id' => $product->id,
+            'category_id' => $product->category_id,
+            'category' => $product->category?->name,
             'name' => $product->name,
             'sku' => $product->sku,
             'price' => $product->price,
-            'stock' => $product->stock,
+            'stock' => $product->availableForSaleStock(),
+            'unit' => $product->unit,
+            'tag' => $product->tag,
+            'is_bundle' => $product->is_bundle,
+            'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,
         ])->values();
     @endphp
 
@@ -179,11 +484,13 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         const orderUrl = @json($canOrder ? route('customer.table.orders', ['tableNumber' => $tableNumber], false) : null);
         const cart = new Map();
+        const state = { category: 'all', search: '' };
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
         }[match]));
+        const initials = (name) => String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || '#';
 
         function showToast(message) {
             const toast = byId('toast');
@@ -200,14 +507,64 @@
             return { items, subtotal, tax, total: subtotal + tax };
         }
 
-        function render() {
-            const data = totals();
+        function visibleProducts() {
+            const query = state.search.trim().toLowerCase();
+            return products.filter((product) => {
+                const inCategory = state.category === 'all' || String(product.category_id) === state.category;
+                const haystack = `${product.name} ${product.sku} ${product.category || ''} ${product.tag || ''}`.toLowerCase();
+                return inCategory && (!query || haystack.includes(query));
+            });
+        }
 
+        function renderProducts() {
+            const grid = byId('product-grid');
+            const rows = visibleProducts();
+
+            if (!rows.length) {
+                grid.innerHTML = '<div class="empty">Produk tidak ditemukan.</div>';
+                return;
+            }
+
+            grid.innerHTML = rows.map((product) => {
+                const image = product.image_url
+                    ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`
+                    : `<div class="product-fallback">${escapeHtml(initials(product.name))}</div>`;
+                const stockLabel = product.is_bundle ? `Paket / Stok ${product.stock}` : `${escapeHtml(product.tag || product.category || product.unit)} / Stok ${product.stock} ${escapeHtml(product.unit)}`;
+                const disabled = !canOrder || product.stock <= 0;
+
+                return `
+                    <article class="product-card">
+                        <div class="product-media">
+                            ${image}
+                            <span class="product-code">${escapeHtml(initials(product.name))}</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>${escapeHtml(product.name)}</h3>
+                            <p class="price">${rupiah(product.price)}</p>
+                            <p class="meta">${stockLabel}</p>
+                            ${canOrder ? `
+                                <div class="qty-control">
+                                    <button type="button" data-dec="${product.id}" aria-label="Kurangi ${escapeHtml(product.name)}" ${disabled ? 'disabled' : ''}>-</button>
+                                    <strong id="qty-${product.id}">0</strong>
+                                    <button type="button" data-add="${product.id}" aria-label="Tambah ${escapeHtml(product.name)}" ${disabled ? 'disabled' : ''}>+</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            renderCart();
+        }
+
+        function renderCart() {
+            const data = totals();
             products.forEach((product) => {
                 const qtyNode = byId(`qty-${product.id}`);
                 if (qtyNode) qtyNode.textContent = cart.get(product.id)?.qty || 0;
             });
 
+            byId('cart-count').textContent = data.items.reduce((sum, item) => sum + item.qty, 0);
             byId('subtotal').textContent = rupiah(data.subtotal);
             byId('tax').textContent = rupiah(data.tax);
             byId('total').textContent = rupiah(data.total);
@@ -221,9 +578,9 @@
                 <div class="cart-row">
                     <div>
                         <strong>${escapeHtml(item.name)}</strong>
-                        <p class="muted">${item.qty} x ${rupiah(item.price)}</p>
+                        <p class="meta">${item.qty} x ${rupiah(item.price)}</p>
                     </div>
-                    <strong>${rupiah(item.price * item.qty)}</strong>
+                    <strong class="amount">${rupiah(item.price * item.qty)}</strong>
                 </div>
             `).join('');
         }
@@ -243,7 +600,17 @@
                 cart.set(product.id, { ...current, qty: nextQty });
             }
 
-            render();
+            renderCart();
+        }
+
+        function showOrderSuccess(order) {
+            const box = byId('success-box');
+            box.innerHTML = `
+                <strong>Pesanan masuk ke kasir.</strong><br>
+                Meja ${escapeHtml(order.table_number || '-')} - Total ${rupiah(order.total || 0)}.
+                Tunggu kasir memuat nota dan menyelesaikan pembayaran.
+            `;
+            box.classList.add('show');
         }
 
         async function sendOrder() {
@@ -285,7 +652,8 @@
 
                 cart.clear();
                 byId('customer-note').value = '';
-                render();
+                renderCart();
+                showOrderSuccess(payload.order || {});
                 showToast('Pesanan meja sudah masuk ke kasir');
             } catch (error) {
                 showToast('Koneksi ke server gagal');
@@ -298,16 +666,27 @@
         document.addEventListener('click', (event) => {
             const add = event.target.closest('[data-add]');
             const dec = event.target.closest('[data-dec]');
+            const category = event.target.closest('[data-category]');
 
             if (add) changeQty(add.dataset.add, 1);
             if (dec) changeQty(dec.dataset.dec, -1);
+            if (category) {
+                state.category = category.dataset.category;
+                document.querySelectorAll('[data-category]').forEach((button) => button.classList.toggle('active', button === category));
+                renderProducts();
+            }
+        });
+
+        byId('search').addEventListener('input', (event) => {
+            state.search = event.target.value;
+            renderProducts();
         });
 
         if (canOrder) {
             byId('send-order').addEventListener('click', sendOrder);
         }
 
-        render();
+        renderProducts();
     </script>
 </body>
 </html>
