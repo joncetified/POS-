@@ -51,6 +51,11 @@
         .bundle-row { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; align-items: center; }
         .bundle-list { margin-top: 8px; display: grid; gap: 4px; color: var(--muted); font-size: .84rem; }
         .badge { display: inline-flex; width: max-content; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; background: #fff0e7; color: #d86635; font-weight: 900; font-size: .78rem; }
+        .product-image-preview { width: 76px; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff7f2; color: #fff; overflow: hidden; }
+        .product-image-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .product-image-preview span { width: 100%; height: 100%; display: grid; place-items: center; background: var(--color, var(--primary)); font-weight: 950; }
+        .image-field { display: grid; gap: 8px; }
+        .image-field .product-image-preview { width: 92px; }
         .barcode-preview { margin-top: 8px; display: grid; gap: 5px; max-width: 210px; color: var(--muted); font-size: .78rem; }
         .barcode-preview img { width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 6px; object-fit: contain; }
         .pagination { margin-top: 12px; }
@@ -189,7 +194,12 @@
                         </div>
                         <div class="field">
                             <label for="image">Gambar produk</label>
-                            <input id="image" name="image" type="file" accept="image/*">
+                            <div class="image-field">
+                                <div class="product-image-preview" data-image-preview="create">
+                                    <span style="--color: #0f766e">IMG</span>
+                                </div>
+                                <input id="image" name="image" type="file" accept="image/*" data-image-input="create">
+                            </div>
                         </div>
                         <label class="bundle-toggle">
                             <input name="is_bundle" type="checkbox" value="1">
@@ -262,7 +272,17 @@
                                             <input name="color" value="{{ $product->color }}" required aria-label="Warna">
                                         </div>
                                         <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
-                                        <input name="image" type="file" accept="image/*" style="margin-top: 8px;" aria-label="Gambar produk">
+                                        <div class="image-field" style="margin-top: 8px;">
+                                            <label for="image-{{ $product->id }}">Gambar produk</label>
+                                            <div class="product-image-preview" data-image-preview="{{ $product->id }}">
+                                                @if ($product->image_path)
+                                                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
+                                                @else
+                                                    <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+                                                @endif
+                                            </div>
+                                            <input id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
+                                        </div>
                                         <input type="hidden" name="is_bundle" value="0">
                                         <label class="bundle-toggle" style="margin-top: 8px;">
                                             <input name="is_bundle" type="checkbox" value="1" @checked($product->is_bundle)>
@@ -328,5 +348,22 @@
             </div>
         </section>
     </main>
+    <script>
+        document.querySelectorAll('[data-image-input]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const key = input.dataset.imageInput;
+                const preview = document.querySelector(`[data-image-preview="${key}"]`);
+                const file = input.files && input.files[0];
+
+                if (!preview || !file) {
+                    return;
+                }
+
+                const url = URL.createObjectURL(file);
+                preview.innerHTML = `<img src="${url}" alt="Preview gambar produk">`;
+                preview.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -216,6 +216,8 @@ class ExampleTest extends TestCase
             ->actingAs($admin)
             ->get(route('products.index'))
             ->assertOk()
+            ->assertSee('data-image-input', false)
+            ->assertSee('data-image-preview', false)
             ->assertSee('data:image/svg+xml', false)
             ->assertSee('8991234567890');
 
