@@ -252,8 +252,10 @@ class ExampleTest extends TestCase
             ->actingAs(User::factory()->create())
             ->get(route('pos.index'))
             ->assertOk()
+            ->assertSee('Scan Barcode')
             ->assertSee('Scan barcode / SKU')
             ->assertSee('"barcode":"8991234567890"', false)
+            ->assertSee('"barcode_image_url":"data:image\/svg+xml', false)
             ->assertSee('"package_contents":"Espresso + Air Mineral"', false)
             ->assertSee('"image_url"', false);
     }

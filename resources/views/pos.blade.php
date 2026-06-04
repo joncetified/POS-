@@ -87,7 +87,7 @@
 
         .panel-head {
             display: grid;
-            grid-template-columns: minmax(170px, 1fr) minmax(220px, 28%) minmax(220px, 28%) auto;
+            grid-template-columns: minmax(170px, 1fr) minmax(220px, 26%) minmax(260px, 32%) auto;
             gap: 16px;
             align-items: center;
         }
@@ -120,6 +120,100 @@
             outline: 0;
             background: transparent;
             color: var(--ink);
+        }
+
+        .scan-panel {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 96px;
+            gap: 10px;
+            align-items: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px;
+            background: #fffaf2;
+        }
+
+        .scan-panel strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .scan-panel .searchbox {
+            min-height: 40px;
+            padding-inline: 10px;
+        }
+
+        .scan-preview {
+            min-width: 0;
+            display: grid;
+            gap: 6px;
+        }
+
+        .scan-status {
+            min-height: 18px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.25;
+        }
+
+        .scan-product {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr);
+            gap: 8px;
+            align-items: center;
+        }
+
+        .scan-thumb {
+            width: 44px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 6px;
+            color: #fff;
+            background: var(--brown);
+            font-size: .7rem;
+            font-weight: 950;
+        }
+
+        .scan-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scan-product h3 {
+            margin: 0;
+            font-size: .88rem;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scan-barcode {
+            width: 96px;
+            min-height: 58px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--muted);
+            font-size: .72rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .scan-barcode img {
+            width: 100%;
+            height: 58px;
+            object-fit: contain;
+            display: block;
+            padding: 4px;
         }
 
         .category-menu,
@@ -229,6 +323,24 @@
             background: rgba(48, 21, 5, 0.78);
             font-size: 0.78rem;
             font-weight: 950;
+        }
+
+        .product-barcode {
+            position: absolute;
+            inset: 10px 10px auto auto;
+            width: 70px;
+            height: 30px;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.8);
+            background: #fff;
+        }
+
+        .product-barcode img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .product-info {
@@ -878,11 +990,19 @@
                             <input id="search" type="search" placeholder="Cari produk...">
                             <span>#</span>
                         </label>
-                        <label class="searchbox" for="barcode-scan">
-                            <span aria-hidden="true">|</span>
-                            <input id="barcode-scan" type="search" inputmode="numeric" autocomplete="off" placeholder="Scan barcode / SKU">
-                            <span>|</span>
-                        </label>
+                        <div class="scan-panel" aria-label="Scan barcode">
+                            <div class="scan-preview">
+                                <strong>Scan Barcode</strong>
+                                <label class="searchbox" for="barcode-scan">
+                                    <span aria-hidden="true">|</span>
+                                    <input id="barcode-scan" type="search" inputmode="numeric" autocomplete="off" placeholder="Scan barcode / SKU">
+                                    <span>|</span>
+                                </label>
+                                <div id="scan-product" class="scan-product" hidden></div>
+                                <div id="scan-status" class="scan-status">Scan barcode produk untuk masuk nota.</div>
+                            </div>
+                            <div id="scan-barcode" class="scan-barcode">Barcode</div>
+                        </div>
                         <button id="category-toggle" class="category-menu" type="button">Kategori</button>
                     </div>
 
@@ -1053,6 +1173,9 @@
             savedOrders: byId('saved-orders'),
             search: byId('search'),
             barcodeScan: byId('barcode-scan'),
+            scanProduct: byId('scan-product'),
+            scanBarcode: byId('scan-barcode'),
+            scanStatus: byId('scan-status'),
             subtotal: byId('subtotal'),
             discountPercent: byId('discount-percent'),
             discount: byId('discount'),
@@ -1184,11 +1307,15 @@
                 const packageLine = product.is_bundle && product.package_contents
                     ? `<p class="small">${escapeHtml(product.package_contents)}</p>`
                     : '';
+                const barcodeImage = product.barcode_image_url
+                    ? `<div class="product-barcode"><img src="${escapeHtml(product.barcode_image_url)}" alt="Barcode ${escapeHtml(product.barcode)}"></div>`
+                    : '';
 
                 return `
                     <article class="product-card">
                         <div class="product-visual" style="--tile-color: ${escapeHtml(product.color)};">
                             ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">` : ''}
+                            ${barcodeImage}
                             <span>${escapeHtml(initials(product.name))}</span>
                         </div>
                         <div class="product-info">
@@ -1313,14 +1440,39 @@
             const product = findProductByScan(value);
 
             if (!product) {
+                nodes.scanProduct.hidden = true;
+                nodes.scanBarcode.textContent = 'Tidak ditemukan';
+                nodes.scanStatus.textContent = 'Barcode atau SKU tidak ditemukan.';
                 showToast('Barcode atau SKU tidak ditemukan');
                 nodes.barcodeScan.select();
                 return;
             }
 
             addItem(product.sku);
+            renderScanPreview(product, 'Produk masuk nota');
             nodes.barcodeScan.value = '';
             showToast(`${product.name} masuk nota`);
+        }
+
+        function renderScanPreview(product, message = 'Siap scan') {
+            const image = product.image_url
+                ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`
+                : escapeHtml(initials(product.name));
+            const barcode = product.barcode_image_url
+                ? `<img src="${escapeHtml(product.barcode_image_url)}" alt="Barcode ${escapeHtml(product.barcode)}">`
+                : 'Belum ada barcode';
+
+            nodes.scanProduct.hidden = false;
+            nodes.scanProduct.innerHTML = `
+                <div class="scan-thumb">${image}</div>
+                <div>
+                    <h3 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
+                    <div class="small">${escapeHtml(product.sku)}${product.barcode ? ` / ${escapeHtml(product.barcode)}` : ''}</div>
+                    <div class="small">${rupiah(product.price)} / Stok ${product.stock}</div>
+                </div>
+            `;
+            nodes.scanBarcode.innerHTML = barcode;
+            nodes.scanStatus.textContent = message;
         }
 
         function updateQty(sku, diff) {
