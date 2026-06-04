@@ -58,6 +58,7 @@
         .image-field .product-image-preview { width: 92px; }
         .image-upload-cell { display: grid; gap: 8px; }
         .image-upload-cell input[type=file] { font-size: .78rem; padding-inline: 8px; }
+        .image-upload-cell .btn { min-height: 34px; padding: 7px 9px; font-size: .82rem; }
         .barcode-preview { margin-top: 8px; display: grid; gap: 5px; max-width: 210px; color: var(--muted); font-size: .78rem; }
         .barcode-preview img { width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 6px; object-fit: contain; }
         .pagination { margin-top: 12px; }
@@ -245,14 +246,31 @@
                             <tr>
                                 <td>
                                     <div class="image-upload-cell">
-                                    <div class="product-image-preview" data-image-preview="{{ $product->id }}">
-                                        @if ($product->image_path)
-                                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
-                                        @else
-                                            <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
-                                        @endif
-                                    </div>
-                                    <input form="update-{{ $product->id }}" id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
+                                        <div class="product-image-preview" data-image-preview="{{ $product->id }}">
+                                            @if ($product->image_path)
+                                                <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
+                                            @else
+                                                <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+                                            @endif
+                                        </div>
+                                        <form id="image-update-{{ $product->id }}" method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="category_id" value="{{ $product->category_id }}">
+                                            <input type="hidden" name="sku" value="{{ $product->sku }}">
+                                            <input type="hidden" name="barcode" value="{{ $product->barcode }}">
+                                            <input type="hidden" name="name" value="{{ $product->name }}">
+                                            <input type="hidden" name="price" value="{{ $product->price }}">
+                                            <input type="hidden" name="stock" value="{{ $product->stock }}">
+                                            <input type="hidden" name="unit" value="{{ $product->unit }}">
+                                            <input type="hidden" name="tag" value="{{ $product->tag }}">
+                                            <input type="hidden" name="package_contents" value="{{ $product->package_contents }}">
+                                            <input type="hidden" name="color" value="{{ $product->color }}">
+                                            <input type="hidden" name="is_bundle" value="{{ $product->is_bundle ? 1 : 0 }}">
+                                            <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
+                                            <input id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
+                                            <button class="btn primary" type="submit">Simpan Gambar</button>
+                                        </form>
                                     </div>
                                 </td>
                                 <td>

@@ -221,6 +221,7 @@ class ExampleTest extends TestCase
             ->assertSee('data-image-input', false)
             ->assertSee('data-image-preview', false)
             ->assertSee('form="update-', false)
+            ->assertSee('Simpan Gambar')
             ->assertSee('data:image/svg+xml', false)
             ->assertSee('8991234567890');
 
