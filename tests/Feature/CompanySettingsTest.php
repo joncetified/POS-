@@ -54,8 +54,8 @@ class CompanySettingsTest extends TestCase
         $this->assertSame('Cafe Serius Baru', $store['name']);
         $this->assertSame('Jl. Testing POS No. 10', $store['address']);
         $this->assertSame('Nadia Manager', $store['manager']);
-        $this->assertNotNull($store['logo_url']);
-        $this->assertNotNull($store['payment_barcode_url']);
+        $this->assertStringStartsWith('/storage/company-logos/', $store['logo_url']);
+        $this->assertStringStartsWith('/storage/payment-barcodes/', $store['payment_barcode_url']);
 
         $this->actingAs($superAdmin)
             ->get(route('dashboard.index'))

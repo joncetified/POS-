@@ -28,8 +28,8 @@
     @auth
         <a class="staff-user-profile" href="{{ route('profile.edit') }}">
             <span class="staff-user-avatar">
-                @if (auth()->user()->avatar_path)
-                    <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt="{{ auth()->user()->name }}">
+                @if (auth()->user()->avatarUrl())
+                    <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}">
                 @else
                     {{ collect(explode(' ', auth()->user()->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
                 @endif

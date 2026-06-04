@@ -230,6 +230,7 @@ class UserRoleTest extends TestCase
         $this->assertSame('Super Admin Baru', $user->name);
         $this->assertTrue(Hash::check('new-password-456', $user->password));
         $this->assertNotNull($user->avatar_path);
+        $this->assertStringStartsWith('/storage/avatars/', $user->avatarUrl());
         Storage::disk('public')->assertExists($user->avatar_path);
     }
 

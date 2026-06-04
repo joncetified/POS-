@@ -46,6 +46,7 @@ class CafeCatalog
         $settings = CompanySetting::current($defaults);
         $logoPath = $settings->logo_path;
         $paymentBarcodePath = $settings->payment_barcode_path;
+        $storageUrl = fn (?string $path): ?string => $path ? '/storage/' . ltrim($path, '/') : null;
 
         return [
             'name' => $settings->company_name ?: $defaults['name'],
@@ -56,9 +57,9 @@ class CafeCatalog
             'contact_phone' => $settings->contact_phone,
             'contact_whatsapp' => $settings->contact_whatsapp,
             'logo_path' => $logoPath,
-            'logo_url' => $logoPath ? asset('storage/' . $logoPath) : null,
+            'logo_url' => $storageUrl($logoPath),
             'payment_barcode_path' => $paymentBarcodePath,
-            'payment_barcode_url' => $paymentBarcodePath ? asset('storage/' . $paymentBarcodePath) : null,
+            'payment_barcode_url' => $storageUrl($paymentBarcodePath),
         ];
     }
 

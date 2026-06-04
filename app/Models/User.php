@@ -63,6 +63,15 @@ class User extends Authenticatable
         return $this->role->label();
     }
 
+    public function avatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return '/storage/' . ltrim($this->avatar_path, '/');
+    }
+
     public function permissionOverrides(): HasMany
     {
         return $this->hasMany(UserPermission::class);

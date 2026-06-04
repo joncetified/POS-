@@ -74,8 +74,8 @@
                     <input type="range" min="1" max="3" step="0.05" value="1" data-avatar-zoom aria-label="Zoom crop foto">
                     <input type="hidden" name="avatar_crop" data-avatar-crop>
                     <span class="muted">Pilih foto muka, lalu atur zoom crop kotak.</span>
-                    @if ($user->avatar_path)
-                        <input type="hidden" data-avatar-current value="{{ asset('storage/' . $user->avatar_path) }}">
+                    @if ($user->avatarUrl())
+                        <input type="hidden" data-avatar-current value="{{ $user->avatarUrl() }}">
                     @endif
                 </div>
 

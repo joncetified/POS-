@@ -83,8 +83,8 @@
                         <div class="access-head">
                             <div class="access-user-row">
                                 <span class="access-avatar">
-                                    @if ($account->avatar_path)
-                                        <img src="{{ asset('storage/' . $account->avatar_path) }}" alt="{{ $account->name }}">
+                                    @if ($account->avatarUrl())
+                                        <img src="{{ $account->avatarUrl() }}" alt="{{ $account->name }}">
                                     @else
                                         {{ collect(explode(' ', $account->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
                                     @endif
