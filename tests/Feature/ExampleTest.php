@@ -255,7 +255,6 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee('Scan Produk')
             ->assertSee('Scan barcode / SKU')
-            ->assertSee('data-payment="Barcode"', false)
             ->assertSee('"barcode":"8991234567890"', false)
             ->assertSee('"barcode_image_url":"data:image\/svg+xml', false)
             ->assertSee('"package_contents":"Espresso + Air Mineral"', false)

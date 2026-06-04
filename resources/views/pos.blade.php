@@ -939,7 +939,7 @@
             .panel-head { grid-template-columns: 1fr; }
             .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .cart-row, .cart-header-row { grid-template-columns: minmax(150px, 1fr) 86px 104px 100px 58px; }
-            .payment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .payment-grid { grid-template-columns: minmax(0, 1fr); }
             .pay-row, .action-row, .customer-row, .discount-row, .payment-status { grid-template-columns: 1fr; }
         }
 
@@ -1073,7 +1073,6 @@
                         <p class="small">Metode Pembayaran</p>
                         <div class="payment-grid">
                             <button class="pay-btn active" type="button" data-payment="Tunai"><span>T</span>Tunai</button>
-                            <button class="pay-btn" type="button" data-payment="Barcode"><span>#</span>Barcode</button>
                         </div>
 
                         <div class="payment-status">
