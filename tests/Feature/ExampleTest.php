@@ -12,7 +12,9 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Support\CafeCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -218,6 +220,7 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee('data-image-input', false)
             ->assertSee('data-image-preview', false)
+            ->assertSee('form="update-', false)
             ->assertSee('data:image/svg+xml', false)
             ->assertSee('8991234567890');
 
@@ -237,6 +240,40 @@ class ExampleTest extends TestCase
             ])
             ->assertRedirect()
             ->assertSessionHasErrors('barcode');
+    }
+
+    public function test_product_update_saves_uploaded_image(): void
+    {
+        Storage::fake('public');
+        CafeCatalog::ensure();
+
+        $admin = User::factory()->admin()->create();
+        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
+        $image = UploadedFile::fake()->image('espresso.jpg', 320, 320);
+
+        $this
+            ->actingAs($admin)
+            ->put(route('products.update', $product), [
+                'category_id' => $product->category_id,
+                'sku' => $product->sku,
+                'barcode' => $product->barcode,
+                'name' => $product->name,
+                'price' => $product->price,
+                'stock' => $product->stock,
+                'unit' => $product->unit,
+                'tag' => $product->tag,
+                'package_contents' => $product->package_contents,
+                'color' => $product->color,
+                'image' => $image,
+                'is_active' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $product->refresh();
+
+        $this->assertNotNull($product->image_path);
+        Storage::disk('public')->assertExists($product->image_path);
     }
 
     public function test_pos_product_payload_includes_barcode_for_scan(): void

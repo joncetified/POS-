@@ -56,6 +56,8 @@
         .product-image-preview span { width: 100%; height: 100%; display: grid; place-items: center; background: var(--color, var(--primary)); font-weight: 950; }
         .image-field { display: grid; gap: 8px; }
         .image-field .product-image-preview { width: 92px; }
+        .image-upload-cell { display: grid; gap: 8px; }
+        .image-upload-cell input[type=file] { font-size: .78rem; padding-inline: 8px; }
         .barcode-preview { margin-top: 8px; display: grid; gap: 5px; max-width: 210px; color: var(--muted); font-size: .78rem; }
         .barcode-preview img { width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 6px; object-fit: contain; }
         .pagination { margin-top: 12px; }
@@ -242,12 +244,15 @@
                         @forelse ($products as $product)
                             <tr>
                                 <td>
-                                    <div class="product-image-preview">
+                                    <div class="image-upload-cell">
+                                    <div class="product-image-preview" data-image-preview="{{ $product->id }}">
                                         @if ($product->image_path)
                                             <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
                                         @else
                                             <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
                                         @endif
+                                    </div>
+                                    <input form="update-{{ $product->id }}" id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
                                     </div>
                                 </td>
                                 <td>
@@ -272,17 +277,6 @@
                                             <input name="color" value="{{ $product->color }}" required aria-label="Warna">
                                         </div>
                                         <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
-                                        <div class="image-field" style="margin-top: 8px;">
-                                            <label for="image-{{ $product->id }}">Gambar produk</label>
-                                            <div class="product-image-preview" data-image-preview="{{ $product->id }}">
-                                                @if ($product->image_path)
-                                                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
-                                                @else
-                                                    <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
-                                                @endif
-                                            </div>
-                                            <input id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
-                                        </div>
                                         <input type="hidden" name="is_bundle" value="0">
                                         <label class="bundle-toggle" style="margin-top: 8px;">
                                             <input name="is_bundle" type="checkbox" value="1" @checked($product->is_bundle)>
