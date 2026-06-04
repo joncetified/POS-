@@ -27,6 +27,8 @@ class CafeCatalog
             'contact_whatsapp' => config('store.contact_whatsapp'),
             'logo_path' => null,
             'logo_url' => null,
+            'payment_barcode_path' => null,
+            'payment_barcode_url' => null,
         ];
     }
 
@@ -43,6 +45,7 @@ class CafeCatalog
 
         $settings = CompanySetting::current($defaults);
         $logoPath = $settings->logo_path;
+        $paymentBarcodePath = $settings->payment_barcode_path;
 
         return [
             'name' => $settings->company_name ?: $defaults['name'],
@@ -54,6 +57,8 @@ class CafeCatalog
             'contact_whatsapp' => $settings->contact_whatsapp,
             'logo_path' => $logoPath,
             'logo_url' => $logoPath ? asset('storage/' . $logoPath) : null,
+            'payment_barcode_path' => $paymentBarcodePath,
+            'payment_barcode_url' => $paymentBarcodePath ? asset('storage/' . $paymentBarcodePath) : null,
         ];
     }
 

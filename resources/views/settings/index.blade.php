@@ -35,6 +35,8 @@
         .errors { background: #fee2e2; color: #991b1b; }
         .logo-preview { width: 96px; height: 96px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--primary); font-size: 2rem; font-weight: 950; overflow: hidden; }
         .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .payment-barcode-preview { width: min(100%, 320px); min-height: 180px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--muted); overflow: hidden; }
+        .payment-barcode-preview img { width: 100%; height: 100%; max-height: 240px; object-fit: contain; padding: 10px; background: #fff; }
         .identity { display: flex; gap: 12px; align-items: center; min-width: 0; }
         .identity h3, .identity p { overflow-wrap: anywhere; }
         .contact-list { display: grid; gap: 9px; }
@@ -104,6 +106,11 @@
                         <input id="logo" name="logo" type="file" accept="image/*">
                     </div>
 
+                    <div class="field wide">
+                        <label for="payment_barcode">Barcode Pembayaran</label>
+                        <input id="payment_barcode" name="payment_barcode" type="file" accept="image/*">
+                    </div>
+
                     <div class="wide">
                         <button class="btn primary" type="submit">Simpan Settings</button>
                     </div>
@@ -127,6 +134,16 @@
                 </div>
 
                 <div class="contact-list">
+                    <div>
+                        <p class="muted">Barcode Pembayaran</p>
+                        <div class="payment-barcode-preview">
+                            @if ($store['payment_barcode_url'])
+                                <img src="{{ $store['payment_barcode_url'] }}" alt="Barcode pembayaran">
+                            @else
+                                Belum ada barcode pembayaran.
+                            @endif
+                        </div>
+                    </div>
                     <div>
                         <p class="muted">Manager</p>
                         <strong>{{ $store['manager'] ?: '-' }}</strong>

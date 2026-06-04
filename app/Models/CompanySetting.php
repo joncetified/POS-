@@ -9,6 +9,7 @@ class CompanySetting extends Model
     protected $fillable = [
         'company_name',
         'logo_path',
+        'payment_barcode_path',
         'manager_name',
         'contact_email',
         'contact_phone',

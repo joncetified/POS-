@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Employee;
+use App\Models\CompanySetting;
 use App\Models\InventoryMovement;
 use App\Models\OperationalExpense;
 use App\Models\Product;
@@ -252,8 +253,9 @@ class ExampleTest extends TestCase
             ->actingAs(User::factory()->create())
             ->get(route('pos.index'))
             ->assertOk()
-            ->assertSee('Scan Barcode')
+            ->assertSee('Scan Produk')
             ->assertSee('Scan barcode / SKU')
+            ->assertSee('data-payment="Barcode"', false)
             ->assertSee('"barcode":"8991234567890"', false)
             ->assertSee('"barcode_image_url":"data:image\/svg+xml', false)
             ->assertSee('"package_contents":"Espresso + Air Mineral"', false)
@@ -465,6 +467,46 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('sales', [
             'payment_method' => 'QRIS',
             'payment_reference' => 'QRIS-123456',
+            'total' => 19980,
+            'paid_amount' => 19980,
+            'change_amount' => 0,
+        ]);
+    }
+
+    public function test_checkout_accepts_barcode_payment(): void
+    {
+        CafeCatalog::ensure();
+
+        CompanySetting::current(CafeCatalog::defaultStore())->update([
+            'payment_barcode_path' => 'payment-barcodes/test.png',
+        ]);
+
+        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
+        $reference = 'BARCODE-' . now()->format('Ymd') . '-0001';
+
+        $this
+            ->actingAs(User::factory()->create())
+            ->postJson('/sales', [
+                'customer_name' => 'Budi Barcode',
+                'cashier_name' => CafeCatalog::store()['cashier'],
+                'order_type' => 'Dine in',
+                'payment_method' => 'Barcode',
+                'discount' => 0,
+                'paid_amount' => 19980,
+                'items' => [
+                    ['product_id' => $product->id, 'quantity' => 1],
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('sale.payment_method', 'Barcode')
+            ->assertJsonPath('sale.payment_reference', $reference)
+            ->assertJsonPath('sale.total', 19980)
+            ->assertJsonPath('sale.paid_amount', 19980)
+            ->assertJsonPath('sale.change_amount', 0);
+
+        $this->assertDatabaseHas('sales', [
+            'payment_method' => 'Barcode',
+            'payment_reference' => $reference,
             'total' => 19980,
             'paid_amount' => 19980,
             'change_amount' => 0,

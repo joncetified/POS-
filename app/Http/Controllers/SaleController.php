@@ -20,7 +20,7 @@ use Illuminate\View\View;
 class SaleController extends Controller
 {
     private const TAX_RATE = 0.11;
-    private const PAYMENT_METHODS = ['Tunai', 'QRIS'];
+    private const PAYMENT_METHODS = ['Tunai', 'QRIS', 'Barcode'];
     private const OPEN_STATUSES = ['open', 'parked'];
 
     public function index(): View
@@ -630,6 +630,7 @@ class SaleController extends Controller
     {
         $prefix = match ($paymentMethod) {
             'QRIS' => 'QRIS',
+            'Barcode' => 'BARCODE',
             default => 'PAY',
         };
 

@@ -911,6 +911,12 @@
             text-align: center;
         }
 
+        .barcode-confirm-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+            gap: 10px;
+        }
+
         @media (max-width: 1320px) {
             .content { grid-template-columns: minmax(0, 1fr); }
             .cart-panel { min-height: 760px; }
@@ -992,14 +998,14 @@
                         </label>
                         <div class="scan-panel" aria-label="Scan barcode">
                             <div class="scan-preview">
-                                <strong>Scan Barcode</strong>
+                                    <strong>Scan Produk</strong>
                                 <label class="searchbox" for="barcode-scan">
                                     <span aria-hidden="true">|</span>
                                     <input id="barcode-scan" type="search" inputmode="numeric" autocomplete="off" placeholder="Scan barcode / SKU">
                                     <span>|</span>
                                 </label>
                                 <div id="scan-product" class="scan-product" hidden></div>
-                                <div id="scan-status" class="scan-status">Scan barcode produk untuk masuk nota.</div>
+                                <div id="scan-status" class="scan-status">Scan barcode/SKU produk untuk masuk nota.</div>
                             </div>
                             <div id="scan-barcode" class="scan-barcode">Barcode</div>
                         </div>
@@ -1067,6 +1073,7 @@
                         <p class="small">Metode Pembayaran</p>
                         <div class="payment-grid">
                             <button class="pay-btn active" type="button" data-payment="Tunai"><span>T</span>Tunai</button>
+                            <button class="pay-btn" type="button" data-payment="Barcode"><span>#</span>Barcode</button>
                         </div>
 
                         <div class="payment-status">
@@ -1122,19 +1129,22 @@
     <div id="qris-modal" class="modal" aria-hidden="true">
         <section class="qris-panel">
             <div>
-                <h2>Scan QRIS</h2>
-                <p class="small">Minta pelanggan scan kode ini lalu tunggu status pembayaran.</p>
+                <h2>Scan Barcode Pembayaran</h2>
+                <p class="small">Tunjukkan gambar ini ke pelanggan. Setelah pelanggan scan dan bayar, tekan sudah dibayar.</p>
             </div>
             <div class="qris-box">
-                <img id="qris-image" alt="Kode QRIS" hidden>
+                <img id="qris-image" alt="Barcode pembayaran" hidden>
                 <div id="qris-code" class="qris-code" hidden></div>
             </div>
             <div class="receipt-line">
                 <span>Total</span>
                 <strong id="qris-amount">Rp 0</strong>
             </div>
-            <div id="qris-status" class="qris-status">Menunggu pembayaran...</div>
-            <button id="qris-cancel" class="clear-btn" type="button">Batalkan</button>
+            <div id="qris-status" class="qris-status">Menunggu pelanggan scan barcode pembayaran.</div>
+            <div class="barcode-confirm-actions">
+                <button id="qris-cancel" class="clear-btn" type="button">Batalkan</button>
+                <button id="barcode-paid" class="checkout-btn" type="button">Sudah Dibayar</button>
+            </div>
         </section>
     </div>
 
@@ -1143,6 +1153,7 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         const qrisChargeUrl = '{{ route('payments.qris.charge', [], false) }}';
         const qrisFinalizeUrl = '{{ route('payments.qris.finalize', [], false) }}';
+        const paymentBarcodeUrl = @json($paymentBarcodeUrl);
         const taxRate = 0.11;
         const state = {
             category: 'Semua',
@@ -1200,6 +1211,7 @@
             qrisAmount: byId('qris-amount'),
             qrisStatus: byId('qris-status'),
             qrisCancel: byId('qris-cancel'),
+            barcodePaid: byId('barcode-paid'),
         };
 
         const paymentCopy = {
@@ -1208,9 +1220,9 @@
                 text: 'Masukkan nominal uang diterima dari pelanggan.',
                 reference: false,
             },
-            QRIS: {
-                title: 'QRIS dipilih',
-                text: 'Nominal bayar otomatis pas. Sistem akan membuat QRIS dinamis saat tombol bayar ditekan.',
+            Barcode: {
+                title: 'Barcode dipilih',
+                text: 'Tekan bayar untuk menampilkan barcode pembayaran ke pelanggan.',
                 reference: false,
             },
         };
@@ -1682,8 +1694,8 @@
                 return;
             }
 
-            if (state.payment === 'QRIS') {
-                await startQrisCheckout(data);
+            if (state.payment === 'Barcode') {
+                startBarcodeCheckout(data);
                 return;
             }
 
@@ -1691,31 +1703,84 @@
             byId('checkout').textContent = 'Menyimpan...';
 
             try {
-                const response = await fetch('{{ route('sales.store', [], false) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify(checkoutPayload(data)),
-                });
-
-                const payload = await response.json();
-
-                if (!response.ok) {
-                    const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Transaksi gagal disimpan'];
-                    showToast(errors[0]);
-                    return;
-                }
-
-                showReceipt(payload.sale);
+                const sale = await submitPaidSale(data);
+                showReceipt(sale);
                 await loadSavedOrdersFromServer();
             } catch (error) {
-                showToast('Koneksi ke server gagal');
+                showToast(error.message || 'Koneksi ke server gagal');
             } finally {
                 byId('checkout').disabled = false;
                 byId('checkout').textContent = 'Bayar';
+            }
+        }
+
+        async function submitPaidSale(data, overrides = {}) {
+            const response = await fetch('{{ route('sales.store', [], false) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(checkoutPayload(data, overrides)),
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Transaksi gagal disimpan'];
+                throw new Error(errors[0]);
+            }
+
+            return payload.sale;
+        }
+
+        function startBarcodeCheckout(data) {
+            if (!paymentBarcodeUrl) {
+                showToast('Barcode pembayaran belum diatur di Settings');
+                return;
+            }
+
+            nodes.qrisAmount.textContent = rupiah(data.total);
+            nodes.qrisStatus.textContent = 'Menunggu pelanggan scan barcode pembayaran.';
+            nodes.qrisImage.src = paymentBarcodeUrl;
+            nodes.qrisImage.hidden = false;
+            nodes.qrisCode.hidden = true;
+            nodes.qrisModal.classList.add('open');
+            nodes.qrisModal.setAttribute('aria-hidden', 'false');
+            nodes.barcodePaid.disabled = false;
+            nodes.barcodePaid.textContent = 'Sudah Dibayar';
+        }
+
+        async function confirmBarcodePayment() {
+            const data = totals();
+
+            if (!data.items.length) {
+                closeQrisModal();
+                showToast('Nota aktif masih kosong');
+                return;
+            }
+
+            nodes.barcodePaid.disabled = true;
+            nodes.barcodePaid.textContent = 'Menyimpan...';
+            nodes.qrisStatus.textContent = 'Menyimpan transaksi barcode...';
+
+            try {
+                const sale = await submitPaidSale(data, {
+                    payment_method: 'Barcode',
+                    payment_reference: nodes.paymentReference.value || null,
+                    paid_amount: Math.round(data.total),
+                });
+
+                nodes.qrisModal.classList.remove('open');
+                nodes.qrisModal.setAttribute('aria-hidden', 'true');
+                showReceipt(sale);
+                await loadSavedOrdersFromServer();
+            } catch (error) {
+                nodes.qrisStatus.textContent = error.message || 'Transaksi barcode gagal disimpan';
+                showToast(nodes.qrisStatus.textContent);
+                nodes.barcodePaid.disabled = false;
+                nodes.barcodePaid.textContent = 'Sudah Dibayar';
             }
         }
 
@@ -1831,6 +1896,8 @@
             state.qrisOrderId = null;
             nodes.qrisModal.classList.remove('open');
             nodes.qrisModal.setAttribute('aria-hidden', 'true');
+            nodes.barcodePaid.disabled = false;
+            nodes.barcodePaid.textContent = 'Sudah Dibayar';
             resetCheckoutButton();
         }
 
@@ -1976,6 +2043,7 @@
         byId('hold-order').addEventListener('click', () => saveCurrentOrder({ clearAfterSave: true }));
         byId('checkout').addEventListener('click', checkout);
         nodes.qrisCancel.addEventListener('click', closeQrisModal);
+        nodes.barcodePaid.addEventListener('click', confirmBarcodePayment);
         byId('close-receipt').addEventListener('click', () => {
             nodes.modal.classList.remove('open');
             nodes.modal.setAttribute('aria-hidden', 'true');

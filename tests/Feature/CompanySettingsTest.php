@@ -20,6 +20,7 @@ class CompanySettingsTest extends TestCase
 
         $superAdmin = User::factory()->superAdmin()->create();
         $logo = UploadedFile::fake()->image('logo.png', 160, 160);
+        $paymentBarcode = UploadedFile::fake()->image('barcode-payment.png', 420, 420);
 
         $this->actingAs($superAdmin)
             ->put(route('settings.update'), [
@@ -30,6 +31,7 @@ class CompanySettingsTest extends TestCase
                 'contact_whatsapp' => '6281234567890',
                 'address' => 'Jl. Testing POS No. 10',
                 'logo' => $logo,
+                'payment_barcode' => $paymentBarcode,
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
@@ -43,7 +45,9 @@ class CompanySettingsTest extends TestCase
         $this->assertSame('6281234567890', $settings->contact_whatsapp);
         $this->assertSame('Jl. Testing POS No. 10', $settings->address);
         $this->assertNotNull($settings->logo_path);
+        $this->assertNotNull($settings->payment_barcode_path);
         Storage::disk('public')->assertExists($settings->logo_path);
+        Storage::disk('public')->assertExists($settings->payment_barcode_path);
 
         $store = CafeCatalog::store();
 
@@ -51,6 +55,7 @@ class CompanySettingsTest extends TestCase
         $this->assertSame('Jl. Testing POS No. 10', $store['address']);
         $this->assertSame('Nadia Manager', $store['manager']);
         $this->assertNotNull($store['logo_url']);
+        $this->assertNotNull($store['payment_barcode_url']);
 
         $this->actingAs($superAdmin)
             ->get(route('dashboard.index'))

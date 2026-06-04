@@ -60,7 +60,9 @@ class PosController extends Controller
             'average' => $orders > 0 ? (int) round($revenue / $orders) : 0,
         ];
 
-        return view('pos', compact('categories', 'products', 'shift', 'store'));
+        $paymentBarcodeUrl = $store['payment_barcode_url'];
+
+        return view('pos', compact('categories', 'products', 'shift', 'store', 'paymentBarcodeUrl'));
     }
 
     private function barcodeSvgDataUri(?string $value): ?string

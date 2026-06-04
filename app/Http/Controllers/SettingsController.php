@@ -31,6 +31,7 @@ class SettingsController extends Controller
             'contact_whatsapp' => ['nullable', 'string', 'max:80'],
             'address' => ['nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'payment_barcode' => ['nullable', 'image', 'max:4096'],
         ]);
 
         if ($request->hasFile('logo')) {
@@ -41,7 +42,16 @@ class SettingsController extends Controller
             $validated['logo_path'] = $request->file('logo')->store('company-logos', 'public');
         }
 
+        if ($request->hasFile('payment_barcode')) {
+            if ($settings->payment_barcode_path) {
+                Storage::disk('public')->delete($settings->payment_barcode_path);
+            }
+
+            $validated['payment_barcode_path'] = $request->file('payment_barcode')->store('payment-barcodes', 'public');
+        }
+
         unset($validated['logo']);
+        unset($validated['payment_barcode']);
 
         $settings->update($validated);
 
