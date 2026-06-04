@@ -64,7 +64,7 @@ class Product extends Model
             : $this->bundleItems()->with('component')->get();
 
         if ($items->isEmpty()) {
-            return 0;
+            return $this->stock;
         }
 
         $componentStock = $items

@@ -142,21 +142,7 @@
                             <input name="is_bundle" type="checkbox" value="1">
                             Produk paket / promo
                         </label>
-                        <div class="bundle-editor">
-                            <strong>Isi paket</strong>
-                            @for ($i = 0; $i < 3; $i++)
-                                <div class="bundle-row">
-                                    <select name="bundle_items[{{ $i }}][product_id]" aria-label="Komponen paket {{ $i + 1 }}">
-                                        <option value="">Pilih produk komponen</option>
-                                        @foreach ($componentProducts as $component)
-                                            <option value="{{ $component->id }}">{{ $component->sku }} - {{ $component->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <input name="bundle_items[{{ $i }}][quantity]" type="number" min="1" value="1" aria-label="Qty komponen {{ $i + 1 }}">
-                                </div>
-                            @endfor
-                            <p class="muted">Kosongkan jika produk biasa. Saat paket dibayar, stok komponen ikut berkurang.</p>
-                        </div>
+                        <p class="muted">Untuk paket, tulis isi paket langsung di Nama, contoh: Nasi + Ayam.</p>
                         <input type="hidden" name="is_active" value="1">
                         <button class="btn primary" type="submit">Simpan Produk</button>
                     </form>
@@ -221,23 +207,7 @@
                                             <input name="is_bundle" type="checkbox" value="1" @checked($product->is_bundle)>
                                             Produk paket / promo
                                         </label>
-                                        <div class="bundle-editor">
-                                            @php($bundleRows = $product->bundleItems->values())
-                                            @for ($i = 0; $i < 3; $i++)
-                                                @php($bundleRow = $bundleRows->get($i))
-                                                <div class="bundle-row">
-                                                    <select name="bundle_items[{{ $i }}][product_id]" aria-label="Komponen paket {{ $i + 1 }}">
-                                                        <option value="">Pilih produk komponen</option>
-                                                        @foreach ($componentProducts as $component)
-                                                            <option value="{{ $component->id }}" @selected($bundleRow?->component_product_id === $component->id) @disabled($component->id === $product->id)>
-                                                                {{ $component->sku }} - {{ $component->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <input name="bundle_items[{{ $i }}][quantity]" type="number" min="1" value="{{ $bundleRow?->quantity ?? 1 }}" aria-label="Qty komponen {{ $i + 1 }}">
-                                                </div>
-                                            @endfor
-                                        </div>
+                                        <p class="muted">Isi paket ditulis di Nama, contoh: Nasi + Ayam.</p>
                                         <input type="hidden" name="is_active" value="0">
                                     </form>
                                     @if ($product->is_bundle)

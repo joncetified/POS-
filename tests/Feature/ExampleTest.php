@@ -246,6 +246,37 @@ class ExampleTest extends TestCase
             ->assertSee('"barcode":"8991234567890"', false);
     }
 
+    public function test_simple_bundle_product_can_be_saved_without_components(): void
+    {
+        CafeCatalog::ensure();
+
+        $admin = User::factory()->admin()->create();
+        $categoryId = Product::query()->firstOrFail()->category_id;
+
+        $this
+            ->actingAs($admin)
+            ->post(route('products.store'), [
+                'category_id' => $categoryId,
+                'sku' => 'PKT-001',
+                'name' => 'Nasi + Ayam',
+                'price' => 35000,
+                'stock' => 10,
+                'unit' => 'paket',
+                'tag' => 'Promo',
+                'color' => '#ff965f',
+                'is_bundle' => 1,
+                'is_active' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $bundle = Product::query()->where('sku', 'PKT-001')->firstOrFail();
+
+        $this->assertTrue($bundle->is_bundle);
+        $this->assertSame(10, $bundle->availableForSaleStock());
+        $this->assertSame(0, $bundle->bundleItems()->count());
+    }
+
     public function test_checkout_creates_sale_and_decreases_stock(): void
     {
         CafeCatalog::ensure();
@@ -291,6 +322,45 @@ class ExampleTest extends TestCase
 
         $this->assertSame(53, $product->fresh()->stock);
         $this->assertSame(1, Sale::query()->count());
+    }
+
+    public function test_checkout_simple_bundle_product_decreases_bundle_stock_only(): void
+    {
+        CafeCatalog::ensure();
+
+        $categoryId = Product::query()->firstOrFail()->category_id;
+        $bundle = Product::query()->create([
+            'category_id' => $categoryId,
+            'sku' => 'PKT-002',
+            'name' => 'Nasi + Ayam',
+            'price' => 35000,
+            'stock' => 10,
+            'unit' => 'paket',
+            'tag' => 'Promo',
+            'color' => '#ff965f',
+            'is_bundle' => true,
+            'is_active' => true,
+        ]);
+
+        $this
+            ->actingAs(User::factory()->create())
+            ->postJson('/sales', [
+                'customer_name' => 'Paket Customer',
+                'cashier_name' => CafeCatalog::store()['cashier'],
+                'order_type' => 'Dine in',
+                'payment_method' => 'Tunai',
+                'discount' => 0,
+                'paid_amount' => 100000,
+                'items' => [
+                    ['product_id' => $bundle->id, 'quantity' => 2],
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('sale.subtotal', 70000)
+            ->assertJsonPath('sale.total', 77700);
+
+        $this->assertSame(8, $bundle->fresh()->stock);
+        $this->assertSame(0, $bundle->bundleItems()->count());
     }
 
     public function test_checkout_bundle_product_decreases_bundle_and_component_stock(): void

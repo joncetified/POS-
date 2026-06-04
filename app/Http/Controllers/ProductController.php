@@ -34,6 +34,7 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $hasBundleItems = $request->has('bundle_items');
         $data = $this->validated($request);
 
         if ($request->hasFile('image')) {
@@ -41,12 +42,12 @@ class ProductController extends Controller
         }
         unset($data['image']);
 
-        DB::transaction(function () use ($data): void {
+        DB::transaction(function () use ($data, $hasBundleItems): void {
             $bundleItems = $data['bundle_items'];
             unset($data['bundle_items']);
 
             $product = Product::query()->create($data);
-            $this->syncBundleItems($product, $bundleItems);
+            $this->syncBundleItems($product, $bundleItems, $hasBundleItems);
         });
 
         return back()->with('status', 'Produk berhasil ditambahkan.');
@@ -54,6 +55,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
+        $hasBundleItems = $request->has('bundle_items');
         $data = $this->validated($request, $product);
 
         if ($request->hasFile('image')) {
@@ -65,12 +67,12 @@ class ProductController extends Controller
         }
         unset($data['image']);
 
-        DB::transaction(function () use ($data, $product): void {
+        DB::transaction(function () use ($data, $product, $hasBundleItems): void {
             $bundleItems = $data['bundle_items'];
             unset($data['bundle_items']);
 
             $product->update($data);
-            $this->syncBundleItems($product, $bundleItems);
+            $this->syncBundleItems($product, $bundleItems, $hasBundleItems);
         });
 
         return back()->with('status', 'Produk berhasil diperbarui.');
@@ -113,11 +115,15 @@ class ProductController extends Controller
     /**
      * @param array<int, array{product_id?: int|null, quantity?: int|null}> $bundleItems
      */
-    private function syncBundleItems(Product $product, array $bundleItems): void
+    private function syncBundleItems(Product $product, array $bundleItems, bool $hasBundleItems): void
     {
         if (! $product->is_bundle) {
             $product->bundleItems()->delete();
 
+            return;
+        }
+
+        if (! $hasBundleItems) {
             return;
         }
 
@@ -130,12 +136,6 @@ class ProductController extends Controller
             ])
             ->reject(fn (array $item) => $item['component_product_id'] === $product->id)
             ->values();
-
-        if ($items->isEmpty()) {
-            throw ValidationException::withMessages([
-                'bundle_items' => 'Produk paket harus punya minimal satu komponen.',
-            ]);
-        }
 
         $componentIds = $items->pluck('component_product_id');
         $invalidComponents = Product::query()

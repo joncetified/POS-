@@ -484,13 +484,7 @@ class SaleController extends Controller
 
             $stockDecrements = [$product->id => $quantity];
 
-            if ($product->is_bundle) {
-                if ($product->bundleItems->isEmpty()) {
-                    throw ValidationException::withMessages([
-                        'items' => "Isi paket {$product->name} belum diatur.",
-                    ]);
-                }
-
+            if ($product->is_bundle && $product->bundleItems->isNotEmpty()) {
                 foreach ($product->bundleItems as $bundleItem) {
                     if (! $bundleItem->component) {
                         throw ValidationException::withMessages([
