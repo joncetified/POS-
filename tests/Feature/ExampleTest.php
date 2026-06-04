@@ -779,6 +779,7 @@ class ExampleTest extends TestCase
             ->get(route('customer.table.menu', ['tableNumber' => '5']))
             ->assertOk()
             ->assertSee('Meja 5')
+            ->assertSee('Dengar Catatan')
             ->assertSee('Kirim ke Kasir');
 
         $this

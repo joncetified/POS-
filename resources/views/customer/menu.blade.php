@@ -321,6 +321,33 @@
             border-radius: 8px;
             resize: vertical;
         }
+        .note-tts-wrap {
+            display: grid;
+            gap: 8px;
+        }
+        .note-tts-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .note-tts-btn {
+            min-height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 8px 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #fff8f2;
+            color: var(--brown);
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .note-tts-btn.is-speaking {
+            color: #fff;
+            border-color: var(--accent);
+            background: var(--accent);
+        }
         .success-box {
             display: none;
             border: 1px solid rgba(40, 121, 103, .35);
@@ -466,7 +493,15 @@
                     <div class="notice">Pelanggan pesan dari QR yang ditempel di meja.</div>
                 @else
                     <input id="customer-name" class="field" type="text" maxlength="120" placeholder="Nama pelanggan (opsional)">
-                    <textarea id="customer-note" class="field" maxlength="255" rows="3" placeholder="Catatan pesanan, contoh: less sugar, tanpa es"></textarea>
+                    <div class="note-tts-wrap">
+                        <textarea id="customer-note" class="field" maxlength="255" rows="3" placeholder="Catatan pesanan, contoh: less sugar, tanpa es"></textarea>
+                        <div class="note-tts-actions">
+                            <button id="speak-note" class="note-tts-btn" type="button" aria-pressed="false">
+                                <span aria-hidden="true">TTS</span>
+                                <span id="speak-note-label">Dengar Catatan</span>
+                            </button>
+                        </div>
+                    </div>
                     <button id="send-order" class="btn primary" type="button">Kirim ke Kasir</button>
                 @endif
             </div>
@@ -499,6 +534,7 @@
         const orderUrl = @json($canOrder ? route('customer.table.orders', ['tableNumber' => $tableNumber], false) : null);
         const cart = new Map();
         const state = { category: 'all', search: '' };
+        let activeUtterance = null;
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
@@ -632,6 +668,67 @@
             renderCart();
         }
 
+        function getNoteText() {
+            return String(byId('customer-note')?.value || '').trim();
+        }
+
+        function setSpeechButtonSpeaking(isSpeaking) {
+            const button = byId('speak-note');
+            const label = byId('speak-note-label');
+
+            if (!button || !label) return;
+
+            button.classList.toggle('is-speaking', isSpeaking);
+            button.setAttribute('aria-pressed', isSpeaking ? 'true' : 'false');
+            label.textContent = isSpeaking ? 'Stop Suara' : 'Dengar Catatan';
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            activeUtterance = null;
+            setSpeechButtonSpeaking(false);
+        }
+
+        function speakNote() {
+            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+                showToast('Browser tidak mendukung TTS');
+                return;
+            }
+
+            if (activeUtterance || window.speechSynthesis.speaking) {
+                stopSpeech();
+                return;
+            }
+
+            const text = getNoteText();
+            if (!text) {
+                showToast('Isi catatan dulu');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.95;
+            utterance.pitch = 1;
+            utterance.onend = () => {
+                activeUtterance = null;
+                setSpeechButtonSpeaking(false);
+            };
+            utterance.onerror = () => {
+                activeUtterance = null;
+                setSpeechButtonSpeaking(false);
+                showToast('TTS gagal dibaca');
+            };
+
+            activeUtterance = utterance;
+            setSpeechButtonSpeaking(true);
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
         function showOrderSuccess(order) {
             const box = byId('success-box');
             box.innerHTML = `
@@ -680,6 +777,7 @@
                 }
 
                 cart.clear();
+                stopSpeech();
                 byId('customer-note').value = '';
                 renderCart();
                 showOrderSuccess(payload.order || {});
@@ -713,7 +811,10 @@
 
         if (canOrder) {
             byId('send-order').addEventListener('click', sendOrder);
+            byId('speak-note').addEventListener('click', speakNote);
         }
+
+        window.addEventListener('beforeunload', stopSpeech);
 
         renderProducts();
     </script>
