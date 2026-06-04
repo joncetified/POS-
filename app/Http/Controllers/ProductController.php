@@ -94,6 +94,7 @@ class ProductController extends Controller
         return $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:40', 'unique:products,sku,' . $productId],
+            'barcode' => ['nullable', 'string', 'max:80', 'unique:products,barcode,' . $productId],
             'name' => ['required', 'string', 'max:160'],
             'price' => ['required', 'integer', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],

@@ -87,7 +87,7 @@
 
         .panel-head {
             display: grid;
-            grid-template-columns: minmax(190px, 1fr) minmax(260px, 34%) auto;
+            grid-template-columns: minmax(170px, 1fr) minmax(220px, 28%) minmax(220px, 28%) auto;
             gap: 16px;
             align-items: center;
         }
@@ -848,6 +848,11 @@
                             <input id="search" type="search" placeholder="Cari produk...">
                             <span>#</span>
                         </label>
+                        <label class="searchbox" for="barcode-scan">
+                            <span aria-hidden="true">|</span>
+                            <input id="barcode-scan" type="search" inputmode="numeric" autocomplete="off" placeholder="Scan barcode / SKU">
+                            <span>|</span>
+                        </label>
                         <button id="category-toggle" class="category-menu" type="button">Kategori</button>
                     </div>
 
@@ -1018,6 +1023,7 @@
             cartCount: byId('cart-count'),
             savedOrders: byId('saved-orders'),
             search: byId('search'),
+            barcodeScan: byId('barcode-scan'),
             subtotal: byId('subtotal'),
             discountPercent: byId('discount-percent'),
             discount: byId('discount'),
@@ -1122,7 +1128,7 @@
             return products
                 .filter((product) => {
                     const matchesCategory = state.category === 'Semua' || product.category === state.category;
-                    const matchesKeyword = [product.sku, product.name, product.category]
+                    const matchesKeyword = [product.sku, product.barcode, product.name, product.category]
                         .join(' ')
                         .toLowerCase()
                         .includes(keyword);
@@ -1145,6 +1151,7 @@
                 const remaining = product.stock - inCart;
                 const disabled = remaining <= 0 ? 'disabled' : '';
                 const productLabel = product.is_bundle ? 'Paket' : (product.tag || product.unit);
+                const barcodeLabel = product.barcode ? ` / Barcode ${escapeHtml(product.barcode)}` : '';
 
                 return `
                     <article class="product-card">
@@ -1157,6 +1164,7 @@
                                 <h3 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
                                 <span class="price">${rupiah(product.price)}</span>
                                 <p class="small">${escapeHtml(productLabel)} / Stok ${remaining} ${escapeHtml(product.unit)}</p>
+                                <p class="small">${escapeHtml(product.sku)}${barcodeLabel}</p>
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
                         </div>
@@ -1241,6 +1249,35 @@
             current.qty += 1;
             state.cart.set(sku, current);
             renderCart();
+        }
+
+        function normalizedCode(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function findProductByScan(value) {
+            const code = normalizedCode(value);
+
+            if (!code) return null;
+
+            return products.find((product) =>
+                normalizedCode(product.barcode) === code || normalizedCode(product.sku) === code
+            );
+        }
+
+        function scanBarcode() {
+            const value = nodes.barcodeScan.value;
+            const product = findProductByScan(value);
+
+            if (!product) {
+                showToast('Barcode atau SKU tidak ditemukan');
+                nodes.barcodeScan.select();
+                return;
+            }
+
+            addItem(product.sku);
+            nodes.barcodeScan.value = '';
+            showToast(`${product.name} masuk nota`);
         }
 
         function updateQty(sku, diff) {
@@ -1706,6 +1743,12 @@
         });
 
         nodes.search.addEventListener('input', renderProducts);
+        nodes.barcodeScan.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                scanBarcode();
+            }
+        });
         nodes.discountPercent.addEventListener('input', () => {
             state.discountMode = Number(nodes.discountPercent.value || 0) > 0 ? 'percent' : 'amount';
             if (state.discountMode === 'amount') {

@@ -182,6 +182,70 @@ class ExampleTest extends TestCase
             ->assertSee('Metode Pembayaran This Month');
     }
 
+    public function test_product_management_accepts_unique_barcode(): void
+    {
+        CafeCatalog::ensure();
+
+        $admin = User::factory()->admin()->create();
+        $categoryId = Product::query()->firstOrFail()->category_id;
+
+        $this
+            ->actingAs($admin)
+            ->post(route('products.store'), [
+                'category_id' => $categoryId,
+                'sku' => 'BAR-001',
+                'barcode' => '8991234567890',
+                'name' => 'Cold Brew Botol',
+                'price' => 45000,
+                'stock' => 12,
+                'unit' => 'botol',
+                'tag' => 'Ready',
+                'color' => '#0f766e',
+                'is_active' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('products', [
+            'sku' => 'BAR-001',
+            'barcode' => '8991234567890',
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->post(route('products.store'), [
+                'category_id' => $categoryId,
+                'sku' => 'BAR-002',
+                'barcode' => '8991234567890',
+                'name' => 'Latte Botol',
+                'price' => 42000,
+                'stock' => 8,
+                'unit' => 'botol',
+                'tag' => 'Ready',
+                'color' => '#0f766e',
+                'is_active' => 1,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasErrors('barcode');
+    }
+
+    public function test_pos_product_payload_includes_barcode_for_scan(): void
+    {
+        CafeCatalog::ensure();
+
+        Product::query()
+            ->where('sku', 'ESP-001')
+            ->firstOrFail()
+            ->update(['barcode' => '8991234567890']);
+
+        $this
+            ->actingAs(User::factory()->create())
+            ->get(route('pos.index'))
+            ->assertOk()
+            ->assertSee('Scan barcode / SKU')
+            ->assertSee('"barcode":"8991234567890"', false);
+    }
+
     public function test_checkout_creates_sale_and_decreases_stock(): void
     {
         CafeCatalog::ensure();

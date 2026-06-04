@@ -29,6 +29,7 @@ class PosController extends Controller
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'sku' => $product->sku,
+                'barcode' => $product->barcode,
                 'name' => $product->name,
                 'category' => $product->category?->name,
                 'category_id' => $product->category_id,

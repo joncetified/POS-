@@ -107,6 +107,10 @@
                             <input id="sku" name="sku" required>
                         </div>
                         <div class="field">
+                            <label for="barcode">Barcode</label>
+                            <input id="barcode" name="barcode" inputmode="numeric" placeholder="Scan / ketik barcode">
+                        </div>
+                        <div class="field">
                             <label for="name">Nama</label>
                             <input id="name" name="name" required>
                         </div>
@@ -205,6 +209,7 @@
                                             <input name="sku" value="{{ $product->sku }}" required aria-label="SKU">
                                             <input name="name" value="{{ $product->name }}" required aria-label="Nama produk">
                                         </div>
+                                        <input name="barcode" value="{{ $product->barcode }}" placeholder="Barcode" style="margin-top: 8px;" aria-label="Barcode">
                                         <div class="swatch-row">
                                             <span class="swatch" style="--color: {{ $product->color }}"></span>
                                             <input name="color" value="{{ $product->color }}" required aria-label="Warna">
