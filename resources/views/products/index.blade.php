@@ -270,6 +270,7 @@
                                             <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
                                             <input id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
                                             <button class="btn primary" type="submit">Simpan Gambar</button>
+                                            <small class="muted">Pilih gambar, lalu otomatis disimpan.</small>
                                         </form>
                                     </div>
                                 </td>
@@ -374,6 +375,16 @@
                 const url = URL.createObjectURL(file);
                 preview.innerHTML = `<img src="${url}" alt="Preview gambar produk">`;
                 preview.querySelector('img').addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+
+                const form = input.closest('form');
+                const button = form?.querySelector('button[type="submit"]');
+                if (form && form.id.startsWith('image-update-')) {
+                    if (button) {
+                        button.disabled = true;
+                        button.textContent = 'Menyimpan...';
+                    }
+                    window.setTimeout(() => form.requestSubmit(), 250);
+                }
             });
         });
     </script>
