@@ -104,7 +104,7 @@ class ProductController extends Controller
             'tag' => ['nullable', 'string', 'max:40'],
             'package_contents' => ['nullable', 'string', 'max:255'],
             'color' => ['required', 'string', 'max:16'],
-            'image' => ['nullable', 'image', 'max:2048'],
+            'image' => ['nullable', 'image', 'max:10240'],
             'is_bundle' => ['nullable', 'boolean'],
             'bundle_items' => ['nullable', 'array'],
             'bundle_items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],

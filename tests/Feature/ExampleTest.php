@@ -276,6 +276,7 @@ class ExampleTest extends TestCase
 
         $this->assertNotNull($product->image_path);
         Storage::disk('public')->assertExists($product->image_path);
+        $this->assertStringContainsString('?v=', $product->imageUrl());
     }
 
     public function test_pos_product_payload_includes_barcode_for_scan(): void

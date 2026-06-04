@@ -248,7 +248,7 @@
                                     <div class="image-upload-cell">
                                         <div class="product-image-preview" data-image-preview="{{ $product->id }}">
                                             @if ($product->image_path)
-                                                <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}">
+                                                <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}">
                                             @else
                                                 <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
                                             @endif

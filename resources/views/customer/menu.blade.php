@@ -523,7 +523,7 @@
             'tag' => $product->tag,
             'package_contents' => $product->package_contents,
             'is_bundle' => $product->is_bundle,
-            'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,
+            'image_url' => $product->imageUrl(),
         ])->values();
     @endphp
 
