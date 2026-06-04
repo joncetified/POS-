@@ -276,6 +276,7 @@ class ExampleTest extends TestCase
 
         $this->assertNotNull($product->image_path);
         Storage::disk('public')->assertExists($product->image_path);
+        $this->assertStringStartsWith('/storage/products/', $product->imageUrl());
         $this->assertStringContainsString('?v=', $product->imageUrl());
     }
 

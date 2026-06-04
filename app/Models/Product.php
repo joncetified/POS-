@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -86,6 +85,6 @@ class Product extends Model
 
         $version = $this->updated_at?->timestamp ?? time();
 
-        return Storage::disk('public')->url($this->image_path) . '?v=' . $version;
+        return '/storage/' . ltrim($this->image_path, '/') . '?v=' . $version;
     }
 }
