@@ -37,6 +37,7 @@ class PosController extends Controller
                 'stock' => $product->availableForSaleStock(),
                 'unit' => $product->unit,
                 'tag' => $product->tag,
+                'package_contents' => $product->package_contents,
                 'color' => $product->color,
                 'is_bundle' => $product->is_bundle,
                 'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,

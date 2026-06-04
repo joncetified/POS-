@@ -269,7 +269,7 @@
         .cart-row {
             min-width: 0;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
             gap: 10px;
             align-items: start;
             border: 1px solid var(--line);
@@ -279,6 +279,19 @@
         }
         .cart-row strong { overflow-wrap: anywhere; }
         .cart-row .amount { white-space: nowrap; }
+        .cart-thumb {
+            width: 54px;
+            height: 44px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: linear-gradient(135deg, #ff9a67, #5b2a12);
+            font-size: .78rem;
+            font-weight: 950;
+        }
+        .cart-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .summary {
             display: grid;
             gap: 7px;
@@ -473,6 +486,7 @@
             'stock' => $product->availableForSaleStock(),
             'unit' => $product->unit,
             'tag' => $product->tag,
+            'package_contents' => $product->package_contents,
             'is_bundle' => $product->is_bundle,
             'image_url' => $product->image_path ? asset('storage/' . $product->image_path) : null,
         ])->values();
@@ -511,7 +525,7 @@
             const query = state.search.trim().toLowerCase();
             return products.filter((product) => {
                 const inCategory = state.category === 'all' || String(product.category_id) === state.category;
-                const haystack = `${product.name} ${product.sku} ${product.category || ''} ${product.tag || ''}`.toLowerCase();
+                const haystack = `${product.name} ${product.sku} ${product.category || ''} ${product.tag || ''} ${product.package_contents || ''}`.toLowerCase();
                 return inCategory && (!query || haystack.includes(query));
             });
         }
@@ -530,6 +544,9 @@
                     ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`
                     : `<div class="product-fallback">${escapeHtml(initials(product.name))}</div>`;
                 const stockLabel = product.is_bundle ? `Paket / Stok ${product.stock}` : `${escapeHtml(product.tag || product.category || product.unit)} / Stok ${product.stock} ${escapeHtml(product.unit)}`;
+                const packageLine = product.is_bundle && product.package_contents
+                    ? `<p class="meta">${escapeHtml(product.package_contents)}</p>`
+                    : '';
                 const disabled = !canOrder || product.stock <= 0;
 
                 return `
@@ -542,6 +559,7 @@
                             <h3>${escapeHtml(product.name)}</h3>
                             <p class="price">${rupiah(product.price)}</p>
                             <p class="meta">${stockLabel}</p>
+                            ${packageLine}
                             ${canOrder ? `
                                 <div class="qty-control">
                                     <button type="button" data-dec="${product.id}" aria-label="Kurangi ${escapeHtml(product.name)}" ${disabled ? 'disabled' : ''}>-</button>
@@ -574,15 +592,26 @@
                 return;
             }
 
-            byId('cart-list').innerHTML = data.items.map((item) => `
+            byId('cart-list').innerHTML = data.items.map((item) => {
+                const image = item.image_url
+                    ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}">`
+                    : escapeHtml(initials(item.name));
+                const packageLine = item.is_bundle && item.package_contents
+                    ? `<p class="meta">${escapeHtml(item.package_contents)}</p>`
+                    : '';
+
+                return `
                 <div class="cart-row">
+                    <div class="cart-thumb">${image}</div>
                     <div>
                         <strong>${escapeHtml(item.name)}</strong>
+                        ${packageLine}
                         <p class="meta">${item.qty} x ${rupiah(item.price)}</p>
                     </div>
                     <strong class="amount">${rupiah(item.price * item.qty)}</strong>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function changeQty(productId, diff) {

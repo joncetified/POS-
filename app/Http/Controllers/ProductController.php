@@ -102,6 +102,7 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'string', 'max:30'],
             'tag' => ['nullable', 'string', 'max:40'],
+            'package_contents' => ['nullable', 'string', 'max:255'],
             'color' => ['required', 'string', 'max:16'],
             'image' => ['nullable', 'image', 'max:2048'],
             'is_bundle' => ['nullable', 'boolean'],

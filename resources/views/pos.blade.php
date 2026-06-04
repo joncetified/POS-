@@ -347,12 +347,20 @@
             width: 58px;
             height: 44px;
             border-radius: 6px;
+            overflow: hidden;
             display: grid;
             place-items: center;
             color: #fff;
             background: linear-gradient(145deg, var(--tile-color), #e8c38f);
             font-size: 0.75rem;
             font-weight: 950;
+        }
+
+        .cart-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .qty-control {
@@ -685,7 +693,29 @@
 
         .receipt-item {
             display: grid;
-            gap: 2px;
+            grid-template-columns: 46px minmax(0, 1fr);
+            gap: 8px;
+            align-items: start;
+        }
+
+        .receipt-thumb {
+            width: 46px;
+            height: 38px;
+            border-radius: 5px;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: #4b2308;
+            font-size: 0.7rem;
+            font-weight: 950;
+        }
+
+        .receipt-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .receipt-item-main {
@@ -1152,6 +1182,9 @@
                 const disabled = remaining <= 0 ? 'disabled' : '';
                 const productLabel = product.is_bundle ? 'Paket' : (product.tag || product.unit);
                 const barcodeLabel = product.barcode ? ` / Barcode ${escapeHtml(product.barcode)}` : '';
+                const packageLine = product.is_bundle && product.package_contents
+                    ? `<p class="small">${escapeHtml(product.package_contents)}</p>`
+                    : '';
 
                 return `
                     <article class="product-card">
@@ -1164,6 +1197,7 @@
                                 <h3 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
                                 <span class="price">${rupiah(product.price)}</span>
                                 <p class="small">${escapeHtml(productLabel)} / Stok ${remaining} ${escapeHtml(product.unit)}</p>
+                                ${packageLine}
                                 <p class="small">${escapeHtml(product.sku)}${barcodeLabel}</p>
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
@@ -1194,12 +1228,21 @@
                 return;
             }
 
-            nodes.cart.innerHTML = data.items.map((item) => `
+            nodes.cart.innerHTML = data.items.map((item) => {
+                const image = item.image_url
+                    ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}">`
+                    : escapeHtml(initials(item.name));
+                const packageLine = item.is_bundle && item.package_contents
+                    ? `<p class="small">${escapeHtml(item.package_contents)}</p>`
+                    : '';
+
+                return `
                 <article class="cart-row">
                     <div class="cart-product">
-                        <div class="cart-thumb" style="--tile-color: ${escapeHtml(item.color)};">${escapeHtml(initials(item.name))}</div>
+                        <div class="cart-thumb" style="--tile-color: ${escapeHtml(item.color)};">${image}</div>
                         <div>
                             <strong>${escapeHtml(item.name)}</strong>
+                            ${packageLine}
                             <p class="small">${escapeHtml(item.sku)}</p>
                         </div>
                     </div>
@@ -1212,7 +1255,8 @@
                     <strong>${rupiah(item.price * item.qty)}</strong>
                     <button class="remove-btn" type="button" data-remove="${escapeHtml(item.sku)}">Hapus</button>
                 </article>
-            `).join('');
+            `;
+            }).join('');
 
             renderProducts();
         }
@@ -1646,15 +1690,28 @@
 
         function showReceipt(sale) {
             nodes.receiptTicket.textContent = sale.invoice_number;
-            const itemRows = sale.items.map((item) => `
+            const itemRows = sale.items.map((item) => {
+                const image = item.image_url
+                    ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.product_name)}">`
+                    : escapeHtml(initials(item.product_name));
+                const packageLine = item.is_bundle && item.package_contents
+                    ? `<span class="receipt-item-sub">${escapeHtml(item.package_contents)}</span>`
+                    : '';
+
+                return `
                 <div class="receipt-item">
-                    <div class="receipt-item-main">
-                        <span>${escapeHtml(item.product_name)}</span>
-                        <strong>${rupiah(item.line_total)}</strong>
+                    <div class="receipt-thumb">${image}</div>
+                    <div>
+                        <div class="receipt-item-main">
+                            <span>${escapeHtml(item.product_name)}</span>
+                            <strong>${rupiah(item.line_total)}</strong>
+                        </div>
+                        ${packageLine}
+                        <span class="receipt-item-sub">${item.quantity} x ${rupiah(item.unit_price)}</span>
                     </div>
-                    <span class="receipt-item-sub">${item.quantity} x ${rupiah(item.unit_price)}</span>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             const reference = sale.payment_reference
                 ? `<div class="receipt-line"><span>Referensi</span><strong>${escapeHtml(sale.payment_reference)}</strong></div>`
                 : '';

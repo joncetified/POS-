@@ -213,6 +213,13 @@ class ExampleTest extends TestCase
 
         $this
             ->actingAs($admin)
+            ->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('data:image/svg+xml', false)
+            ->assertSee('8991234567890');
+
+        $this
+            ->actingAs($admin)
             ->post(route('products.store'), [
                 'category_id' => $categoryId,
                 'sku' => 'BAR-002',
@@ -236,14 +243,19 @@ class ExampleTest extends TestCase
         Product::query()
             ->where('sku', 'ESP-001')
             ->firstOrFail()
-            ->update(['barcode' => '8991234567890']);
+            ->update([
+                'barcode' => '8991234567890',
+                'package_contents' => 'Espresso + Air Mineral',
+            ]);
 
         $this
             ->actingAs(User::factory()->create())
             ->get(route('pos.index'))
             ->assertOk()
             ->assertSee('Scan barcode / SKU')
-            ->assertSee('"barcode":"8991234567890"', false);
+            ->assertSee('"barcode":"8991234567890"', false)
+            ->assertSee('"package_contents":"Espresso + Air Mineral"', false)
+            ->assertSee('"image_url"', false);
     }
 
     public function test_simple_bundle_product_can_be_saved_without_components(): void
@@ -263,6 +275,7 @@ class ExampleTest extends TestCase
                 'stock' => 10,
                 'unit' => 'paket',
                 'tag' => 'Promo',
+                'package_contents' => 'Nasi + Ayam',
                 'color' => '#ff965f',
                 'is_bundle' => 1,
                 'is_active' => 1,
@@ -273,6 +286,7 @@ class ExampleTest extends TestCase
         $bundle = Product::query()->where('sku', 'PKT-001')->firstOrFail();
 
         $this->assertTrue($bundle->is_bundle);
+        $this->assertSame('Nasi + Ayam', $bundle->package_contents);
         $this->assertSame(10, $bundle->availableForSaleStock());
         $this->assertSame(0, $bundle->bundleItems()->count());
     }
@@ -337,6 +351,7 @@ class ExampleTest extends TestCase
             'stock' => 10,
             'unit' => 'paket',
             'tag' => 'Promo',
+            'package_contents' => 'Nasi + Ayam',
             'color' => '#ff965f',
             'is_bundle' => true,
             'is_active' => true,

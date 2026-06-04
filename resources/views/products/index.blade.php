@@ -8,7 +8,7 @@
         :root { --bg: #f3f5f7; --surface: #fff; --soft: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; --danger: #dc2626; }
         * { box-sizing: border-box; }
         body { margin: 0; color: var(--ink); background: var(--bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        button, input, select { font: inherit; }
+        button, input, select, textarea { font: inherit; }
         a { color: inherit; text-decoration: none; }
         .shell { width: min(1220px, calc(100% - 32px)); margin: 24px auto; display: grid; gap: 18px; }
         .topbar, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: 0 14px 30px rgba(15, 23, 42, .06); }
@@ -28,8 +28,9 @@
         .category-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
         .field { display: grid; gap: 6px; }
         label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
-        input, select { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
+        input, select, textarea { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
+        textarea { min-height: 70px; resize: vertical; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, .12); }
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
         .errors { background: #fee2e2; color: #991b1b; }
@@ -50,6 +51,8 @@
         .bundle-row { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; align-items: center; }
         .bundle-list { margin-top: 8px; display: grid; gap: 4px; color: var(--muted); font-size: .84rem; }
         .badge { display: inline-flex; width: max-content; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; background: #fff0e7; color: #d86635; font-weight: 900; font-size: .78rem; }
+        .barcode-preview { margin-top: 8px; display: grid; gap: 5px; max-width: 210px; color: var(--muted); font-size: .78rem; }
+        .barcode-preview img { width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 6px; object-fit: contain; }
         .pagination { margin-top: 12px; }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
@@ -58,6 +61,52 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
+    @php
+        $barcodeSvg = function (?string $value): ?string {
+            $value = strtoupper(trim((string) $value));
+            if ($value === '') {
+                return null;
+            }
+
+            $patterns = [
+                '0' => 'nnnwwnwnn', '1' => 'wnnwnnnnw', '2' => 'nnwwnnnnw', '3' => 'wnwwnnnnn',
+                '4' => 'nnnwwnnnw', '5' => 'wnnwwnnnn', '6' => 'nnwwwnnnn', '7' => 'nnnwnnwnw',
+                '8' => 'wnnwnnwnn', '9' => 'nnwwnnwnn', 'A' => 'wnnnnwnnw', 'B' => 'nnwnnwnnw',
+                'C' => 'wnwnnwnnn', 'D' => 'nnnnwwnnw', 'E' => 'wnnnwwnnn', 'F' => 'nnwnwwnnn',
+                'G' => 'nnnnnwwnw', 'H' => 'wnnnnwwnn', 'I' => 'nnwnnwwnn', 'J' => 'nnnnwwwnn',
+                'K' => 'wnnnnnnww', 'L' => 'nnwnnnnww', 'M' => 'wnwnnnnwn', 'N' => 'nnnnwnnww',
+                'O' => 'wnnnwnnwn', 'P' => 'nnwnwnnwn', 'Q' => 'nnnnnnwww', 'R' => 'wnnnnnwwn',
+                'S' => 'nnwnnnwwn', 'T' => 'nnnnwnwwn', 'U' => 'wwnnnnnnw', 'V' => 'nwwnnnnnw',
+                'W' => 'wwwnnnnnn', 'X' => 'nwnnwnnnw', 'Y' => 'wwnnwnnnn', 'Z' => 'nwwnwnnnn',
+                '-' => 'nwnnnnwnw', '.' => 'wwnnnnwnn', ' ' => 'nwwnnnwnn', '$' => 'nwnwnwnnn',
+                '/' => 'nwnwnnnwn', '+' => 'nwnnnwnwn', '%' => 'nnnwnwnwn', '*' => 'nwnnwnwnn',
+            ];
+
+            $encoded = '*' . preg_replace('/[^0-9A-Z\-. $\/+%]/', '-', $value) . '*';
+            $x = 10;
+            $bars = '';
+            foreach (str_split($encoded) as $char) {
+                $pattern = $patterns[$char] ?? $patterns['-'];
+                foreach (str_split($pattern) as $index => $widthCode) {
+                    $width = $widthCode === 'w' ? 4 : 2;
+                    if ($index % 2 === 0) {
+                        $bars .= '<rect x="' . $x . '" y="8" width="' . $width . '" height="44" fill="#111"/>';
+                    }
+                    $x += $width;
+                }
+                $x += 2;
+            }
+            $width = max($x + 10, 180);
+            $safeValue = e($value);
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $width . '" height="74" viewBox="0 0 ' . $width . ' 74">'
+                . '<rect width="100%" height="100%" fill="#fff"/>'
+                . $bars
+                . '<text x="50%" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">' . $safeValue . '</text>'
+                . '</svg>';
+
+            return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        };
+    @endphp
     <main class="shell">
         <section class="topbar">
             <div class="staff-brand-wrap">
@@ -115,6 +164,10 @@
                             <input id="name" name="name" required>
                         </div>
                         <div class="field">
+                            <label for="package_contents">Isi Paket</label>
+                            <input id="package_contents" name="package_contents" placeholder="Contoh: Nasi + Ayam">
+                        </div>
+                        <div class="field">
                             <label for="price">Harga</label>
                             <input id="price" name="price" type="number" min="0" required>
                         </div>
@@ -142,7 +195,7 @@
                             <input name="is_bundle" type="checkbox" value="1">
                             Produk paket / promo
                         </label>
-                        <p class="muted">Untuk paket, tulis isi paket langsung di Nama, contoh: Nasi + Ayam.</p>
+                        <p class="muted">Untuk paket, isi detailnya di kolom Isi Paket, contoh: Nasi + Ayam.</p>
                         <input type="hidden" name="is_active" value="1">
                         <button class="btn primary" type="submit">Simpan Produk</button>
                     </form>
@@ -196,6 +249,14 @@
                                             <input name="name" value="{{ $product->name }}" required aria-label="Nama produk">
                                         </div>
                                         <input name="barcode" value="{{ $product->barcode }}" placeholder="Barcode" style="margin-top: 8px;" aria-label="Barcode">
+                                        <input name="package_contents" value="{{ $product->package_contents }}" placeholder="Isi Paket, contoh: Nasi + Ayam" style="margin-top: 8px;" aria-label="Isi Paket">
+                                        <div class="barcode-preview">
+                                            @if ($barcodeSvg($product->barcode))
+                                                <img src="{{ $barcodeSvg($product->barcode) }}" alt="Barcode {{ $product->barcode }}">
+                                            @else
+                                                <span>Belum ada barcode.</span>
+                                            @endif
+                                        </div>
                                         <div class="swatch-row">
                                             <span class="swatch" style="--color: {{ $product->color }}"></span>
                                             <input name="color" value="{{ $product->color }}" required aria-label="Warna">
@@ -207,17 +268,18 @@
                                             <input name="is_bundle" type="checkbox" value="1" @checked($product->is_bundle)>
                                             Produk paket / promo
                                         </label>
-                                        <p class="muted">Isi paket ditulis di Nama, contoh: Nasi + Ayam.</p>
+                                        <p class="muted">Isi paket ditulis di kolom Isi Paket, contoh: Nasi + Ayam.</p>
                                         <input type="hidden" name="is_active" value="0">
                                     </form>
                                     @if ($product->is_bundle)
                                         <div class="bundle-list">
                                             <span class="badge">Paket</span>
-                                            @forelse ($product->bundleItems as $item)
+                                            @if ($product->package_contents)
+                                                <span>{{ $product->package_contents }}</span>
+                                            @endif
+                                            @foreach ($product->bundleItems as $item)
                                                 <span>{{ $item->component?->name ?: 'Produk terhapus' }} x {{ $item->quantity }}</span>
-                                            @empty
-                                                <span>Isi paket belum diatur.</span>
-                                            @endforelse
+                                            @endforeach
                                         </div>
                                     @endif
                                 </td>

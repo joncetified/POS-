@@ -66,7 +66,7 @@ class SaleController extends Controller
     public function openOrders(): JsonResponse
     {
         $orders = Sale::query()
-            ->with('items')
+            ->with('items.product')
             ->whereIn('status', self::OPEN_STATUSES)
             ->latest('updated_at')
             ->get()
@@ -124,7 +124,7 @@ class SaleController extends Controller
 
             $this->replaceSaleItems($sale, $lines, false);
 
-            return $sale->load('items');
+            return $sale->load('items.product');
         });
 
         return response()->json([
@@ -211,7 +211,7 @@ class SaleController extends Controller
         if ($existingSale) {
             return response()->json([
                 'message' => 'Transaksi QRIS sudah tersimpan.',
-                'sale' => $this->serializePaidSale($existingSale->load('items')),
+                'sale' => $this->serializePaidSale($existingSale->load('items.product')),
             ]);
         }
 
@@ -319,7 +319,7 @@ class SaleController extends Controller
 
             $this->replaceSaleItems($sale, $lines, true);
 
-            return $sale->load('items');
+            return $sale->load('items.product');
         });
 
         return $sale;
@@ -686,6 +686,9 @@ class SaleController extends Controller
                 'sku' => $item->sku,
                 'qty' => $item->quantity,
                 'product_name' => $item->product_name,
+                'image_url' => $item->product?->image_path ? asset('storage/' . $item->product->image_path) : null,
+                'package_contents' => $item->product?->package_contents,
+                'is_bundle' => (bool) ($item->product?->is_bundle ?? false),
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'line_total' => $item->line_total,
@@ -715,8 +718,12 @@ class SaleController extends Controller
             'change_amount' => $sale->change_amount,
             'paid_at' => $sale->paid_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i'),
             'items' => $sale->items->map(fn ($item) => [
+                'product_id' => $item->product_id,
                 'sku' => $item->sku,
                 'product_name' => $item->product_name,
+                'image_url' => $item->product?->image_path ? asset('storage/' . $item->product->image_path) : null,
+                'package_contents' => $item->product?->package_contents,
+                'is_bundle' => (bool) ($item->product?->is_bundle ?? false),
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'line_total' => $item->line_total,

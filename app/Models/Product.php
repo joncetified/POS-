@@ -20,6 +20,7 @@ class Product extends Model
         'stock',
         'unit',
         'tag',
+        'package_contents',
         'color',
         'image_path',
         'is_bundle',
