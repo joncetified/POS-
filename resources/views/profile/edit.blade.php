@@ -34,6 +34,7 @@
         .face-camera.is-active { display: block; }
         .face-camera video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
         .face-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .face-meta { color: var(--muted); font-size: .92rem; }
         .face-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: #fff; color: var(--muted); font-weight: 750; }
         .face-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
         .face-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
@@ -117,27 +118,40 @@
                             <input name="password_confirmation" type="password" autocomplete="new-password">
                         </div>
                     </div>
-                    <section class="face-panel" aria-label="Verifikasi wajah">
-                        <div class="face-panel-header">
-                            <div>
-                                <h2>Verifikasi Wajah</h2>
-                                <p class="muted">Scan wajah dari kamera, lalu pakai hasilnya sebagai foto profil.</p>
-                            </div>
-                        </div>
-                        <div class="face-camera" data-face-camera>
-                            <video data-face-video autoplay playsinline muted></video>
-                        </div>
-                        <div class="face-actions">
-                            <button class="btn" type="button" data-face-start>Mulai Scan Wajah</button>
-                            <button class="btn primary" type="button" data-face-capture disabled>Pakai Foto Wajah</button>
-                            <button class="btn" type="button" data-face-stop disabled>Matikan Kamera</button>
-                        </div>
-                        <div class="face-status" data-face-status>Kamera belum aktif.</div>
-                    </section>
                     <div class="profile-actions">
                         <button class="btn primary" type="submit">Simpan Profil Saya</button>
                     </div>
                 </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <form class="face-panel" method="POST" action="{{ route('profile.face.update') }}" data-face-enroll-form>
+                @csrf
+                @method('PUT')
+                <div class="face-panel-header">
+                    <div>
+                        <h2>Face Recognition Login</h2>
+                        <p class="muted">Daftarkan wajah akun ini supaya bisa login dengan username dan scan wajah.</p>
+                    </div>
+                    <p class="face-meta">
+                        @if ($user->face_registered_at)
+                            Terdaftar {{ $user->face_registered_at->format('d M Y H:i') }}
+                        @else
+                            Belum terdaftar
+                        @endif
+                    </p>
+                </div>
+                <div class="face-camera" data-face-camera>
+                    <video data-face-video autoplay playsinline muted></video>
+                </div>
+                <div data-face-descriptor-inputs></div>
+                <div class="face-actions">
+                    <button class="btn" type="button" data-face-start>Mulai Kamera</button>
+                    <button class="btn primary" type="button" data-face-enroll disabled>Daftarkan Wajah</button>
+                    <button class="btn" type="button" data-face-stop disabled>Matikan Kamera</button>
+                </div>
+                <div class="face-status" data-face-status>Kamera belum aktif.</div>
             </form>
         </section>
     </main>
@@ -256,15 +270,6 @@
 
             canvas.addEventListener('pointerup', endDrag);
             canvas.addEventListener('pointercancel', endDrag);
-            editor.addEventListener('avatar:set-image', (event) => {
-                const src = event.detail?.src;
-                if (typeof src !== 'string' || !src.startsWith('data:image/')) return;
-
-                input.value = '';
-                zoom.value = '1';
-                load(src, true);
-            });
-
             if (current) {
                 load(current);
             } else {
@@ -272,120 +277,73 @@
             }
         });
 
-        document.querySelectorAll('[data-face-start]').forEach((startButton) => {
-            const form = startButton.closest('form');
+        document.querySelectorAll('[data-face-enroll-form]').forEach((form) => {
+            const startButton = form.querySelector('[data-face-start]');
+            const enrollButton = form.querySelector('[data-face-enroll]');
+            const stopButton = form.querySelector('[data-face-stop]');
             const camera = form.querySelector('[data-face-camera]');
             const video = form.querySelector('[data-face-video]');
-            const captureButton = form.querySelector('[data-face-capture]');
-            const stopButton = form.querySelector('[data-face-stop]');
             const status = form.querySelector('[data-face-status]');
-            const avatarEditor = form.querySelector('[data-avatar-editor]');
+            const inputs = form.querySelector('[data-face-descriptor-inputs]');
             let stream = null;
-            let detector = null;
-            let scanTimer = null;
-            let faceDetected = false;
 
             function setStatus(message, type = '') {
                 status.textContent = message;
                 status.className = `face-status${type ? ` ${type}` : ''}`;
             }
 
-            function stopScan() {
-                if (scanTimer) {
-                    clearInterval(scanTimer);
-                    scanTimer = null;
-                }
-
+            function stopCamera() {
                 if (stream) {
-                    stream.getTracks().forEach((track) => track.stop());
+                    window.CafeFaceRecognition?.stopStream(stream);
                     stream = null;
                 }
 
                 video.srcObject = null;
                 camera.classList.remove('is-active');
-                captureButton.disabled = true;
                 stopButton.disabled = true;
                 startButton.disabled = false;
-                faceDetected = false;
-            }
-
-            async function detectFace() {
-                if (!detector || !stream || video.readyState < 2) return;
-
-                try {
-                    const faces = await detector.detect(video);
-                    faceDetected = faces.length > 0;
-                    captureButton.disabled = !faceDetected;
-                    setStatus(
-                        faceDetected
-                            ? 'Wajah terdeteksi. Tekan Pakai Foto Wajah untuk simpan ke crop profil.'
-                            : 'Arahkan wajah ke kamera sampai terdeteksi.',
-                        faceDetected ? 'ok' : 'warn'
-                    );
-                } catch (error) {
-                    setStatus('Deteksi wajah gagal dibaca. Kamera tetap aktif, coba ulang scan.', 'error');
-                }
             }
 
             startButton.addEventListener('click', async () => {
-                if (!navigator.mediaDevices?.getUserMedia) {
-                    setStatus('Browser ini belum mendukung akses kamera.', 'error');
-                    return;
-                }
-
-                stopScan();
+                stopCamera();
                 startButton.disabled = true;
 
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 540 } },
-                        audio: false,
-                    });
-                    video.srcObject = stream;
-                    await video.play();
+                    stream = await window.CafeFaceRecognition.openCamera(video);
                     camera.classList.add('is-active');
                     stopButton.disabled = false;
-
-                    if ('FaceDetector' in window) {
-                        detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-                        setStatus('Kamera aktif. Arahkan wajah ke kamera untuk verifikasi.', 'warn');
-                        scanTimer = setInterval(detectFace, 700);
-                        detectFace();
-                    } else {
-                        detector = null;
-                        faceDetected = true;
-                        captureButton.disabled = false;
-                        setStatus('Kamera aktif. Browser ini belum punya FaceDetector, jadi foto bisa dicapture tanpa auto-detect.', 'warn');
-                    }
+                    enrollButton.disabled = false;
+                    setStatus('Kamera aktif. Arahkan wajah ke kamera lalu tekan Daftarkan Wajah.', 'warn');
                 } catch (error) {
-                    stopScan();
-                    setStatus('Kamera tidak bisa dibuka. Cek izin kamera browser.', 'error');
+                    stopCamera();
+                    setStatus(error.message || 'Kamera tidak bisa dibuka. Cek izin kamera browser.', 'error');
                 }
             });
 
-            captureButton.addEventListener('click', () => {
-                if (!stream || !faceDetected || video.videoWidth === 0) return;
+            enrollButton.addEventListener('click', async () => {
+                if (!stream) return;
 
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const context = canvas.getContext('2d');
-                context.translate(canvas.width, 0);
-                context.scale(-1, 1);
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                avatarEditor.dispatchEvent(new CustomEvent('avatar:set-image', {
-                    detail: { src: canvas.toDataURL('image/jpeg', 0.9) },
-                }));
-                setStatus('Foto wajah masuk ke crop profil. Atur zoom bila perlu, lalu Simpan Profil Saya.', 'ok');
+                try {
+                    enrollButton.disabled = true;
+                    setStatus('Membaca wajah...', 'warn');
+                    const descriptor = await window.CafeFaceRecognition.captureDescriptor(video);
+                    window.CafeFaceRecognition.fillDescriptorInputs(inputs, descriptor);
+                    setStatus('Data wajah terbaca. Menyimpan face recognition login...', 'ok');
+                    stopCamera();
+                    form.submit();
+                } catch (error) {
+                    enrollButton.disabled = false;
+                    setStatus(error.message || 'Wajah belum bisa dibaca. Coba arahkan wajah lebih jelas.', 'error');
+                }
             });
 
             stopButton.addEventListener('click', () => {
-                stopScan();
+                stopCamera();
+                enrollButton.disabled = true;
                 setStatus('Kamera dimatikan.');
             });
 
-            form.addEventListener('submit', stopScan);
-            window.addEventListener('beforeunload', stopScan);
+            window.addEventListener('beforeunload', stopCamera);
         });
     </script>
 </body>

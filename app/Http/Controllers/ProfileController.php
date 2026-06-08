@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\CafeCatalog;
+use App\Support\FaceRecognition;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -45,6 +46,20 @@ class ProfileController extends Controller
         $user->update($data);
 
         return back()->with('status', 'Profil saya berhasil disimpan.');
+    }
+
+    public function updateFace(Request $request): RedirectResponse
+    {
+        $validated = $request->validate(FaceRecognition::rules());
+
+        /** @var User $user */
+        $user = $request->user();
+        $user->forceFill([
+            'face_descriptor' => FaceRecognition::normalize($validated['face_descriptor']),
+            'face_registered_at' => now(),
+        ])->save();
+
+        return back()->with('status', 'Face recognition login berhasil didaftarkan.');
     }
 
     private function storeCroppedAvatar(string $dataUrl, User $user): string

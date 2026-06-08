@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Mail\RegistrationVerificationCode;
 use App\Models\User;
 use App\Support\CafeCatalog;
+use App\Support\FaceRecognition;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +50,49 @@ class AuthController extends Controller
         }
 
         return redirect()->intended(route($this->homeRouteFor($request->user())));
+    }
+
+    public function faceLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'username' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
+            ...FaceRecognition::rules(),
+        ]);
+
+        $user = User::query()
+            ->where('username', $validated['username'])
+            ->first();
+
+        if (! $user || ! $user->face_descriptor) {
+            return response()->json([
+                'message' => 'Wajah belum terdaftar untuk username ini.',
+                'errors' => ['username' => ['Wajah belum terdaftar untuk username ini.']],
+            ], 422);
+        }
+
+        if (! FaceRecognition::matches($user->face_descriptor, $validated['face_descriptor'])) {
+            return response()->json([
+                'message' => 'Wajah tidak cocok dengan data login.',
+                'errors' => ['face_descriptor' => ['Wajah tidak cocok dengan data login.']],
+            ], 422);
+        }
+
+        if (! $user->email_verified_at) {
+            $request->session()->put('pending_verification_user_id', $user->id);
+
+            return response()->json([
+                'message' => 'Verifikasi email dulu sebelum masuk.',
+                'redirect' => route('verification.notice'),
+            ], 403);
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return response()->json([
+            'redirect' => route($this->homeRouteFor($user)),
+        ]);
     }
 
     public function showRegister(): View

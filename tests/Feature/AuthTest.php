@@ -81,4 +81,69 @@ class AuthTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_verified_user_can_login_with_registered_face_descriptor(): void
+    {
+        $descriptor = array_fill(0, 256, 0.25);
+        $user = User::factory()->create([
+            'username' => 'kasirface',
+            'face_descriptor' => $descriptor,
+            'face_registered_at' => now(),
+        ]);
+
+        $this->withHeader('Accept', 'application/json')
+            ->postJson(route('login.face'), [
+                'username' => 'kasirface',
+                'face_descriptor' => $descriptor,
+            ])
+            ->assertOk()
+            ->assertJson(['redirect' => route('pos.index')]);
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_face_login_rejects_unregistered_or_mismatched_face(): void
+    {
+        User::factory()->create([
+            'username' => 'tanpawajah',
+            'face_descriptor' => null,
+        ]);
+
+        $this->postJson(route('login.face'), [
+            'username' => 'tanpawajah',
+            'face_descriptor' => array_fill(0, 256, 0.25),
+        ])->assertUnprocessable();
+
+        User::factory()->create([
+            'username' => 'wajahbeda',
+            'face_descriptor' => array_fill(0, 256, -1),
+            'face_registered_at' => now(),
+        ]);
+
+        $this->postJson(route('login.face'), [
+            'username' => 'wajahbeda',
+            'face_descriptor' => array_fill(0, 256, 1),
+        ])->assertUnprocessable();
+
+        $this->assertGuest();
+    }
+
+    public function test_unverified_user_cannot_login_with_face_before_verification(): void
+    {
+        $descriptor = array_fill(0, 256, 0.25);
+        $user = User::factory()->unverified()->create([
+            'username' => 'facepending',
+            'face_descriptor' => $descriptor,
+            'face_registered_at' => now(),
+        ]);
+
+        $this->postJson(route('login.face'), [
+            'username' => 'facepending',
+            'face_descriptor' => $descriptor,
+        ])->assertForbidden()
+            ->assertJson(['redirect' => route('verification.notice')]);
+
+        $this->assertGuest();
+        $this->assertSame($user->id, session('pending_verification_user_id'));
+    }
 }

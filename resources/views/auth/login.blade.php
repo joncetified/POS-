@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - {{ $store['name'] }}</title>
     <style>
         :root { --bg: #f3f5f7; --surface: #fff; --soft: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --primary: #0f766e; --primary-dark: #115e59; --danger: #dc2626; }
@@ -24,6 +25,16 @@
         .status { padding: 10px 12px; border-radius: 8px; color: #166534; background: #dcfce7; font-weight: 800; }
         .errors { padding: 10px 12px; border-radius: 8px; color: #991b1b; background: #fee2e2; }
         .footer { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+        .divider { height: 1px; background: var(--line); }
+        .face-login { display: grid; gap: 12px; }
+        .face-camera { aspect-ratio: 4 / 3; border: 1px dashed var(--line); border-radius: 8px; overflow: hidden; background: #0f172a; display: none; }
+        .face-camera.is-active { display: block; }
+        .face-camera video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
+        .face-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .face-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--soft); color: var(--muted); font-weight: 750; }
+        .face-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
+        .face-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .face-status.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -59,10 +70,123 @@
             <button class="btn" type="submit">Masuk</button>
         </form>
 
+        <div class="divider"></div>
+
+        <section class="face-login" data-face-login>
+            <div>
+                <strong>Login dengan Wajah</strong>
+                <p class="muted">Isi username, lalu scan wajah yang sudah didaftarkan di Profil Saya.</p>
+            </div>
+            <div class="face-camera" data-face-camera>
+                <video data-face-video autoplay playsinline muted></video>
+            </div>
+            <div class="face-actions">
+                <button class="btn" type="button" data-face-start>Mulai Kamera</button>
+                <button class="btn" type="button" data-face-stop disabled>Matikan</button>
+            </div>
+            <button class="btn" type="button" data-face-submit disabled>Login Wajah</button>
+            <div class="face-status" data-face-status>Kamera belum aktif.</div>
+        </section>
+
         <div class="footer">
             <span class="muted">Belum punya akun?</span>
             <a href="{{ route('register') }}">Register</a>
         </div>
     </main>
+    <script>
+        document.querySelectorAll('[data-face-login]').forEach((panel) => {
+            const startButton = panel.querySelector('[data-face-start]');
+            const stopButton = panel.querySelector('[data-face-stop]');
+            const submitButton = panel.querySelector('[data-face-submit]');
+            const camera = panel.querySelector('[data-face-camera]');
+            const video = panel.querySelector('[data-face-video]');
+            const status = panel.querySelector('[data-face-status]');
+            const username = document.querySelector('#username');
+            const remember = document.querySelector('input[name="remember"]');
+            let stream = null;
+
+            function setStatus(message, type = '') {
+                status.textContent = message;
+                status.className = `face-status${type ? ` ${type}` : ''}`;
+            }
+
+            function stopCamera() {
+                if (stream) {
+                    window.CafeFaceRecognition?.stopStream(stream);
+                    stream = null;
+                }
+
+                video.srcObject = null;
+                camera.classList.remove('is-active');
+                stopButton.disabled = true;
+                submitButton.disabled = true;
+                startButton.disabled = false;
+            }
+
+            startButton.addEventListener('click', async () => {
+                if (!username.value.trim()) {
+                    username.focus();
+                    setStatus('Isi username dulu sebelum login wajah.', 'error');
+                    return;
+                }
+
+                stopCamera();
+                startButton.disabled = true;
+
+                try {
+                    stream = await window.CafeFaceRecognition.openCamera(video);
+                    camera.classList.add('is-active');
+                    stopButton.disabled = false;
+                    submitButton.disabled = false;
+                    setStatus('Kamera aktif. Arahkan wajah lalu tekan Login Wajah.', 'warn');
+                } catch (error) {
+                    stopCamera();
+                    setStatus(error.message || 'Kamera tidak bisa dibuka. Cek izin kamera browser.', 'error');
+                }
+            });
+
+            submitButton.addEventListener('click', async () => {
+                if (!stream) return;
+
+                try {
+                    submitButton.disabled = true;
+                    setStatus('Membandingkan wajah...', 'warn');
+                    const descriptor = await window.CafeFaceRecognition.captureDescriptor(video);
+                    const response = await fetch('{{ route('login.face') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({
+                            username: username.value.trim(),
+                            remember: remember.checked,
+                            face_descriptor: descriptor,
+                        }),
+                    });
+                    const payload = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(payload.message || 'Login wajah gagal.');
+                    }
+
+                    setStatus('Wajah cocok. Masuk...', 'ok');
+                    stopCamera();
+                    window.location.href = payload.redirect;
+                } catch (error) {
+                    submitButton.disabled = false;
+                    setStatus(error.message || 'Login wajah gagal.', 'error');
+                }
+            });
+
+            stopButton.addEventListener('click', () => {
+                stopCamera();
+                setStatus('Kamera dimatikan.');
+            });
+
+            window.addEventListener('beforeunload', stopCamera);
+        });
+    </script>
 </body>
 </html>

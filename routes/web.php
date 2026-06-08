@@ -20,6 +20,7 @@ Route::post('/qr/meja/{tableNumber}/orders', [CustomerMenuController::class, 'su
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login/face', [AuthController::class, 'faceLogin'])->name('login.face');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
     Route::get('/email/verify', [AuthController::class, 'showVerification'])->name('verification.notice');
@@ -32,6 +33,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/face', [ProfileController::class, 'updateFace'])->name('profile.face.update');
 
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
     Route::match(['put', 'patch'], '/access-control/{user}', [AccessControlController::class, 'update'])->name('access-control.update');
