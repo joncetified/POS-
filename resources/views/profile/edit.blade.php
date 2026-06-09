@@ -27,18 +27,15 @@
         .avatar-editor input[type="range"] { width: 220px; max-width: 100%; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .profile-fields { display: grid; gap: 16px; min-width: 0; }
-        .face-panel { border: 1px solid var(--line); border-radius: 8px; background: var(--soft); padding: 14px; display: grid; gap: 12px; }
-        .face-panel-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; flex-wrap: wrap; }
-        .face-panel h2 { font-size: 1rem; }
-        .face-camera { width: 100%; max-width: 360px; aspect-ratio: 4 / 3; border: 1px dashed var(--line); border-radius: 8px; overflow: hidden; background: #0f172a; display: none; }
-        .face-camera.is-active { display: block; }
-        .face-camera video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: block; }
-        .face-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .face-meta { color: var(--muted); font-size: .92rem; }
-        .face-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: #fff; color: var(--muted); font-weight: 750; }
-        .face-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
-        .face-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
-        .face-status.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+        .fingerprint-panel { border: 1px solid var(--line); border-radius: 8px; background: var(--soft); padding: 14px; display: grid; gap: 12px; }
+        .fingerprint-panel-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; flex-wrap: wrap; }
+        .fingerprint-panel h2 { font-size: 1rem; }
+        .fingerprint-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .fingerprint-meta { color: var(--muted); font-size: .92rem; }
+        .fingerprint-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: #fff; color: var(--muted); font-weight: 750; }
+        .fingerprint-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
+        .fingerprint-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .fingerprint-status.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
         .field { display: grid; gap: 6px; }
         label { color: var(--muted); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
         input { min-height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--surface); color: var(--ink); }
@@ -126,32 +123,28 @@
         </section>
 
         <section class="panel">
-            <form class="face-panel" method="POST" action="{{ route('profile.face.update') }}" data-face-enroll-form>
+            <form class="fingerprint-panel" method="POST" action="{{ route('profile.fingerprint.update') }}" data-fingerprint-register-form>
                 @csrf
                 @method('PUT')
-                <div class="face-panel-header">
+                <div class="fingerprint-panel-header">
                     <div>
-                        <h2>Face Recognition Login</h2>
-                        <p class="muted">Daftarkan wajah akun ini supaya bisa login dengan username dan scan wajah.</p>
+                        <h2>Fingerprint Login</h2>
+                        <p class="muted">Daftarkan fingerprint/biometrik bawaan perangkat untuk login akun ini.</p>
                     </div>
-                    <p class="face-meta">
-                        @if ($user->face_registered_at)
-                            Terdaftar {{ $user->face_registered_at->format('d M Y H:i') }}
+                    <p class="fingerprint-meta">
+                        @if ($user->biometric_registered_at)
+                            Terdaftar {{ $user->biometric_registered_at->format('d M Y H:i') }}
                         @else
                             Belum terdaftar
                         @endif
                     </p>
                 </div>
-                <div class="face-camera" data-face-camera>
-                    <video data-face-video autoplay playsinline muted></video>
+                <input type="hidden" name="credential_id" data-fingerprint-credential-id>
+                <input type="hidden" name="client_data_json" data-fingerprint-client-data>
+                <div class="fingerprint-actions">
+                    <button class="btn primary" type="button" data-fingerprint-register>Daftarkan Fingerprint</button>
                 </div>
-                <div data-face-descriptor-inputs></div>
-                <div class="face-actions">
-                    <button class="btn" type="button" data-face-start>Mulai Kamera</button>
-                    <button class="btn primary" type="button" data-face-enroll disabled>Daftarkan Wajah</button>
-                    <button class="btn" type="button" data-face-stop disabled>Matikan Kamera</button>
-                </div>
-                <div class="face-status" data-face-status>Kamera belum aktif.</div>
+                <div class="fingerprint-status" data-fingerprint-status>Fingerprint belum dimulai.</div>
             </form>
         </section>
     </main>
@@ -277,73 +270,53 @@
             }
         });
 
-        document.querySelectorAll('[data-face-enroll-form]').forEach((form) => {
-            const startButton = form.querySelector('[data-face-start]');
-            const enrollButton = form.querySelector('[data-face-enroll]');
-            const stopButton = form.querySelector('[data-face-stop]');
-            const camera = form.querySelector('[data-face-camera]');
-            const video = form.querySelector('[data-face-video]');
-            const status = form.querySelector('[data-face-status]');
-            const inputs = form.querySelector('[data-face-descriptor-inputs]');
-            let stream = null;
+        document.querySelectorAll('[data-fingerprint-register-form]').forEach((form) => {
+            const registerButton = form.querySelector('[data-fingerprint-register]');
+            const credentialInput = form.querySelector('[data-fingerprint-credential-id]');
+            const clientDataInput = form.querySelector('[data-fingerprint-client-data]');
+            const status = form.querySelector('[data-fingerprint-status]');
 
             function setStatus(message, type = '') {
                 status.textContent = message;
-                status.className = `face-status${type ? ` ${type}` : ''}`;
+                status.className = `fingerprint-status${type ? ` ${type}` : ''}`;
             }
 
-            function stopCamera() {
-                if (stream) {
-                    window.CafeFaceRecognition?.stopStream(stream);
-                    stream = null;
-                }
-
-                video.srcObject = null;
-                camera.classList.remove('is-active');
-                stopButton.disabled = true;
-                startButton.disabled = false;
-            }
-
-            startButton.addEventListener('click', async () => {
-                stopCamera();
-                startButton.disabled = true;
-
+            registerButton.addEventListener('click', async () => {
                 try {
-                    stream = await window.CafeFaceRecognition.openCamera(video);
-                    camera.classList.add('is-active');
-                    stopButton.disabled = false;
-                    enrollButton.disabled = false;
-                    setStatus('Kamera aktif. Arahkan wajah ke kamera lalu tekan Daftarkan Wajah.', 'warn');
-                } catch (error) {
-                    stopCamera();
-                    setStatus(error.message || 'Kamera tidak bisa dibuka. Cek izin kamera browser.', 'error');
-                }
-            });
+                    registerButton.disabled = true;
+                    setStatus('Meminta fingerprint perangkat...', 'warn');
 
-            enrollButton.addEventListener('click', async () => {
-                if (!stream) return;
+                    if (!await window.CafeFingerprintAuth.browserSupportsBiometric()) {
+                        throw new Error('Perangkat/browser belum mendukung fingerprint atau biometrik.');
+                    }
 
-                try {
-                    enrollButton.disabled = true;
-                    setStatus('Membaca wajah...', 'warn');
-                    const descriptor = await window.CafeFaceRecognition.captureDescriptor(video);
-                    window.CafeFaceRecognition.fillDescriptorInputs(inputs, descriptor);
-                    setStatus('Data wajah terbaca. Menyimpan face recognition login...', 'ok');
-                    stopCamera();
+                    const optionResponse = await fetch('{{ route('profile.fingerprint.options') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        },
+                    });
+                    const optionPayload = await optionResponse.json();
+
+                    if (!optionResponse.ok) {
+                        throw new Error(optionPayload.message || 'Fingerprint belum bisa dimulai.');
+                    }
+
+                    const credential = await navigator.credentials.create(
+                        window.CafeFingerprintAuth.credentialCreationOptions(optionPayload.options)
+                    );
+                    const payload = window.CafeFingerprintAuth.registrationPayload(credential);
+                    credentialInput.value = payload.credential_id;
+                    clientDataInput.value = payload.client_data_json;
+                    setStatus('Fingerprint terbaca. Menyimpan...', 'ok');
                     form.submit();
                 } catch (error) {
-                    enrollButton.disabled = false;
-                    setStatus(error.message || 'Wajah belum bisa dibaca. Coba arahkan wajah lebih jelas.', 'error');
+                    registerButton.disabled = false;
+                    setStatus(error.message || 'Fingerprint gagal didaftarkan.', 'error');
                 }
             });
-
-            stopButton.addEventListener('click', () => {
-                stopCamera();
-                enrollButton.disabled = true;
-                setStatus('Kamera dimatikan.');
-            });
-
-            window.addEventListener('beforeunload', stopCamera);
         });
     </script>
 </body>

@@ -234,6 +234,35 @@ class UserRoleTest extends TestCase
         Storage::disk('public')->assertExists($user->avatar_path);
     }
 
+    public function test_authenticated_user_can_register_own_fingerprint_credential(): void
+    {
+        $user = User::factory()->superAdmin()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('profile.fingerprint.options'))
+            ->assertOk()
+            ->assertJsonPath('options.user.name', $user->username);
+
+        $challenge = session('fingerprint_register_challenge');
+
+        $this->actingAs($user)
+            ->put(route('profile.fingerprint.update'), [
+                'credential_id' => 'fingerprint-register-123',
+                'client_data_json' => \App\Support\WebAuthn::base64UrlEncode(json_encode([
+                    'type' => 'webauthn.create',
+                    'challenge' => $challenge,
+                    'origin' => 'http://localhost',
+                ], JSON_THROW_ON_ERROR)),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $user->refresh();
+
+        $this->assertSame('fingerprint-register-123', $user->biometric_credential_id);
+        $this->assertNotNull($user->biometric_registered_at);
+    }
+
     public function test_report_exports_are_available_to_report_roles(): void
     {
         $manager = User::factory()->manager()->create();

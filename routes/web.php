@@ -20,7 +20,8 @@ Route::post('/qr/meja/{tableNumber}/orders', [CustomerMenuController::class, 'su
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
-    Route::post('/login/face', [AuthController::class, 'faceLogin'])->name('login.face');
+    Route::post('/login/fingerprint/options', [AuthController::class, 'fingerprintOptions'])->name('login.fingerprint.options');
+    Route::post('/login/fingerprint', [AuthController::class, 'fingerprintLogin'])->name('login.fingerprint');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
     Route::get('/email/verify', [AuthController::class, 'showVerification'])->name('verification.notice');
@@ -33,7 +34,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/face', [ProfileController::class, 'updateFace'])->name('profile.face.update');
+    Route::post('/profile/fingerprint/options', [ProfileController::class, 'fingerprintOptions'])->name('profile.fingerprint.options');
+    Route::put('/profile/fingerprint', [ProfileController::class, 'updateFingerprint'])->name('profile.fingerprint.update');
 
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
     Route::match(['put', 'patch'], '/access-control/{user}', [AccessControlController::class, 'update'])->name('access-control.update');

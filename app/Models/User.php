@@ -27,8 +27,8 @@ class User extends Authenticatable
         'email',
         'role',
         'avatar_path',
-        'face_descriptor',
-        'face_registered_at',
+        'biometric_credential_id',
+        'biometric_registered_at',
         'password',
         'email_verification_code',
         'email_verification_expires_at',
@@ -43,7 +43,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'email_verification_code',
-        'face_descriptor',
+        'biometric_credential_id',
     ];
 
     /**
@@ -56,8 +56,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'email_verification_expires_at' => 'datetime',
-            'face_descriptor' => 'array',
-            'face_registered_at' => 'datetime',
+            'biometric_registered_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
         ];

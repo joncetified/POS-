@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\CafeCatalog;
-use App\Support\FaceRecognition;
+use App\Support\WebAuthn;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
@@ -48,18 +50,47 @@ class ProfileController extends Controller
         return back()->with('status', 'Profil saya berhasil disimpan.');
     }
 
-    public function updateFace(Request $request): RedirectResponse
+    public function fingerprintOptions(Request $request): JsonResponse
     {
-        $validated = $request->validate(FaceRecognition::rules());
+        /** @var User $user */
+        $user = $request->user();
+
+        $challenge = WebAuthn::challenge();
+        $request->session()->put('fingerprint_register_challenge', $challenge);
+
+        return response()->json([
+            'options' => WebAuthn::registrationOptions($request, $challenge, $user->id, $user->username, $user->name),
+        ]);
+    }
+
+    public function updateFingerprint(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'credential_id' => ['required', 'string', 'max:512'],
+            'client_data_json' => ['required', 'string'],
+        ]);
+
+        $challenge = $request->session()->pull('fingerprint_register_challenge');
+
+        if (! $challenge) {
+            return back()->withErrors(['fingerprint' => 'Sesi daftar fingerprint sudah habis. Mulai ulang.']);
+        }
+
+        try {
+            WebAuthn::validateClientData($validated['client_data_json'], 'webauthn.create', $challenge, $request);
+            $credentialId = WebAuthn::normalizeCredentialId($validated['credential_id']);
+        } catch (InvalidArgumentException $error) {
+            return back()->withErrors(['fingerprint' => $error->getMessage()]);
+        }
 
         /** @var User $user */
         $user = $request->user();
         $user->forceFill([
-            'face_descriptor' => FaceRecognition::normalize($validated['face_descriptor']),
-            'face_registered_at' => now(),
+            'biometric_credential_id' => $credentialId,
+            'biometric_registered_at' => now(),
         ])->save();
 
-        return back()->with('status', 'Face recognition login berhasil didaftarkan.');
+        return back()->with('status', 'Fingerprint login berhasil didaftarkan.');
     }
 
     private function storeCroppedAvatar(string $dataUrl, User $user): string

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Mail\RegistrationVerificationCode;
 use App\Models\User;
+use App\Support\WebAuthn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -82,68 +83,97 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_verified_user_can_login_with_registered_face_descriptor(): void
+    public function test_verified_user_can_login_with_registered_fingerprint(): void
     {
-        $descriptor = array_fill(0, 256, 0.25);
+        $credentialId = 'fingerprint-credential-123';
         $user = User::factory()->create([
-            'username' => 'kasirface',
-            'face_descriptor' => $descriptor,
-            'face_registered_at' => now(),
+            'username' => 'kasirfinger',
+            'biometric_credential_id' => $credentialId,
+            'biometric_registered_at' => now(),
         ]);
 
-        $this->withHeader('Accept', 'application/json')
-            ->postJson(route('login.face'), [
-                'username' => 'kasirface',
-                'face_descriptor' => $descriptor,
-            ])
+        $this->postJson(route('login.fingerprint.options'), [
+            'username' => 'kasirfinger',
+        ])->assertOk()
+            ->assertJsonPath('options.allowCredentials.0.id', $credentialId);
+
+        $challenge = session('fingerprint_login_challenge');
+
+        $this->postJson(route('login.fingerprint'), [
+            'username' => 'kasirfinger',
+            'credential_id' => $credentialId,
+            'client_data_json' => $this->clientDataJson('webauthn.get', $challenge),
+        ])
             ->assertOk()
             ->assertJson(['redirect' => route('pos.index')]);
 
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_face_login_rejects_unregistered_or_mismatched_face(): void
+    public function test_fingerprint_login_rejects_unregistered_or_mismatched_credential(): void
     {
         User::factory()->create([
-            'username' => 'tanpawajah',
-            'face_descriptor' => null,
+            'username' => 'tanpafinger',
+            'biometric_credential_id' => null,
         ]);
 
-        $this->postJson(route('login.face'), [
-            'username' => 'tanpawajah',
-            'face_descriptor' => array_fill(0, 256, 0.25),
+        $this->postJson(route('login.fingerprint.options'), [
+            'username' => 'tanpafinger',
         ])->assertUnprocessable();
 
         User::factory()->create([
-            'username' => 'wajahbeda',
-            'face_descriptor' => array_fill(0, 256, -1),
-            'face_registered_at' => now(),
+            'username' => 'fingerbeda',
+            'biometric_credential_id' => 'credential-benar',
+            'biometric_registered_at' => now(),
         ]);
 
-        $this->postJson(route('login.face'), [
-            'username' => 'wajahbeda',
-            'face_descriptor' => array_fill(0, 256, 1),
+        $this->postJson(route('login.fingerprint.options'), [
+            'username' => 'fingerbeda',
+        ])->assertOk();
+
+        $challenge = session('fingerprint_login_challenge');
+
+        $this->postJson(route('login.fingerprint'), [
+            'username' => 'fingerbeda',
+            'credential_id' => 'credential-salah',
+            'client_data_json' => $this->clientDataJson('webauthn.get', $challenge),
         ])->assertUnprocessable();
 
         $this->assertGuest();
     }
 
-    public function test_unverified_user_cannot_login_with_face_before_verification(): void
+    public function test_unverified_user_cannot_login_with_fingerprint_before_verification(): void
     {
-        $descriptor = array_fill(0, 256, 0.25);
+        $credentialId = 'pending-fingerprint';
         $user = User::factory()->unverified()->create([
-            'username' => 'facepending',
-            'face_descriptor' => $descriptor,
-            'face_registered_at' => now(),
+            'username' => 'fingerpending',
+            'biometric_credential_id' => $credentialId,
+            'biometric_registered_at' => now(),
         ]);
 
-        $this->postJson(route('login.face'), [
-            'username' => 'facepending',
-            'face_descriptor' => $descriptor,
+        $this->postJson(route('login.fingerprint.options'), [
+            'username' => 'fingerpending',
+        ])->assertOk();
+
+        $challenge = session('fingerprint_login_challenge');
+
+        $this->postJson(route('login.fingerprint'), [
+            'username' => 'fingerpending',
+            'credential_id' => $credentialId,
+            'client_data_json' => $this->clientDataJson('webauthn.get', $challenge),
         ])->assertForbidden()
             ->assertJson(['redirect' => route('verification.notice')]);
 
         $this->assertGuest();
         $this->assertSame($user->id, session('pending_verification_user_id'));
+    }
+
+    private function clientDataJson(string $type, string $challenge): string
+    {
+        return WebAuthn::base64UrlEncode(json_encode([
+            'type' => $type,
+            'challenge' => $challenge,
+            'origin' => 'http://localhost',
+        ], JSON_THROW_ON_ERROR));
     }
 }

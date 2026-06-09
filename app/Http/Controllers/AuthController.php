@@ -6,7 +6,8 @@ use App\Enums\UserRole;
 use App\Mail\RegistrationVerificationCode;
 use App\Models\User;
 use App\Support\CafeCatalog;
-use App\Support\FaceRecognition;
+use App\Support\WebAuthn;
+use InvalidArgumentException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,29 +53,69 @@ class AuthController extends Controller
         return redirect()->intended(route($this->homeRouteFor($request->user())));
     }
 
-    public function faceLogin(Request $request): JsonResponse
+    public function fingerprintOptions(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'username' => ['required', 'string'],
-            'remember' => ['nullable', 'boolean'],
-            ...FaceRecognition::rules(),
         ]);
 
         $user = User::query()
             ->where('username', $validated['username'])
             ->first();
 
-        if (! $user || ! $user->face_descriptor) {
+        if (! $user || ! $user->biometric_credential_id) {
             return response()->json([
-                'message' => 'Wajah belum terdaftar untuk username ini.',
-                'errors' => ['username' => ['Wajah belum terdaftar untuk username ini.']],
+                'message' => 'Fingerprint belum terdaftar untuk username ini.',
+                'errors' => ['username' => ['Fingerprint belum terdaftar untuk username ini.']],
             ], 422);
         }
 
-        if (! FaceRecognition::matches($user->face_descriptor, $validated['face_descriptor'])) {
+        $challenge = WebAuthn::challenge();
+        $request->session()->put('fingerprint_login_challenge', $challenge);
+        $request->session()->put('fingerprint_login_username', $user->username);
+
+        return response()->json([
+            'options' => WebAuthn::authenticationOptions($request, $challenge, $user->biometric_credential_id),
+        ]);
+    }
+
+    public function fingerprintLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'username' => ['required', 'string'],
+            'credential_id' => ['required', 'string', 'max:512'],
+            'client_data_json' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
+        ]);
+
+        $challenge = $request->session()->pull('fingerprint_login_challenge');
+        $challengeUsername = $request->session()->pull('fingerprint_login_username');
+
+        $user = User::query()
+            ->where('username', $validated['username'])
+            ->first();
+
+        if (! $challenge || ! hash_equals((string) $challengeUsername, $validated['username']) || ! $user || ! $user->biometric_credential_id) {
             return response()->json([
-                'message' => 'Wajah tidak cocok dengan data login.',
-                'errors' => ['face_descriptor' => ['Wajah tidak cocok dengan data login.']],
+                'message' => 'Sesi fingerprint tidak valid. Mulai ulang scan fingerprint.',
+                'errors' => ['username' => ['Sesi fingerprint tidak valid.']],
+            ], 422);
+        }
+
+        try {
+            WebAuthn::validateClientData($validated['client_data_json'], 'webauthn.get', $challenge, $request);
+            $credentialId = WebAuthn::normalizeCredentialId($validated['credential_id']);
+        } catch (InvalidArgumentException $error) {
+            return response()->json([
+                'message' => $error->getMessage(),
+                'errors' => ['credential_id' => [$error->getMessage()]],
+            ], 422);
+        }
+
+        if (! hash_equals($user->biometric_credential_id, $credentialId)) {
+            return response()->json([
+                'message' => 'Fingerprint tidak cocok dengan akun ini.',
+                'errors' => ['credential_id' => ['Fingerprint tidak cocok dengan akun ini.']],
             ], 422);
         }
 

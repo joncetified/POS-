@@ -1,2 +1,2 @@
 import './bootstrap';
-import './face-recognition';
+import './fingerprint-auth';
