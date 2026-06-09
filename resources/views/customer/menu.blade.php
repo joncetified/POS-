@@ -348,6 +348,15 @@
             border-color: var(--accent);
             background: var(--accent);
         }
+        .note-tts-btn.is-listening {
+            color: #fff;
+            border-color: var(--green);
+            background: var(--green);
+        }
+        .note-tts-btn:disabled {
+            opacity: .56;
+            cursor: not-allowed;
+        }
         .success-box {
             display: none;
             border: 1px solid rgba(40, 121, 103, .35);
@@ -496,6 +505,10 @@
                     <div class="note-tts-wrap">
                         <textarea id="customer-note" class="field" maxlength="255" rows="3" placeholder="Catatan pesanan, contoh: less sugar, tanpa es"></textarea>
                         <div class="note-tts-actions">
+                            <button id="listen-note" class="note-tts-btn" type="button" aria-pressed="false">
+                                <span aria-hidden="true">Mic</span>
+                                <span id="listen-note-label">Voice Note</span>
+                            </button>
                             <button id="speak-note" class="note-tts-btn" type="button" aria-pressed="false">
                                 <span aria-hidden="true">TTS</span>
                                 <span id="speak-note-label">Dengar Catatan</span>
@@ -535,6 +548,9 @@
         const cart = new Map();
         const state = { category: 'all', search: '' };
         let activeUtterance = null;
+        let activeRecognition = null;
+        let isListening = false;
+        const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition || null;
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
@@ -672,6 +688,17 @@
             return String(byId('customer-note')?.value || '').trim();
         }
 
+        function appendNoteText(text) {
+            const textarea = byId('customer-note');
+            if (!textarea) return;
+
+            const current = textarea.value.trim();
+            const separator = current ? ' ' : '';
+            const maxLength = Number(textarea.getAttribute('maxlength') || 255);
+            textarea.value = `${current}${separator}${text}`.slice(0, maxLength);
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
         function setSpeechButtonSpeaking(isSpeaking) {
             const button = byId('speak-note');
             const label = byId('speak-note-label');
@@ -681,6 +708,17 @@
             button.classList.toggle('is-speaking', isSpeaking);
             button.setAttribute('aria-pressed', isSpeaking ? 'true' : 'false');
             label.textContent = isSpeaking ? 'Stop Suara' : 'Dengar Catatan';
+        }
+
+        function setListenButtonListening(listening) {
+            const button = byId('listen-note');
+            const label = byId('listen-note-label');
+
+            if (!button || !label) return;
+
+            button.classList.toggle('is-listening', listening);
+            button.setAttribute('aria-pressed', listening ? 'true' : 'false');
+            label.textContent = listening ? 'Stop Rekam' : 'Voice Note';
         }
 
         function stopSpeech() {
@@ -727,6 +765,69 @@
             setSpeechButtonSpeaking(true);
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
+        }
+
+        function stopVoiceNote() {
+            if (activeRecognition) {
+                activeRecognition.stop();
+            }
+            activeRecognition = null;
+            isListening = false;
+            setListenButtonListening(false);
+        }
+
+        function startVoiceNote() {
+            if (!SpeechRecognitionApi) {
+                showToast('Browser tidak mendukung voice-to-text');
+                return;
+            }
+
+            if (isListening) {
+                stopVoiceNote();
+                return;
+            }
+
+            stopSpeech();
+
+            const recognition = new SpeechRecognitionApi();
+            recognition.lang = 'id-ID';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map((result) => result[0]?.transcript || '')
+                    .join(' ')
+                    .trim();
+
+                if (transcript) {
+                    appendNoteText(transcript);
+                    showToast('Voice note masuk ke catatan');
+                }
+            };
+
+            recognition.onerror = () => {
+                showToast('Voice-to-text gagal atau mic ditolak');
+            };
+
+            recognition.onend = () => {
+                activeRecognition = null;
+                isListening = false;
+                setListenButtonListening(false);
+            };
+
+            activeRecognition = recognition;
+            isListening = true;
+            setListenButtonListening(true);
+
+            try {
+                recognition.start();
+            } catch (error) {
+                activeRecognition = null;
+                isListening = false;
+                setListenButtonListening(false);
+                showToast('Voice-to-text gagal dimulai');
+            }
         }
 
         function showOrderSuccess(order) {
@@ -778,6 +879,7 @@
 
                 cart.clear();
                 stopSpeech();
+                stopVoiceNote();
                 byId('customer-note').value = '';
                 renderCart();
                 showOrderSuccess(payload.order || {});
@@ -811,10 +913,19 @@
 
         if (canOrder) {
             byId('send-order').addEventListener('click', sendOrder);
+            byId('listen-note').addEventListener('click', startVoiceNote);
             byId('speak-note').addEventListener('click', speakNote);
+
+            if (!SpeechRecognitionApi) {
+                byId('listen-note').disabled = true;
+                byId('listen-note').title = 'Browser tidak mendukung voice-to-text';
+            }
         }
 
-        window.addEventListener('beforeunload', stopSpeech);
+        window.addEventListener('beforeunload', () => {
+            stopSpeech();
+            stopVoiceNote();
+        });
 
         renderProducts();
     </script>
