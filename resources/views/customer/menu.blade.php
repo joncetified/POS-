@@ -920,6 +920,11 @@
                 byId('listen-note').disabled = true;
                 byId('listen-note').title = 'Browser tidak mendukung voice-to-text';
             }
+
+            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+                byId('speak-note').disabled = true;
+                byId('speak-note').title = 'Browser tidak mendukung text-to-voice';
+            }
         }
 
         window.addEventListener('beforeunload', () => {

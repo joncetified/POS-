@@ -612,6 +612,41 @@
             outline: 0;
         }
 
+        .note-voice-wrap {
+            display: grid;
+            gap: 8px;
+        }
+
+        .note-voice-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .note-voice-btn {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 0 12px;
+            color: var(--brown);
+            background: #fff8ed;
+            font-weight: 850;
+        }
+
+        .note-voice-btn.is-speaking {
+            color: #fff;
+            border-color: var(--brown);
+            background: var(--brown);
+        }
+
+        .note-voice-btn:disabled {
+            opacity: .56;
+            cursor: not-allowed;
+        }
+
         .money-input input {
             border: 0;
             text-align: right;
@@ -1051,7 +1086,15 @@
                             <input id="customer" class="customer-input" type="text" placeholder="Nama pelanggan">
                             <input id="table-number" class="customer-input" type="text" placeholder="Meja nomor">
                         </div>
-                        <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
+                        <div class="note-voice-wrap">
+                            <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
+                            <div class="note-voice-actions">
+                                <button id="speak-customer-note" class="note-voice-btn" type="button" aria-pressed="false">
+                                    <span aria-hidden="true">TTS</span>
+                                    <span id="speak-customer-note-label">Dengar Catatan</span>
+                                </button>
+                            </div>
+                        </div>
                         <div id="saved-orders" class="saved-orders" hidden></div>
 
                         <div class="discount-row">
@@ -1165,6 +1208,7 @@
             qrisOrderId: null,
             qrisPollTimer: null,
         };
+        let activeCustomerNoteUtterance = null;
 
         const openOrdersUrl = '{{ route('orders.open', [], false) }}';
         const parkOrderUrl = '{{ route('orders.park', [], false) }}';
@@ -1199,6 +1243,8 @@
             paymentReference: byId('payment-reference'),
             customer: byId('customer'),
             customerNote: byId('customer-note'),
+            speakCustomerNote: byId('speak-customer-note'),
+            speakCustomerNoteLabel: byId('speak-customer-note-label'),
             tableNumber: byId('table-number'),
             toast: byId('toast'),
             modal: byId('receipt-modal'),
@@ -1504,6 +1550,7 @@
         }
 
         function resetOrder() {
+            stopCustomerNoteSpeech();
             state.cart.clear();
             state.currentOrderId = null;
             nodes.discountPercent.value = 0;
@@ -1595,6 +1642,7 @@
                 return;
             }
 
+            stopCustomerNoteSpeech();
             state.cart.clear();
             order.items.forEach((item) => {
                 const product = products.find((entry) => entry.id === item.product_id || entry.sku === item.sku);
@@ -1660,6 +1708,61 @@
             window.setTimeout(() => nodes.toast.classList.remove('show'), 1800);
         }
 
+        function setCustomerNoteSpeaking(isSpeaking) {
+            if (!nodes.speakCustomerNote || !nodes.speakCustomerNoteLabel) return;
+
+            nodes.speakCustomerNote.classList.toggle('is-speaking', isSpeaking);
+            nodes.speakCustomerNote.setAttribute('aria-pressed', isSpeaking ? 'true' : 'false');
+            nodes.speakCustomerNoteLabel.textContent = isSpeaking ? 'Stop Suara' : 'Dengar Catatan';
+        }
+
+        function stopCustomerNoteSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            activeCustomerNoteUtterance = null;
+            setCustomerNoteSpeaking(false);
+        }
+
+        function speakCustomerNote() {
+            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+                showToast('Browser tidak mendukung text-to-voice');
+                return;
+            }
+
+            if (activeCustomerNoteUtterance || window.speechSynthesis.speaking) {
+                stopCustomerNoteSpeech();
+                return;
+            }
+
+            const text = String(nodes.customerNote.value || '').trim();
+
+            if (!text) {
+                showToast('Isi catatan dulu');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.95;
+            utterance.pitch = 1;
+            utterance.onend = () => {
+                activeCustomerNoteUtterance = null;
+                setCustomerNoteSpeaking(false);
+            };
+            utterance.onerror = () => {
+                activeCustomerNoteUtterance = null;
+                setCustomerNoteSpeaking(false);
+                showToast('Text-to-voice gagal dibaca');
+            };
+
+            activeCustomerNoteUtterance = utterance;
+            setCustomerNoteSpeaking(true);
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
         function checkoutPayload(data, overrides = {}) {
             return {
                 order_id: state.currentOrderId,
@@ -1703,6 +1806,7 @@
 
             try {
                 const sale = await submitPaidSale(data);
+                stopCustomerNoteSpeech();
                 showReceipt(sale);
                 await loadSavedOrdersFromServer();
             } catch (error) {
@@ -1771,6 +1875,7 @@
                     paid_amount: Math.round(data.total),
                 });
 
+                stopCustomerNoteSpeech();
                 nodes.qrisModal.classList.remove('open');
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 showReceipt(sale);
@@ -1876,6 +1981,7 @@
                 nodes.qrisModal.classList.remove('open');
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 state.qrisOrderId = null;
+                stopCustomerNoteSpeech();
                 showReceipt(payload.sale);
                 await loadSavedOrdersFromServer();
             } catch (error) {
@@ -2041,14 +2147,23 @@
         byId('save-order').addEventListener('click', () => saveCurrentOrder());
         byId('hold-order').addEventListener('click', () => saveCurrentOrder({ clearAfterSave: true }));
         byId('checkout').addEventListener('click', checkout);
+        nodes.speakCustomerNote.addEventListener('click', speakCustomerNote);
         nodes.qrisCancel.addEventListener('click', closeQrisModal);
         nodes.barcodePaid.addEventListener('click', confirmBarcodePayment);
         byId('close-receipt').addEventListener('click', () => {
+            stopCustomerNoteSpeech();
             nodes.modal.classList.remove('open');
             nodes.modal.setAttribute('aria-hidden', 'true');
             window.location.reload();
         });
         byId('print-receipt').addEventListener('click', () => window.print());
+
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            nodes.speakCustomerNote.disabled = true;
+            nodes.speakCustomerNote.title = 'Browser tidak mendukung text-to-voice';
+        }
+
+        window.addEventListener('beforeunload', stopCustomerNoteSpeech);
 
         loadSavedOrdersFromServer();
         renderProducts();
