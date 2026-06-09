@@ -3846,3 +3846,112 @@ tbody tr:hover {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
+
+/* POS cart stability: product image, name, and price must never overlap. */
+.app-shell .cart-table .cart-header-row {
+    display: none !important;
+}
+
+.app-shell .cart-table .cart-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+        "product total"
+        "unit qty"
+        "remove remove" !important;
+    gap: 8px 12px !important;
+    align-items: start !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+}
+
+.app-shell .cart-table .cart-row > * {
+    min-width: 0 !important;
+}
+
+.app-shell .cart-table .cart-product {
+    grid-area: product !important;
+    display: grid !important;
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    align-items: start !important;
+}
+
+.app-shell .cart-table .cart-product > div:last-child {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 2px !important;
+}
+
+.app-shell .cart-table .cart-product strong {
+    display: block !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.2 !important;
+}
+
+.app-shell .cart-table .cart-product .small {
+    display: block !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+}
+
+.app-shell .cart-table .cart-thumb {
+    width: 58px !important;
+    height: 58px !important;
+    flex: 0 0 58px !important;
+    align-self: start !important;
+}
+
+.app-shell .cart-table .cart-unit-price {
+    grid-area: unit !important;
+    align-self: center !important;
+    color: var(--muted) !important;
+    font-size: .86rem !important;
+    line-height: 1.25 !important;
+}
+
+.app-shell .cart-table .cart-line-total {
+    grid-area: total !important;
+    justify-self: end !important;
+    white-space: nowrap !important;
+    font-size: .98rem !important;
+    line-height: 1.25 !important;
+}
+
+.app-shell .cart-table .qty-control {
+    grid-area: qty !important;
+    justify-self: end !important;
+    width: 104px !important;
+}
+
+.app-shell .cart-table .remove-btn {
+    grid-area: remove !important;
+    justify-self: stretch !important;
+    align-self: center !important;
+    margin-top: 0 !important;
+    min-height: 28px !important;
+    padding: 0 4px !important;
+    text-align: right !important;
+}
+
+@media (max-width: 1180px) {
+    .app-shell .cart-table .cart-row {
+        gap: 8px !important;
+    }
+
+    .app-shell .cart-table .cart-product {
+        grid-template-columns: 54px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .cart-table .cart-thumb {
+        width: 54px !important;
+        height: 54px !important;
+    }
+}

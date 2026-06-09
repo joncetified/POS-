@@ -1383,13 +1383,13 @@
                             <p class="small">${escapeHtml(item.sku)}</p>
                         </div>
                     </div>
-                    <span>${rupiah(item.price)}</span>
+                    <span class="cart-unit-price">${rupiah(item.price)}</span>
                     <div class="qty-control">
                         <button type="button" data-dec="${escapeHtml(item.sku)}">-</button>
                         <span>${item.qty}</span>
                         <button type="button" data-inc="${escapeHtml(item.sku)}">+</button>
                     </div>
-                    <strong>${rupiah(item.price * item.qty)}</strong>
+                    <strong class="cart-line-total">${rupiah(item.price * item.qty)}</strong>
                     <button class="remove-btn" type="button" data-remove="${escapeHtml(item.sku)}">Hapus</button>
                 </article>
             `;
