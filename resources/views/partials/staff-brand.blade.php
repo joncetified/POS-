@@ -13,10 +13,12 @@
 <div class="staff-brand-stack">
     <a class="staff-brand" href="{{ $homeRoute }}">
         <span class="staff-brand-mark">
+            @php($storeInitials = collect(explode(' ', $store['name']))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode(''))
             @if ($store['logo_url'])
-                <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo">
+                <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+                <span class="image-fallback" hidden>{{ $storeInitials }}</span>
             @else
-                {{ collect(explode(' ', $store['name']))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
+                <span class="image-fallback">{{ $storeInitials }}</span>
             @endif
         </span>
         <span>
@@ -28,10 +30,12 @@
     @auth
         <a class="staff-user-profile" href="{{ route('profile.edit') }}">
             <span class="staff-user-avatar">
+                @php($userInitials = collect(explode(' ', auth()->user()->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode(''))
                 @if (auth()->user()->avatarUrl())
-                    <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}">
+                    <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+                    <span class="image-fallback" hidden>{{ $userInitials }}</span>
                 @else
-                    {{ collect(explode(' ', auth()->user()->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
+                    <span class="image-fallback">{{ $userInitials }}</span>
                 @endif
             </span>
             <span>

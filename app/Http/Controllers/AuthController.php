@@ -6,15 +6,17 @@ use App\Enums\UserRole;
 use App\Mail\RegistrationVerificationCode;
 use App\Models\User;
 use App\Support\CafeCatalog;
-use App\Support\WebAuthn;
-use InvalidArgumentException;
+use App\Support\FaceRecognition;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -32,16 +34,47 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Schema::hasTable('users')) {
+            return back()
+                ->withErrors(['username' => 'Tabel users belum ada di database hosting. Import database dulu.'])
+                ->onlyInput('username');
+        }
+
+        $loginColumn = match (true) {
+            Schema::hasColumn('users', 'username') => 'username',
+            Schema::hasColumn('users', 'email') => 'email',
+            Schema::hasColumn('users', 'name') => 'name',
+            default => null,
+        };
+
+        if (! $loginColumn || ! Schema::hasColumn('users', 'password')) {
+            return back()
+                ->withErrors(['username' => 'Struktur tabel users di hosting belum cocok dengan aplikasi.'])
+                ->onlyInput('username');
+        }
+
+        try {
+            $user = User::query()
+                ->where($loginColumn, $credentials['username'])
+                ->first();
+        } catch (Throwable $error) {
+            report($error);
+
+            return back()
+                ->withErrors(['username' => 'Database users hosting belum cocok. Cek kolom username/email/password.'])
+                ->onlyInput('username');
+        }
+
+        if (! $user || ! Hash::check($credentials['password'], (string) $user->password)) {
             return back()
                 ->withErrors(['username' => 'Username atau password tidak sesuai.'])
                 ->onlyInput('username');
         }
 
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        if (! $request->user()->email_verified_at) {
-            $user = $request->user();
+        if (Schema::hasColumn('users', 'email_verified_at') && ! $user->email_verified_at) {
             Auth::logout();
             $request->session()->put('pending_verification_user_id', $user->id);
 
@@ -53,69 +86,96 @@ class AuthController extends Controller
         return redirect()->intended(route($this->homeRouteFor($request->user())));
     }
 
-    public function fingerprintOptions(Request $request): JsonResponse
+    public function faceOptions(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'username' => ['required', 'string'],
         ]);
 
-        $user = User::query()
-            ->where('username', $validated['username'])
-            ->first();
-
-        if (! $user || ! $user->biometric_credential_id) {
+        if (! Schema::hasColumn('users', 'face_descriptor')) {
             return response()->json([
-                'message' => 'Fingerprint belum terdaftar untuk username ini.',
-                'errors' => ['username' => ['Fingerprint belum terdaftar untuk username ini.']],
-            ], 422);
-        }
-
-        $challenge = WebAuthn::challenge();
-        $request->session()->put('fingerprint_login_challenge', $challenge);
-        $request->session()->put('fingerprint_login_username', $user->username);
-
-        return response()->json([
-            'options' => WebAuthn::authenticationOptions($request, $challenge, $user->biometric_credential_id),
-        ]);
-    }
-
-    public function fingerprintLogin(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'username' => ['required', 'string'],
-            'credential_id' => ['required', 'string', 'max:512'],
-            'client_data_json' => ['required', 'string'],
-            'remember' => ['nullable', 'boolean'],
-        ]);
-
-        $challenge = $request->session()->pull('fingerprint_login_challenge');
-        $challengeUsername = $request->session()->pull('fingerprint_login_username');
-
-        $user = User::query()
-            ->where('username', $validated['username'])
-            ->first();
-
-        if (! $challenge || ! hash_equals((string) $challengeUsername, $validated['username']) || ! $user || ! $user->biometric_credential_id) {
-            return response()->json([
-                'message' => 'Sesi fingerprint tidak valid. Mulai ulang scan fingerprint.',
-                'errors' => ['username' => ['Sesi fingerprint tidak valid.']],
+                'message' => 'Database hosting belum punya kolom Face Recognition. Import database terbaru atau jalankan migration.',
+                'errors' => ['username' => ['Database hosting belum punya kolom Face Recognition.']],
             ], 422);
         }
 
         try {
-            WebAuthn::validateClientData($validated['client_data_json'], 'webauthn.get', $challenge, $request);
-            $credentialId = WebAuthn::normalizeCredentialId($validated['credential_id']);
-        } catch (InvalidArgumentException $error) {
+            $user = User::query()
+                ->where('username', $validated['username'])
+                ->first(['id', 'username', 'face_descriptor', 'email_verified_at']);
+        } catch (Throwable $error) {
+            report($error);
+
             return response()->json([
-                'message' => $error->getMessage(),
-                'errors' => ['credential_id' => [$error->getMessage()]],
+                'message' => 'Face Recognition belum siap di hosting. Cek database users dan kolom face_descriptor.',
+                'errors' => ['username' => ['Face Recognition belum siap di hosting.']],
             ], 422);
         }
 
-        if (! hash_equals($user->biometric_credential_id, $credentialId)) {
+        if (! $user || ! $user->face_descriptor) {
             return response()->json([
-                'message' => 'Fingerprint tidak cocok dengan akun ini.',
-                'errors' => ['credential_id' => ['Fingerprint tidak cocok dengan akun ini.']],
+                'message' => 'Face Recognition belum terdaftar untuk username ini.',
+                'errors' => ['username' => ['Face Recognition belum terdaftar untuk username ini.']],
+            ], 422);
+        }
+
+        $request->session()->put('face_login_username', $user->username);
+
+        return response()->json([
+            'ready' => true,
+        ]);
+    }
+
+    public function faceLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'username' => ['required', 'string'],
+            'face_descriptor' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
+        ]);
+
+        $challengeUsername = $request->session()->pull('face_login_username');
+
+        if (! Schema::hasColumn('users', 'face_descriptor')) {
+            return response()->json([
+                'message' => 'Database hosting belum punya kolom Face Recognition. Import database terbaru atau jalankan migration.',
+                'errors' => ['face_descriptor' => ['Database hosting belum punya kolom Face Recognition.']],
+            ], 422);
+        }
+
+        try {
+            $user = User::query()
+                ->where('username', $validated['username'])
+                ->first(['id', 'username', 'email_verified_at', 'face_descriptor', 'role']);
+        } catch (Throwable $error) {
+            report($error);
+
+            return response()->json([
+                'message' => 'Face Recognition belum siap di hosting. Cek database users dan kolom face_descriptor.',
+                'errors' => ['face_descriptor' => ['Face Recognition belum siap di hosting.']],
+            ], 422);
+        }
+
+        if (! hash_equals((string) $challengeUsername, $validated['username']) || ! $user || ! $user->face_descriptor) {
+            return response()->json([
+                'message' => 'Sesi Face Recognition tidak valid. Mulai ulang verifikasi wajah.',
+                'errors' => ['username' => ['Sesi Face Recognition tidak valid.']],
+            ], 422);
+        }
+
+        try {
+            $matches = FaceRecognition::isMatch($user->face_descriptor, $validated['face_descriptor']);
+        } catch (\InvalidArgumentException $error) {
+            return response()->json([
+                'message' => $error->getMessage(),
+                'errors' => ['face_descriptor' => [$error->getMessage()]],
+            ], 422);
+        }
+
+        if (! $matches) {
+            return response()->json([
+                'message' => 'Ini bukan wajah pengguna yang terdaftar.',
+                'errors' => ['face_descriptor' => ['Ini bukan wajah pengguna yang terdaftar.']],
             ], 422);
         }
 
@@ -273,6 +333,7 @@ class AuthController extends Controller
             'page.reports' => 'reports.index',
             'page.sales' => 'sales.index',
             'page.settings' => 'settings.index',
+            'page.access_control' => 'access-control.index',
             'page.qr_tables' => 'customer.qr.index',
         ] as $permission => $routeName) {
             if ($user->hasPermission($permission)) {

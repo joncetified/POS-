@@ -139,6 +139,30 @@
             margin-bottom: 6px;
         }
 
+        .scan-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .scan-camera-btn,
+        .scan-close-btn {
+            min-height: 34px;
+            border-radius: 8px;
+            padding: 0 12px;
+            color: #fff;
+            background: var(--brown);
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .scan-close-btn {
+            color: var(--brown);
+            background: #fff;
+            border: 1px solid var(--line);
+        }
+
         .scan-panel .searchbox {
             min-height: 40px;
             padding-inline: 10px;
@@ -214,6 +238,57 @@
             object-fit: contain;
             display: block;
             padding: 4px;
+        }
+
+        .camera-scan {
+            grid-column: 1 / -1;
+            display: none;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--line);
+        }
+
+        .scan-panel.is-scanning .camera-scan {
+            display: grid;
+        }
+
+        .camera-scan-reader {
+            width: 100%;
+            min-height: 210px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #080b17;
+        }
+
+        .camera-scan-reader video {
+            width: 100% !important;
+            border-radius: 8px;
+        }
+
+        .camera-scan-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .camera-scan-actions select {
+            min-width: 0;
+            min-height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0 10px;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        .camera-scan-status[data-status="success"] {
+            color: var(--success);
+        }
+
+        .camera-scan-status[data-status="error"] {
+            color: var(--danger);
         }
 
         .category-menu,
@@ -326,13 +401,14 @@
         }
 
         .product-barcode {
-            position: absolute;
-            inset: 10px 10px auto auto;
-            width: 70px;
-            height: 30px;
-            border-radius: 5px;
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: min(100%, 320px);
+            aspect-ratio: 3.8 / 1;
+            padding: 8px 10px;
+            border-radius: 6px;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,.8);
+            border: 1px solid var(--line);
             background: #fff;
         }
 
@@ -610,41 +686,6 @@
             color: var(--ink);
             background: #fff;
             outline: 0;
-        }
-
-        .note-voice-wrap {
-            display: grid;
-            gap: 8px;
-        }
-
-        .note-voice-actions {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .note-voice-btn {
-            min-height: 38px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            border: 1px solid var(--line);
-            border-radius: 7px;
-            padding: 0 12px;
-            color: var(--brown);
-            background: #fff8ed;
-            font-weight: 850;
-        }
-
-        .note-voice-btn.is-speaking {
-            color: #fff;
-            border-color: var(--brown);
-            background: var(--brown);
-        }
-
-        .note-voice-btn:disabled {
-            opacity: .56;
-            cursor: not-allowed;
         }
 
         .money-input input {
@@ -1031,9 +1072,12 @@
                             <input id="search" type="search" placeholder="Cari produk...">
                             <span>#</span>
                         </label>
-                        <div class="scan-panel" aria-label="Scan barcode">
+                        <div class="scan-panel" aria-label="Scan barcode" data-html5-code-scanner>
                             <div class="scan-preview">
+                                <div class="scan-title-row">
                                     <strong>Scan Produk</strong>
+                                    <button class="scan-camera-btn" type="button" data-code-scanner-open>Kamera</button>
+                                </div>
                                 <label class="searchbox" for="barcode-scan">
                                     <span aria-hidden="true">|</span>
                                     <input id="barcode-scan" type="search" inputmode="numeric" autocomplete="off" placeholder="Scan barcode / SKU">
@@ -1043,6 +1087,16 @@
                                 <div id="scan-status" class="scan-status">Scan barcode/SKU produk untuk masuk nota.</div>
                             </div>
                             <div id="scan-barcode" class="scan-barcode">Barcode</div>
+                            <div class="camera-scan">
+                                <div class="camera-scan-reader" data-code-scanner-reader></div>
+                                <div class="camera-scan-actions">
+                                    <select data-code-scanner-camera aria-label="Pilih kamera" hidden></select>
+                                    <button class="scan-close-btn" type="button" data-code-scanner-close>Tutup</button>
+                                </div>
+                                <div class="scan-status camera-scan-status" data-code-scanner-status>
+                                    Kamera siap untuk scan QR Code atau barcode.
+                                </div>
+                            </div>
                         </div>
                         <button id="category-toggle" class="category-menu" type="button">Kategori</button>
                     </div>
@@ -1086,15 +1140,7 @@
                             <input id="customer" class="customer-input" type="text" placeholder="Nama pelanggan">
                             <input id="table-number" class="customer-input" type="text" placeholder="Meja nomor">
                         </div>
-                        <div class="note-voice-wrap">
-                            <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
-                            <div class="note-voice-actions">
-                                <button id="speak-customer-note" class="note-voice-btn" type="button" aria-pressed="false">
-                                    <span aria-hidden="true">TTS</span>
-                                    <span id="speak-customer-note-label">Dengar Catatan</span>
-                                </button>
-                            </div>
-                        </div>
+                        <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
                         <div id="saved-orders" class="saved-orders" hidden></div>
 
                         <div class="discount-row">
@@ -1193,8 +1239,8 @@
     <script>
         const products = @json($products);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        const qrisChargeUrl = '{{ route('payments.qris.charge', [], false) }}';
-        const qrisFinalizeUrl = '{{ route('payments.qris.finalize', [], false) }}';
+        const qrisChargeUrl = @json(route('payments.qris.charge'));
+        const qrisFinalizeUrl = @json(route('payments.qris.finalize'));
         const paymentBarcodeUrl = @json($paymentBarcodeUrl);
         const taxRate = 0.11;
         const state = {
@@ -1208,11 +1254,10 @@
             qrisOrderId: null,
             qrisPollTimer: null,
         };
-        let activeCustomerNoteUtterance = null;
 
-        const openOrdersUrl = '{{ route('orders.open', [], false) }}';
-        const parkOrderUrl = '{{ route('orders.park', [], false) }}';
-        const destroyOrderUrl = '{{ route('orders.open', [], false) }}';
+        const openOrdersUrl = @json(route('orders.open'));
+        const parkOrderUrl = @json(route('orders.park'));
+        const destroyOrderUrl = @json(route('orders.open'));
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
@@ -1243,8 +1288,6 @@
             paymentReference: byId('payment-reference'),
             customer: byId('customer'),
             customerNote: byId('customer-note'),
-            speakCustomerNote: byId('speak-customer-note'),
-            speakCustomerNoteLabel: byId('speak-customer-note-label'),
             tableNumber: byId('table-number'),
             toast: byId('toast'),
             modal: byId('receipt-modal'),
@@ -1275,12 +1318,14 @@
         async function loadSavedOrdersFromServer() {
             try {
                 const response = await fetch(openOrdersUrl, {
+                    credentials: 'same-origin',
                     headers: {
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
                 state.savedOrders = Array.isArray(payload.orders) ? payload.orders : [];
             } catch (error) {
                 state.savedOrders = [];
@@ -1372,7 +1417,6 @@
                     <article class="product-card">
                         <div class="product-visual" style="--tile-color: ${escapeHtml(product.color)};">
                             ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">` : ''}
-                            ${barcodeImage}
                             <span>${escapeHtml(initials(product.name))}</span>
                         </div>
                         <div class="product-info">
@@ -1385,6 +1429,7 @@
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
                         </div>
+                        ${barcodeImage}
                     </article>
                 `;
             }).join('');
@@ -1550,7 +1595,6 @@
         }
 
         function resetOrder() {
-            stopCustomerNoteSpeech();
             state.cart.clear();
             state.currentOrderId = null;
             nodes.discountPercent.value = 0;
@@ -1601,14 +1645,16 @@
             try {
                 const response = await fetch(parkOrderUrl, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify(currentOrderSnapshot()),
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
 
                 if (!response.ok) {
                     const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Order gagal disimpan'];
@@ -1642,7 +1688,6 @@
                 return;
             }
 
-            stopCustomerNoteSpeech();
             state.cart.clear();
             order.items.forEach((item) => {
                 const product = products.find((entry) => entry.id === item.product_id || entry.sku === item.sku);
@@ -1679,12 +1724,14 @@
             try {
                 const response = await fetch(`${destroyOrderUrl}/${id}`, {
                     method: 'DELETE',
+                    credentials: 'same-origin',
                     headers: {
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
 
                 if (!response.ok) {
                     showToast(payload.message || 'Order gagal dihapus');
@@ -1708,59 +1755,22 @@
             window.setTimeout(() => nodes.toast.classList.remove('show'), 1800);
         }
 
-        function setCustomerNoteSpeaking(isSpeaking) {
-            if (!nodes.speakCustomerNote || !nodes.speakCustomerNoteLabel) return;
+        async function readJsonResponse(response, fallbackMessage = 'Server mengembalikan halaman, bukan JSON. Refresh halaman lalu coba lagi.') {
+            const text = await response.text();
 
-            nodes.speakCustomerNote.classList.toggle('is-speaking', isSpeaking);
-            nodes.speakCustomerNote.setAttribute('aria-pressed', isSpeaking ? 'true' : 'false');
-            nodes.speakCustomerNoteLabel.textContent = isSpeaking ? 'Stop Suara' : 'Dengar Catatan';
-        }
+            try {
+                return text ? JSON.parse(text) : {};
+            } catch (error) {
+                if (response.status === 401 || response.status === 419 || response.redirected) {
+                    throw new Error('Sesi login habis. Refresh halaman lalu login ulang.');
+                }
 
-        function stopCustomerNoteSpeech() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+                if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                    throw new Error(fallbackMessage);
+                }
+
+                throw new Error(text || fallbackMessage);
             }
-
-            activeCustomerNoteUtterance = null;
-            setCustomerNoteSpeaking(false);
-        }
-
-        function speakCustomerNote() {
-            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
-                showToast('Browser tidak mendukung text-to-voice');
-                return;
-            }
-
-            if (activeCustomerNoteUtterance || window.speechSynthesis.speaking) {
-                stopCustomerNoteSpeech();
-                return;
-            }
-
-            const text = String(nodes.customerNote.value || '').trim();
-
-            if (!text) {
-                showToast('Isi catatan dulu');
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'id-ID';
-            utterance.rate = 0.95;
-            utterance.pitch = 1;
-            utterance.onend = () => {
-                activeCustomerNoteUtterance = null;
-                setCustomerNoteSpeaking(false);
-            };
-            utterance.onerror = () => {
-                activeCustomerNoteUtterance = null;
-                setCustomerNoteSpeaking(false);
-                showToast('Text-to-voice gagal dibaca');
-            };
-
-            activeCustomerNoteUtterance = utterance;
-            setCustomerNoteSpeaking(true);
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
         }
 
         function checkoutPayload(data, overrides = {}) {
@@ -1806,7 +1816,6 @@
 
             try {
                 const sale = await submitPaidSale(data);
-                stopCustomerNoteSpeech();
                 showReceipt(sale);
                 await loadSavedOrdersFromServer();
             } catch (error) {
@@ -1818,17 +1827,19 @@
         }
 
         async function submitPaidSale(data, overrides = {}) {
-            const response = await fetch('{{ route('sales.store', [], false) }}', {
+            const response = await fetch(@json(route('sales.store')), {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify(checkoutPayload(data, overrides)),
             });
 
-            const payload = await response.json();
+            const payload = await readJsonResponse(response);
 
             if (!response.ok) {
                 const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Transaksi gagal disimpan'];
@@ -1875,7 +1886,6 @@
                     paid_amount: Math.round(data.total),
                 });
 
-                stopCustomerNoteSpeech();
                 nodes.qrisModal.classList.remove('open');
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 showReceipt(sale);
@@ -1895,9 +1905,11 @@
             try {
                 const response = await fetch(qrisChargeUrl, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify(checkoutPayload(data, {
@@ -1906,7 +1918,7 @@
                         paid_amount: undefined,
                     })),
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
 
                 if (!response.ok) {
                     const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'QRIS gagal dibuat'];
@@ -1955,14 +1967,16 @@
             try {
                 const response = await fetch(qrisFinalizeUrl, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({ midtrans_order_id: midtransOrderId }),
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
 
                 if (response.status === 202) {
                     nodes.qrisStatus.textContent = 'Menunggu pembayaran...';
@@ -1981,7 +1995,6 @@
                 nodes.qrisModal.classList.remove('open');
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 state.qrisOrderId = null;
-                stopCustomerNoteSpeech();
                 showReceipt(payload.sale);
                 await loadSavedOrdersFromServer();
             } catch (error) {
@@ -2129,6 +2142,13 @@
                 scanBarcode();
             }
         });
+        document.querySelector('[data-html5-code-scanner]')?.addEventListener('cafe:code-scanned', (event) => {
+            const code = String(event.detail?.code || '').trim();
+            if (!code) return;
+
+            nodes.barcodeScan.value = code;
+            scanBarcode();
+        });
         nodes.discountPercent.addEventListener('input', () => {
             state.discountMode = Number(nodes.discountPercent.value || 0) > 0 ? 'percent' : 'amount';
             if (state.discountMode === 'amount') {
@@ -2147,23 +2167,14 @@
         byId('save-order').addEventListener('click', () => saveCurrentOrder());
         byId('hold-order').addEventListener('click', () => saveCurrentOrder({ clearAfterSave: true }));
         byId('checkout').addEventListener('click', checkout);
-        nodes.speakCustomerNote.addEventListener('click', speakCustomerNote);
         nodes.qrisCancel.addEventListener('click', closeQrisModal);
         nodes.barcodePaid.addEventListener('click', confirmBarcodePayment);
         byId('close-receipt').addEventListener('click', () => {
-            stopCustomerNoteSpeech();
             nodes.modal.classList.remove('open');
             nodes.modal.setAttribute('aria-hidden', 'true');
             window.location.reload();
         });
         byId('print-receipt').addEventListener('click', () => window.print());
-
-        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
-            nodes.speakCustomerNote.disabled = true;
-            nodes.speakCustomerNote.title = 'Browser tidak mendukung text-to-voice';
-        }
-
-        window.addEventListener('beforeunload', stopCustomerNoteSpeech);
 
         loadSavedOrdersFromServer();
         renderProducts();

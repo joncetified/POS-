@@ -23,13 +23,14 @@ class UserRoleTest extends TestCase
         $this->assertFalse($user->hasPermission('system.settings'));
     }
 
-    public function test_super_admin_can_access_every_permission(): void
+    public function test_super_admin_uses_default_permissions_without_future_wildcard(): void
     {
         $user = User::factory()->superAdmin()->create();
 
         $this->assertTrue($user->hasPermission('system.settings'));
-        $this->assertTrue($user->hasPermission('products.manage'));
-        $this->assertTrue($user->hasPermission('unknown.future_permission'));
+        $this->assertTrue($user->hasPermission('page.products'));
+        $this->assertTrue($user->hasPermission('page.access_control'));
+        $this->assertFalse($user->hasPermission('unknown.future_permission'));
     }
 
     public function test_role_options_include_requested_roles(): void
@@ -93,74 +94,118 @@ class UserRoleTest extends TestCase
         }
     }
 
-    public function test_super_admin_can_manage_user_page_access_from_database(): void
+    public function test_super_admin_can_manage_page_access_by_role_from_database(): void
     {
         $superAdmin = User::factory()->superAdmin()->create();
         $cashier = User::factory()->cashier()->create();
+        $secondCashier = User::factory()->cashier()->create();
 
         $this->actingAs($superAdmin)
-            ->patch(route('access-control.update', $cashier), [
+            ->patch(route('access-control.update', UserRole::Cashier->value), [
                 'permissions' => ['page.reports', 'page.reports_export'],
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
 
-        $this->assertDatabaseHas('user_permissions', [
-            'user_id' => $cashier->id,
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::Cashier->value,
             'permission' => 'page.reports',
             'allowed' => true,
         ]);
 
-        $this->assertDatabaseHas('user_permissions', [
-            'user_id' => $cashier->id,
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::Cashier->value,
             'permission' => 'page.pos',
             'allowed' => false,
         ]);
 
         $cashier->refresh();
+        $secondCashier->refresh();
 
         $this->actingAs($cashier)->get(route('reports.index'))->assertOk();
         $this->actingAs($cashier)->get(route('pos.index'))->assertForbidden();
+        $this->actingAs($secondCashier)->get(route('reports.index'))->assertOk();
+        $this->actingAs($secondCashier)->get(route('pos.index'))->assertForbidden();
     }
 
-    public function test_admin_cannot_manage_page_access(): void
+    public function test_admin_can_manage_lower_role_page_access_only(): void
     {
         $admin = User::factory()->admin()->create();
         $cashier = User::factory()->cashier()->create();
 
         $this->actingAs($admin)
             ->get(route('access-control.index'))
-            ->assertForbidden();
+            ->assertOk();
 
         $this->actingAs($admin)
-            ->patch(route('access-control.update', $cashier), [
+            ->patch(route('access-control.update', UserRole::Cashier->value), [
                 'permissions' => ['page.dashboard', 'page.pos', 'page.products', 'page.reports'],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::Cashier->value,
+            'permission' => 'page.dashboard',
+            'allowed' => true,
+        ]);
+
+        $this->actingAs($cashier->refresh())->get(route('dashboard.index'))->assertOk();
+
+        $this->actingAs($admin)
+            ->patch(route('access-control.update', UserRole::Admin->value), [
+                'permissions' => ['page.dashboard'],
             ])
             ->assertForbidden();
 
-        $this->assertDatabaseMissing('user_permissions', [
-            'user_id' => $cashier->id,
+        $this->actingAs($admin)
+            ->patch(route('access-control.update', UserRole::SuperAdmin->value), [
+                'permissions' => ['page.dashboard'],
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('role_permissions', [
+            'role' => UserRole::Admin->value,
         ]);
     }
 
-    public function test_super_admin_page_access_is_locked(): void
+    public function test_super_admin_keeps_required_access_but_other_pages_can_be_disabled(): void
     {
         $actor = User::factory()->superAdmin()->create();
-        $target = User::factory()->superAdmin()->create();
 
         $this->actingAs($actor)
-            ->patch(route('access-control.update', $target), [
+            ->patch(route('access-control.update', UserRole::SuperAdmin->value), [
                 'permissions' => [],
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
 
-        $this->assertDatabaseMissing('user_permissions', [
-            'user_id' => $target->id,
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::SuperAdmin->value,
+            'permission' => 'page.pos',
+            'allowed' => false,
         ]);
 
-        $this->assertTrue($target->refresh()->hasPermission('page.pos'));
-        $this->assertTrue($target->hasPermission('unknown.future_permission'));
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::SuperAdmin->value,
+            'permission' => 'page.settings',
+            'allowed' => true,
+        ]);
+
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::SuperAdmin->value,
+            'permission' => 'page.access_control',
+            'allowed' => true,
+        ]);
+
+        $actor->refresh();
+
+        $this->assertFalse($actor->hasPermission('page.pos'));
+        $this->assertTrue($actor->hasPermission('page.settings'));
+        $this->assertTrue($actor->hasPermission('page.access_control'));
+        $this->actingAs($actor)->get(route('pos.index'))->assertForbidden();
+        $this->actingAs($actor)->get(route('settings.index'))->assertOk();
+        $this->actingAs($actor)->get(route('access-control.index'))->assertOk();
     }
 
     public function test_access_control_does_not_edit_other_user_profile_photo_or_password(): void
@@ -175,7 +220,7 @@ class UserRoleTest extends TestCase
         ]);
 
         $this->actingAs($superAdmin)
-            ->patch(route('access-control.update', $cashier), [
+            ->patch(route('access-control.update', UserRole::Manager->value), [
                 'name' => 'Kasir Baru',
                 'username' => 'kasir_baru',
                 'email' => 'kasir-baru@example.test',
@@ -195,10 +240,10 @@ class UserRoleTest extends TestCase
         $this->assertSame('kasir-lama@example.test', $cashier->email);
         $this->assertSame('avatars/existing.jpg', $cashier->avatar_path);
         $this->assertTrue(Hash::check('old-password-123', $cashier->password));
-        $this->assertSame(UserRole::Manager, $cashier->role);
+        $this->assertSame(UserRole::Cashier, $cashier->role);
 
-        $this->assertDatabaseHas('user_permissions', [
-            'user_id' => $cashier->id,
+        $this->assertDatabaseHas('role_permissions', [
+            'role' => UserRole::Manager->value,
             'permission' => 'page.reports',
             'allowed' => true,
         ]);
@@ -212,7 +257,7 @@ class UserRoleTest extends TestCase
             'password' => Hash::make('old-password-123'),
         ]);
 
-        $avatar = 'data:image/jpeg;base64,' . base64_encode('my-face-photo');
+        $avatar = 'data:image/jpeg;base64,' . base64_encode('my-profile-photo');
 
         $this->actingAs($user)
             ->put(route('profile.update'), [
@@ -234,33 +279,26 @@ class UserRoleTest extends TestCase
         Storage::disk('public')->assertExists($user->avatar_path);
     }
 
-    public function test_authenticated_user_can_register_own_fingerprint_credential(): void
+    public function test_authenticated_user_can_register_own_face_credential(): void
     {
         $user = User::factory()->superAdmin()->create();
 
         $this->actingAs($user)
-            ->postJson(route('profile.fingerprint.options'))
+            ->postJson(route('profile.face.options'))
             ->assertOk()
-            ->assertJsonPath('options.user.name', $user->username);
-
-        $challenge = session('fingerprint_register_challenge');
+            ->assertJsonPath('user.username', $user->username);
 
         $this->actingAs($user)
-            ->put(route('profile.fingerprint.update'), [
-                'credential_id' => 'fingerprint-register-123',
-                'client_data_json' => \App\Support\WebAuthn::base64UrlEncode(json_encode([
-                    'type' => 'webauthn.create',
-                    'challenge' => $challenge,
-                    'origin' => 'http://localhost',
-                ], JSON_THROW_ON_ERROR)),
+            ->put(route('profile.face.update'), [
+                'face_descriptor' => json_encode(array_fill(0, 128, 0.35), JSON_THROW_ON_ERROR),
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
 
         $user->refresh();
 
-        $this->assertSame('fingerprint-register-123', $user->biometric_credential_id);
-        $this->assertNotNull($user->biometric_registered_at);
+        $this->assertNotNull($user->face_descriptor);
+        $this->assertNotNull($user->face_registered_at);
     }
 
     public function test_report_exports_are_available_to_report_roles(): void

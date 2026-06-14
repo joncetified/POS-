@@ -2103,11 +2103,13 @@ tbody tr:hover {
 
 .app-shell .product-card {
     min-width: 0 !important;
-    min-height: 172px !important;
+    min-height: 260px !important;
     display: grid !important;
     grid-template-columns: 124px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
     gap: 16px !important;
     padding: 16px !important;
+    align-items: start !important;
 }
 
 .app-shell .product-visual {
@@ -3460,7 +3462,7 @@ tbody tr:hover {
     }
 
     .app-shell .product-card {
-        min-height: 142px !important;
+        min-height: 230px !important;
         grid-template-columns: 108px minmax(0, 1fr) !important;
         gap: 14px !important;
         padding: 12px !important;
@@ -3953,5 +3955,83 @@ tbody tr:hover {
     .app-shell .cart-table .cart-thumb {
         width: 54px !important;
         height: 54px !important;
+    }
+}
+
+/* Broken upload image guard: keep sidebar/settings cards readable even when a stored file is missing on hosting. */
+.staff-brand-mark,
+.staff-user-avatar,
+.logo-preview {
+    overflow: hidden !important;
+    text-align: center !important;
+}
+
+.staff-brand-mark img,
+.staff-user-avatar img,
+.logo-preview img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.image-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 6px !important;
+    overflow: hidden !important;
+    color: inherit !important;
+    font-weight: 950 !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    overflow-wrap: anywhere !important;
+}
+
+.image-fallback[hidden] {
+    display: none !important;
+}
+
+.staff-brand-mark .image-fallback,
+.staff-user-avatar .image-fallback {
+    font-size: .86rem !important;
+}
+
+.settings-shell .layout,
+.settings-shell .panel,
+.settings-shell .preview-card,
+.settings-shell .form-grid,
+.settings-shell .contact-list,
+.settings-shell .identity {
+    min-width: 0 !important;
+}
+
+@media (min-width: 981px) {
+    .settings-shell:has(> .topbar .staff-nav) > .layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr) !important;
+        gap: 18px !important;
+        align-items: start !important;
+        padding: 24px !important;
+        background: rgba(255, 252, 249, .74) !important;
+    }
+
+    .settings-shell:has(> .topbar .staff-nav) .preview-card {
+        position: sticky !important;
+        top: 24px !important;
+        max-height: calc(100dvh - 64px) !important;
+        overflow: auto !important;
+    }
+}
+
+@media (max-width: 1220px) {
+    .settings-shell:has(> .topbar .staff-nav) > .layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settings-shell:has(> .topbar .staff-nav) .preview-card {
+        position: static !important;
+        max-height: none !important;
     }
 }

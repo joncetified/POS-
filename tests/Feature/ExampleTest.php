@@ -851,6 +851,34 @@ class ExampleTest extends TestCase
         $this->assertSame(42, $product->fresh()->stock);
     }
 
+    public function test_kitchen_page_shows_active_table_orders_for_cooks(): void
+    {
+        CafeCatalog::ensure();
+
+        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
+
+        $this
+            ->postJson(route('customer.table.orders', ['tableNumber' => '7']), [
+                'customer_name' => 'Budi',
+                'customer_note' => 'Tanpa gula',
+                'items' => [
+                    ['product_id' => $product->id, 'quantity' => 1],
+                ],
+            ])
+            ->assertCreated();
+
+        $this
+            ->actingAs(User::factory()->cashier()->create())
+            ->get(route('kitchen.index'))
+            ->assertOk()
+            ->assertSee('Dapur')
+            ->assertSee('Meja 7')
+            ->assertSee('Budi')
+            ->assertSee('Tanpa gula')
+            ->assertSee('Dengar Pesanan')
+            ->assertSee($product->name);
+    }
+
     public function test_qr_table_page_lists_all_configured_tables(): void
     {
         config(['store.table_count' => 4]);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CafeCatalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -85,6 +86,6 @@ class Product extends Model
 
         $version = $this->updated_at?->timestamp ?? time();
 
-        return '/storage/' . ltrim($this->image_path, '/') . '?v=' . $version;
+        return CafeCatalog::publicStorageUrl($this->image_path) . '?v=' . $version;
     }
 }

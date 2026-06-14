@@ -21,7 +21,8 @@
         h1 { font-size: clamp(1.55rem, 2.4vw, 2rem); }
         h2 { font-size: 1.12rem; }
         .muted { color: var(--muted); }
-        .layout { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; align-items: start; }
+        .settings-shell { max-width: 100%; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 16px; align-items: start; min-width: 0; }
         .panel, .preview-card { padding: 18px; display: grid; gap: 14px; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .field { display: grid; gap: 6px; }
@@ -33,9 +34,10 @@
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
         .errors { background: #fee2e2; color: #991b1b; }
-        .logo-preview { width: 96px; height: 96px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--primary); font-size: 2rem; font-weight: 950; overflow: hidden; }
+        .logo-preview { width: 96px; height: 96px; flex: 0 0 96px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--primary); font-size: 1.35rem; font-weight: 950; overflow: hidden; line-height: 1.05; text-align: center; }
         .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
-        .payment-barcode-preview { width: min(100%, 320px); min-height: 180px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--muted); overflow: hidden; }
+        .image-fallback { width: 100%; height: 100%; display: grid; place-items: center; padding: 8px; overflow: hidden; }
+        .payment-barcode-preview { width: 100%; max-width: 360px; min-height: 180px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--muted); overflow: hidden; text-align: center; padding: 10px; }
         .payment-barcode-preview img { width: 100%; height: 100%; max-height: 240px; object-fit: contain; padding: 10px; background: #fff; }
         .identity { display: flex; gap: 12px; align-items: center; min-width: 0; }
         .identity h3, .identity p { overflow-wrap: anywhere; }
@@ -43,12 +45,13 @@
         .contact-list div { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--soft); overflow-wrap: anywhere; }
         .logout-form { margin: 0; }
         .logout-form .btn { width: 100%; }
+        @media (max-width: 1180px) { .layout { grid-template-columns: 1fr; } .preview-card { max-width: 100%; } }
         @media (max-width: 860px) { .topbar, .layout, .form-grid { grid-template-columns: 1fr; } .actions { justify-content: flex-start; } .actions .btn, .actions button { width: 100%; } }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <main class="shell">
+    <main class="shell settings-shell">
         <section class="topbar">
             <div class="staff-brand-wrap">
                 @include('partials.staff-brand', ['store' => $store])
@@ -121,10 +124,12 @@
                 <h2>Preview</h2>
                 <div class="identity">
                     <div class="logo-preview">
+                        @php($storeInitials = collect(explode(' ', $store['name']))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode(''))
                         @if ($store['logo_url'])
-                            <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo">
+                            <img src="{{ $store['logo_url'] }}" alt="{{ $store['name'] }} logo" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+                            <span class="image-fallback" hidden>{{ $storeInitials }}</span>
                         @else
-                            {{ strtoupper(substr($store['name'], 0, 1)) }}
+                            <span class="image-fallback">{{ $storeInitials }}</span>
                         @endif
                     </div>
                     <div>
@@ -138,9 +143,10 @@
                         <p class="muted">Barcode Pembayaran</p>
                         <div class="payment-barcode-preview">
                             @if ($store['payment_barcode_url'])
-                                <img src="{{ $store['payment_barcode_url'] }}" alt="Barcode pembayaran">
+                                <img src="{{ $store['payment_barcode_url'] }}" alt="Barcode pembayaran" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+                                <span class="image-fallback" hidden>Belum ada barcode pembayaran.</span>
                             @else
-                                Belum ada barcode pembayaran.
+                                <span class="image-fallback">Belum ada barcode pembayaran.</span>
                             @endif
                         </div>
                     </div>

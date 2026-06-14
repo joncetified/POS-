@@ -6,51 +6,71 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Support\CafeCatalog;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PosController extends Controller
 {
     public function index(): View
     {
-        CafeCatalog::ensure();
-
         $store = CafeCatalog::store();
+        $categories = collect();
+        $products = collect();
 
-        $categories = Category::query()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+        if (Schema::hasTable('categories') && Schema::hasTable('products')) {
+            CafeCatalog::ensure();
+            $hasProductBundles = Schema::hasTable('product_bundle_items');
+            $hasBarcode = Schema::hasColumn('products', 'barcode');
+            $hasPackageContents = Schema::hasColumn('products', 'package_contents');
+            $hasImagePath = Schema::hasColumn('products', 'image_path');
+            $hasIsBundle = Schema::hasColumn('products', 'is_bundle');
 
-        $products = Product::query()
-            ->with(['category:id,name', 'bundleItems.component:id,name,stock'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Product $product) => [
-                'id' => $product->id,
-                'sku' => $product->sku,
-                'barcode' => $product->barcode,
-                'barcode_image_url' => $this->barcodeSvgDataUri($product->barcode),
-                'name' => $product->name,
-                'category' => $product->category?->name,
-                'category_id' => $product->category_id,
-                'price' => $product->price,
-                'stock' => $product->availableForSaleStock(),
-                'unit' => $product->unit,
-                'tag' => $product->tag,
-                'package_contents' => $product->package_contents,
-                'color' => $product->color,
-                'is_bundle' => $product->is_bundle,
-                'image_url' => $product->imageUrl(),
-            ])
-            ->values();
+            $categories = Category::query()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug']);
 
-        $todaySales = Sale::query()
-            ->whereDate('paid_at', today())
-            ->where('status', 'paid');
+            $productQuery = Product::query()->with(['category:id,name']);
 
-        $orders = (clone $todaySales)->count();
-        $revenue = (clone $todaySales)->sum('total');
+            if ($hasProductBundles) {
+                $productQuery->with(['bundleItems.component:id,name,stock']);
+            }
+
+            $products = $productQuery
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Product $product) => [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'barcode' => $hasBarcode ? $product->barcode : null,
+                    'barcode_image_url' => $this->barcodeSvgDataUri($hasBarcode ? $product->barcode : null),
+                    'name' => $product->name,
+                    'category' => $product->category?->name,
+                    'category_id' => $product->category_id,
+                    'price' => $product->price,
+                    'stock' => $hasProductBundles && $hasIsBundle ? $product->availableForSaleStock() : $product->stock,
+                    'unit' => $product->unit,
+                    'tag' => $product->tag,
+                    'package_contents' => $hasPackageContents ? $product->package_contents : null,
+                    'color' => $product->color,
+                    'is_bundle' => $hasIsBundle ? $product->is_bundle : false,
+                    'image_url' => $hasImagePath ? $product->imageUrl() : null,
+                ])
+                ->values();
+        }
+
+        $orders = 0;
+        $revenue = 0;
+
+        if (Schema::hasTable('sales')) {
+            $todaySales = Sale::query()
+                ->whereDate('paid_at', today())
+                ->where('status', 'paid');
+
+            $orders = (clone $todaySales)->count();
+            $revenue = (clone $todaySales)->sum('total');
+        }
 
         $shift = [
             'cashier' => $store['cashier'],

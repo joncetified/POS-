@@ -26,11 +26,14 @@
         .errors { padding: 10px 12px; border-radius: 8px; color: #991b1b; background: #fee2e2; }
         .footer { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
         .divider { height: 1px; background: var(--line); }
-        .fingerprint-login { display: grid; gap: 12px; }
-        .fingerprint-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--soft); color: var(--muted); font-weight: 750; }
-        .fingerprint-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
-        .fingerprint-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
-        .fingerprint-status.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+        .face-login { display: grid; gap: 12px; }
+        .face-status { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: var(--soft); color: var(--muted); font-weight: 750; }
+        .face-status.ok { border-color: #86efac; background: #f0fdf4; color: #166534; }
+        .face-status.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .face-status.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+        .face-video-wrap { min-height: 190px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; overflow: hidden; background: #020617; }
+        .face-video { width: 100%; max-height: 260px; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+        .face-video:not([data-ready="1"]) { opacity: .2; }
     </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -68,13 +71,16 @@
 
         <div class="divider"></div>
 
-        <section class="fingerprint-login" data-fingerprint-login>
+        <section class="face-login" data-face-login>
             <div>
-                <strong>Login dengan Fingerprint</strong>
-                <p class="muted">Isi username, lalu gunakan fingerprint/biometrik bawaan perangkat.</p>
+                <strong>Login dengan Face Recognition</strong>
+                <p class="muted">Isi username, lalu kamera akan membandingkan wajah dengan data yang tersimpan di profil.</p>
             </div>
-            <button class="btn" type="button" data-fingerprint-submit>Login Fingerprint</button>
-            <div class="fingerprint-status" data-fingerprint-status>Fingerprint belum dimulai.</div>
+            <div class="face-video-wrap">
+                <video class="face-video" data-face-video autoplay muted playsinline data-ready="0"></video>
+            </div>
+            <button class="btn" type="button" data-face-submit>Login Face Recognition</button>
+            <div class="face-status" data-face-status>Face Recognition belum dimulai.</div>
         </section>
 
         <div class="footer">
@@ -83,74 +89,95 @@
         </div>
     </main>
     <script>
-        document.querySelectorAll('[data-fingerprint-login]').forEach((panel) => {
-            const submitButton = panel.querySelector('[data-fingerprint-submit]');
-            const status = panel.querySelector('[data-fingerprint-status]');
+        document.querySelectorAll('[data-face-login]').forEach((panel) => {
+            const submitButton = panel.querySelector('[data-face-submit]');
+            const status = panel.querySelector('[data-face-status]');
+            const video = panel.querySelector('[data-face-video]');
             const username = document.querySelector('#username');
             const remember = document.querySelector('input[name="remember"]');
 
             function setStatus(message, type = '') {
                 status.textContent = message;
-                status.className = `fingerprint-status${type ? ` ${type}` : ''}`;
+                status.className = `face-status${type ? ` ${type}` : ''}`;
+            }
+
+            async function readJson(response, fallbackMessage) {
+                const text = await response.text();
+                try {
+                    return text ? JSON.parse(text) : {};
+                } catch (error) {
+                    if (response.status === 419) {
+                        throw new Error('Sesi login sudah kedaluwarsa. Refresh halaman lalu coba lagi.');
+                    }
+
+                    if (response.redirected || text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                        throw new Error(fallbackMessage);
+                    }
+
+                    throw new Error(text || fallbackMessage);
+                }
             }
 
             submitButton.addEventListener('click', async () => {
                 if (!username.value.trim()) {
                     username.focus();
-                    setStatus('Isi username dulu sebelum login fingerprint.', 'error');
+                    setStatus('Isi username dulu sebelum login Face Recognition.', 'error');
                     return;
                 }
 
                 try {
                     submitButton.disabled = true;
-                    setStatus('Meminta fingerprint perangkat...', 'warn');
+                    setStatus('Meminta izin kamera...', 'warn');
 
-                    if (!await window.CafeFingerprintAuth.browserSupportsBiometric()) {
-                        throw new Error('Perangkat/browser belum mendukung fingerprint atau biometrik.');
-                    }
-
-                    const optionResponse = await fetch('{{ route('login.fingerprint.options') }}', {
+                    const optionResponse = await fetch('{{ route('login.face.options') }}', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         },
                         body: JSON.stringify({ username: username.value.trim() }),
                     });
-                    const optionPayload = await optionResponse.json();
+                    const optionPayload = await readJson(optionResponse, 'Server mengembalikan halaman, bukan JSON. Refresh halaman lalu coba lagi.');
 
                     if (!optionResponse.ok) {
-                        throw new Error(optionPayload.message || 'Fingerprint belum bisa dimulai.');
+                        throw new Error(optionPayload.message || 'Face Recognition belum bisa dimulai.');
                     }
 
-                    const credential = await navigator.credentials.get(
-                        window.CafeFingerprintAuth.credentialRequestOptions(optionPayload.options)
-                    );
-                    const response = await fetch('{{ route('login.fingerprint') }}', {
+                    await window.CafeFaceAuth.startCamera(video, (message) => setStatus(message, 'warn'));
+                    setStatus('Membaca data wajah...', 'warn');
+                    const descriptor = await window.CafeFaceAuth.captureStableDescriptor(video);
+                    const response = await fetch('{{ route('login.face') }}', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         },
                         body: JSON.stringify({
                             username: username.value.trim(),
                             remember: remember.checked,
-                            ...window.CafeFingerprintAuth.authenticationPayload(credential),
+                            face_descriptor: window.CafeFaceAuth.descriptorPayload(descriptor),
                         }),
                     });
-                    const payload = await response.json();
+                    const payload = await readJson(response, 'Server mengembalikan halaman, bukan JSON. Refresh halaman lalu coba lagi.');
 
                     if (!response.ok) {
-                        throw new Error(payload.message || 'Login fingerprint gagal.');
+                        throw new Error(payload.message || 'Login Face Recognition gagal.');
                     }
 
-                    setStatus('Fingerprint cocok. Masuk...', 'ok');
+                    setStatus('Ini wajah pengguna terdaftar. Masuk...', 'ok');
                     window.location.href = payload.redirect;
                 } catch (error) {
                     submitButton.disabled = false;
-                    setStatus(error.message || 'Login fingerprint gagal.', 'error');
+                    video.dataset.ready = '0';
+                    setStatus(error.message || 'Login Face Recognition gagal.', 'error');
+                } finally {
+                    window.CafeFaceAuth.stopCamera(video);
                 }
             });
         });

@@ -38,12 +38,14 @@ enum UserRole: string
                 'page.customer_menu',
                 'page.products',
                 'page.orders',
+                'page.kitchen',
                 'page.sales',
                 'page.sales_export',
                 'page.reports',
                 'page.reports_export',
                 'page.operations',
                 'page.settings',
+                'page.access_control',
                 'features.access_all',
                 'branches.access_all',
                 'admins.manage',
@@ -56,11 +58,13 @@ enum UserRole: string
                 'page.qr_tables',
                 'page.products',
                 'page.orders',
+                'page.kitchen',
                 'page.sales',
                 'page.sales_export',
                 'page.reports',
                 'page.reports_export',
                 'page.operations',
+                'page.access_control',
                 'products.manage',
                 'stock.manage',
                 'transactions.manage',
@@ -71,6 +75,7 @@ enum UserRole: string
                 'page.pos',
                 'page.qr_tables',
                 'page.orders',
+                'page.kitchen',
                 'items.scan',
                 'transactions.create',
                 'receipts.print',
@@ -78,6 +83,7 @@ enum UserRole: string
             ],
             self::Warehouse => [
                 'page.products',
+                'page.kitchen',
                 'stock.in',
                 'stock.out',
                 'inventory.manage',
@@ -91,6 +97,7 @@ enum UserRole: string
                 'page.reports',
                 'page.reports_export',
                 'page.operations',
+                'page.kitchen',
                 'reports.view_store',
                 'discounts.approve',
                 'cashiers.monitor',
@@ -103,6 +110,7 @@ enum UserRole: string
                 'page.reports',
                 'page.reports_export',
                 'page.operations',
+                'page.kitchen',
                 'dashboard.view',
                 'profits.view',
                 'branches.monitor',
@@ -117,7 +125,21 @@ enum UserRole: string
 
     public function can(string $permission): bool
     {
-        return $this === self::SuperAdmin || in_array($permission, $this->permissions(), true);
+        return in_array($permission, $this->permissions(), true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function requiredPermissions(): array
+    {
+        return match ($this) {
+            self::SuperAdmin => [
+                'page.settings',
+                'page.access_control',
+            ],
+            default => [],
+        };
     }
 
     /**

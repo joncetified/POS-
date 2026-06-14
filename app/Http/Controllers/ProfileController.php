@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\CafeCatalog;
-use App\Support\WebAuthn;
+use App\Support\FaceRecognition;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -50,47 +50,53 @@ class ProfileController extends Controller
         return back()->with('status', 'Profil saya berhasil disimpan.');
     }
 
-    public function fingerprintOptions(Request $request): JsonResponse
+    public function faceOptions(Request $request): JsonResponse
     {
+        if (! Schema::hasColumn('users', 'face_descriptor')) {
+            return response()->json([
+                'message' => 'Database hosting belum punya kolom Face Recognition. Import database terbaru atau jalankan migration.',
+            ], 422);
+        }
+
         /** @var User $user */
         $user = $request->user();
 
-        $challenge = WebAuthn::challenge();
-        $request->session()->put('fingerprint_register_challenge', $challenge);
-
         return response()->json([
-            'options' => WebAuthn::registrationOptions($request, $challenge, $user->id, $user->username, $user->name),
+            'ready' => true,
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'name' => $user->name,
+            ],
         ]);
     }
 
-    public function updateFingerprint(Request $request): RedirectResponse
+    public function updateFace(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'credential_id' => ['required', 'string', 'max:512'],
-            'client_data_json' => ['required', 'string'],
-        ]);
-
-        $challenge = $request->session()->pull('fingerprint_register_challenge');
-
-        if (! $challenge) {
-            return back()->withErrors(['fingerprint' => 'Sesi daftar fingerprint sudah habis. Mulai ulang.']);
+        if (! Schema::hasColumn('users', 'face_descriptor') || ! Schema::hasColumn('users', 'face_registered_at')) {
+            return back()->withErrors([
+                'face' => 'Database hosting belum punya kolom Face Recognition. Import database terbaru atau jalankan migration.',
+            ]);
         }
 
+        $validated = $request->validate([
+            'face_descriptor' => ['required', 'string'],
+        ]);
+
         try {
-            WebAuthn::validateClientData($validated['client_data_json'], 'webauthn.create', $challenge, $request);
-            $credentialId = WebAuthn::normalizeCredentialId($validated['credential_id']);
-        } catch (InvalidArgumentException $error) {
-            return back()->withErrors(['fingerprint' => $error->getMessage()]);
+            $descriptor = FaceRecognition::encode(FaceRecognition::descriptorFromJson($validated['face_descriptor']));
+        } catch (\InvalidArgumentException $error) {
+            return back()->withErrors(['face' => $error->getMessage()]);
         }
 
         /** @var User $user */
         $user = $request->user();
         $user->forceFill([
-            'biometric_credential_id' => $credentialId,
-            'biometric_registered_at' => now(),
+            'face_descriptor' => $descriptor,
+            'face_registered_at' => now(),
         ])->save();
 
-        return back()->with('status', 'Fingerprint login berhasil didaftarkan.');
+        return back()->with('status', 'Face Recognition berhasil didaftarkan.');
     }
 
     private function storeCroppedAvatar(string $dataUrl, User $user): string

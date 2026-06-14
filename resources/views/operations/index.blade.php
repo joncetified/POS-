@@ -32,6 +32,13 @@
         select { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .salary-form { grid-template-columns: minmax(240px, 1.2fr) minmax(130px, .7fr) minmax(130px, .7fr); }
         textarea { min-height: 42px; resize: vertical; }
+        .voice-note-wrap { display: grid; gap: 8px; }
+        .voice-note-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+        .voice-note-btn { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--soft); color: var(--ink); font-weight: 850; cursor: pointer; }
+        .voice-note-btn.is-listening { border-color: var(--primary); background: var(--primary); color: #fff; }
+        .voice-note-btn.is-speaking { border-color: #334155; background: #334155; color: #fff; }
+        .voice-note-btn:disabled { opacity: .56; cursor: not-allowed; }
+        #voice-toast { position: fixed; right: 18px; bottom: 18px; z-index: 20; max-width: min(360px, calc(100% - 36px)); box-shadow: 0 14px 30px rgba(15, 23, 42, .14); }
         .status, .errors { border-radius: 8px; padding: 11px 13px; font-weight: 850; }
         .status { background: #dcfce7; color: #166534; }
         .errors { background: #fee2e2; color: #991b1b; }
@@ -115,7 +122,16 @@
                     <div class="field"><label>Periode</label><input name="period" type="month" value="{{ now()->format('Y-m') }}" required></div>
                     <div class="field"><label>Nominal</label><input name="amount" type="number" min="0" required></div>
                     <div class="field"><label>Tanggal Bayar</label><input name="paid_at" type="date" value="{{ now()->toDateString() }}" required></div>
-                    <div class="field"><label>Catatan</label><input name="note"></div>
+                    <div class="field">
+                        <label>Catatan</label>
+                        <div class="voice-note-wrap">
+                            <input id="salary-note" name="note" maxlength="160">
+                            <div class="voice-note-actions">
+                                <button class="voice-note-btn" type="button" data-voice-listen="salary-note"><span aria-hidden="true">Mic</span><span>Voice Note</span></button>
+                                <button class="voice-note-btn" type="button" data-voice-speak="salary-note"><span aria-hidden="true">TTS</span><span>Dengar Catatan</span></button>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn primary" type="submit" @disabled($employees->isEmpty())>Catat Gaji</button>
                 </form>
                 <div class="table-wrap">
@@ -142,7 +158,16 @@
                 <div class="field"><label>Qty</label><input name="quantity" type="number" min="1" required></div>
                 <div class="field"><label>Harga Modal / Unit</label><input name="unit_cost" type="number" min="0" value="0"></div>
                 <div class="field"><label>Tanggal</label><input name="occurred_at" type="date" value="{{ now()->toDateString() }}" required></div>
-                <div class="field"><label>Catatan</label><input name="note"></div>
+                <div class="field">
+                    <label>Catatan</label>
+                    <div class="voice-note-wrap">
+                        <input id="inventory-note" name="note" maxlength="160">
+                        <div class="voice-note-actions">
+                            <button class="voice-note-btn" type="button" data-voice-listen="inventory-note"><span aria-hidden="true">Mic</span><span>Voice Note</span></button>
+                            <button class="voice-note-btn" type="button" data-voice-speak="inventory-note"><span aria-hidden="true">TTS</span><span>Dengar Catatan</span></button>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn primary" type="submit" @disabled($products->isEmpty())>Simpan Movement</button>
             </form>
             <div class="table-wrap">
@@ -167,5 +192,225 @@
             </div>
         </section>
     </main>
+    <div id="voice-toast" class="status" role="status" aria-live="polite" hidden></div>
+    <script>
+        const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+        let activeRecognition = null;
+        let activeListenButton = null;
+        let activeUtterance = null;
+        let activeSpeakButton = null;
+
+        function showVoiceToast(message) {
+            const toast = document.getElementById('voice-toast');
+            toast.textContent = message;
+            toast.hidden = false;
+            window.setTimeout(() => {
+                toast.hidden = true;
+            }, 2200);
+        }
+
+        function voiceTarget(button, type) {
+            return document.getElementById(button.dataset[type]);
+        }
+
+        function setListenButton(button, listening) {
+            if (!button) return;
+            button.classList.toggle('is-listening', listening);
+            button.setAttribute('aria-pressed', listening ? 'true' : 'false');
+            const label = button.querySelector('span:last-child');
+            if (label) label.textContent = listening ? 'Stop Rekam' : 'Voice Note';
+        }
+
+        function setSpeakButton(button, speaking) {
+            if (!button) return;
+            button.classList.toggle('is-speaking', speaking);
+            button.setAttribute('aria-pressed', speaking ? 'true' : 'false');
+            const label = button.querySelector('span:last-child');
+            if (label) label.textContent = speaking ? 'Stop Suara' : 'Dengar Catatan';
+        }
+
+        function appendVoiceText(input, text) {
+            const current = String(input.value || '').trim();
+            const separator = current ? ' ' : '';
+            const maxLength = Number(input.getAttribute('maxlength') || 160);
+            input.value = `${current}${separator}${text}`.slice(0, maxLength);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function getSpeechRecognitionErrorMessage(error) {
+            const messages = {
+                'not-allowed': 'Izin mic ditolak. Izinkan microphone di browser.',
+                'service-not-allowed': 'Voice-to-text diblokir browser.',
+                'audio-capture': 'Mic tidak ditemukan atau sedang dipakai aplikasi lain.',
+                'no-speech': 'Tidak ada suara terdengar. Coba bicara lebih dekat ke mic.',
+                network: 'Voice-to-text gagal karena koneksi/browser.',
+                aborted: 'Rekam suara dihentikan.',
+            };
+
+            return messages[error] || 'Voice-to-text gagal. Coba lagi.';
+        }
+
+        function getIndonesianVoice() {
+            if (!canSpeak || typeof window.speechSynthesis.getVoices !== 'function') {
+                return null;
+            }
+
+            const voices = window.speechSynthesis.getVoices();
+            return voices.find((voice) => voice.lang === 'id-ID')
+                || voices.find((voice) => voice.lang?.toLowerCase().startsWith('id'))
+                || null;
+        }
+
+        function stopSpeech() {
+            if (canSpeak) {
+                window.speechSynthesis.cancel();
+            }
+
+            activeUtterance = null;
+            setSpeakButton(activeSpeakButton, false);
+            activeSpeakButton = null;
+        }
+
+        function stopRecognition() {
+            if (activeRecognition) {
+                try {
+                    activeRecognition.stop();
+                } catch (error) {
+                    try {
+                        activeRecognition.abort();
+                    } catch (abortError) {
+                        // Browser can throw if recognition already ended.
+                    }
+                }
+            }
+
+            activeRecognition = null;
+            setListenButton(activeListenButton, false);
+            activeListenButton = null;
+        }
+
+        function stopVoiceTools() {
+            stopSpeech();
+            stopRecognition();
+        }
+
+        document.querySelectorAll('[data-voice-listen]').forEach((button) => {
+            button.setAttribute('aria-pressed', 'false');
+
+            if (!SpeechRecognitionApi) {
+                button.disabled = true;
+                button.title = 'Browser tidak mendukung voice-to-text';
+                return;
+            }
+
+            button.addEventListener('click', () => {
+                const input = voiceTarget(button, 'voiceListen');
+                if (!input) return;
+
+                if (activeListenButton === button) {
+                    stopRecognition();
+                    return;
+                }
+
+                stopVoiceTools();
+
+                const recognition = new SpeechRecognitionApi();
+                recognition.lang = 'id-ID';
+                recognition.interimResults = false;
+                recognition.continuous = false;
+                recognition.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map((result) => result[0]?.transcript || '')
+                        .join(' ')
+                        .trim();
+
+                    if (transcript) {
+                        appendVoiceText(input, transcript);
+                        showVoiceToast('Voice note masuk ke catatan');
+                    }
+                };
+                recognition.onerror = (event) => {
+                    if (event.error !== 'aborted') {
+                        showVoiceToast(getSpeechRecognitionErrorMessage(event.error));
+                    }
+                };
+                recognition.onnomatch = () => {
+                    showVoiceToast('Suara belum terbaca. Coba ulangi lebih jelas.');
+                };
+                recognition.onend = () => {
+                    activeRecognition = null;
+                    setListenButton(activeListenButton, false);
+                    activeListenButton = null;
+                };
+
+                activeRecognition = recognition;
+                activeListenButton = button;
+                setListenButton(button, true);
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    stopRecognition();
+                    showVoiceToast('Voice-to-text gagal dimulai. Pastikan halaman memakai HTTPS atau localhost.');
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-voice-speak]').forEach((button) => {
+            button.setAttribute('aria-pressed', 'false');
+
+            if (!canSpeak) {
+                button.disabled = true;
+                button.title = 'Browser tidak mendukung text-to-voice';
+                return;
+            }
+
+            button.addEventListener('click', () => {
+                const input = voiceTarget(button, 'voiceSpeak');
+                if (!input) return;
+
+                if (activeSpeakButton === button || window.speechSynthesis.speaking) {
+                    stopSpeech();
+                    return;
+                }
+
+                const text = String(input.value || '').trim();
+                if (!text) {
+                    showVoiceToast('Isi catatan dulu');
+                    return;
+                }
+
+                stopVoiceTools();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                const voice = getIndonesianVoice();
+                if (voice) utterance.voice = voice;
+                utterance.rate = 0.95;
+                utterance.pitch = 1;
+                utterance.onend = () => {
+                    activeUtterance = null;
+                    setSpeakButton(activeSpeakButton, false);
+                    activeSpeakButton = null;
+                };
+                utterance.onerror = () => {
+                    activeUtterance = null;
+                    setSpeakButton(activeSpeakButton, false);
+                    activeSpeakButton = null;
+                    showVoiceToast('Text-to-voice gagal dibaca');
+                };
+
+                activeUtterance = utterance;
+                activeSpeakButton = button;
+                setSpeakButton(button, true);
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+            });
+        });
+
+        document.addEventListener('submit', stopVoiceTools);
+        window.addEventListener('beforeunload', stopVoiceTools);
+    </script>
 </body>
 </html>

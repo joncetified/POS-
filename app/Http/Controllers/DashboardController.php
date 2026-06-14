@@ -10,31 +10,46 @@ use App\Models\SalaryPayment;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Support\CafeCatalog;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
-        CafeCatalog::ensure();
+        if (Schema::hasTable('categories') && Schema::hasTable('products')) {
+            CafeCatalog::ensure();
+        }
 
-        $todaySales = Sale::query()
-            ->whereDate('paid_at', today())
-            ->where('status', 'paid');
+        $hasSales = Schema::hasTable('sales');
+        $hasSaleItems = Schema::hasTable('sale_items');
+        $hasProducts = Schema::hasTable('products');
 
-        $openOrders = Sale::query()
-            ->with('items')
-            ->whereIn('status', ['open', 'parked'])
-            ->latest('updated_at')
-            ->get();
+        $todaySales = $hasSales
+            ? Sale::query()->whereDate('paid_at', today())->where('status', 'paid')
+            : null;
 
-        $todayRevenue = (clone $todaySales)->sum('total');
-        $todayOrders = (clone $todaySales)->count();
-        $todayTax = (clone $todaySales)->sum('tax');
-        $todayDiscount = (clone $todaySales)->sum('discount');
-        $todayOperationalCost = OperationalExpense::query()->whereDate('spent_at', today())->sum('amount');
-        $todaySalaryCost = SalaryPayment::query()->whereDate('paid_at', today())->sum('amount');
-        $todayInventoryCost = InventoryMovement::query()->where('type', 'in')->whereDate('occurred_at', today())->sum('total_cost');
+        $openOrders = $hasSales
+            ? Sale::query()
+                ->with($hasSaleItems ? ['items'] : [])
+                ->whereIn('status', ['open', 'parked'])
+                ->latest('updated_at')
+                ->get()
+            : collect();
+
+        $todayRevenue = $todaySales ? (clone $todaySales)->sum('total') : 0;
+        $todayOrders = $todaySales ? (clone $todaySales)->count() : 0;
+        $todayTax = $todaySales ? (clone $todaySales)->sum('tax') : 0;
+        $todayDiscount = $todaySales ? (clone $todaySales)->sum('discount') : 0;
+        $todayOperationalCost = Schema::hasTable('operational_expenses')
+            ? OperationalExpense::query()->whereDate('spent_at', today())->sum('amount')
+            : 0;
+        $todaySalaryCost = Schema::hasTable('salary_payments')
+            ? SalaryPayment::query()->whereDate('paid_at', today())->sum('amount')
+            : 0;
+        $todayInventoryCost = Schema::hasTable('inventory_movements')
+            ? InventoryMovement::query()->where('type', 'in')->whereDate('occurred_at', today())->sum('total_cost')
+            : 0;
         $canViewIncomeReport = in_array(request()->user()?->role, [UserRole::SuperAdmin, UserRole::Manager], true);
 
         return view('dashboard.index', [
@@ -57,33 +72,41 @@ class DashboardController extends Controller
             'averageOrder' => $todayOrders > 0 ? (int) round($todayRevenue / $todayOrders) : 0,
             'openOrders' => $openOrders,
             'openOrdersTotal' => $openOrders->sum('total'),
-            'activeProducts' => Product::query()->where('is_active', true)->count(),
-            'lowStockCount' => Product::query()->where('is_active', true)->where('stock', '<=', 10)->count(),
-            'paymentSummary' => (clone $todaySales)
-                ->selectRaw('payment_method, COUNT(*) as orders_count, SUM(total) as total_sales')
-                ->groupBy('payment_method')
-                ->orderBy('payment_method')
-                ->get(),
-            'latestSales' => Sale::query()
-                ->with('items')
-                ->where('status', 'paid')
-                ->latest('paid_at')
-                ->limit(6)
-                ->get(),
-            'topItems' => SaleItem::query()
-                ->whereHas('sale', fn ($query) => $query->where('status', 'paid'))
-                ->selectRaw('product_name, sku, SUM(quantity) as sold_qty, SUM(line_total) as revenue')
-                ->groupBy('product_name', 'sku')
-                ->orderByDesc('sold_qty')
-                ->limit(6)
-                ->get(),
-            'lowStockProducts' => Product::query()
-                ->with('category')
-                ->where('is_active', true)
-                ->where('stock', '<=', 10)
-                ->orderBy('stock')
-                ->limit(8)
-                ->get(),
+            'activeProducts' => $hasProducts ? Product::query()->where('is_active', true)->count() : 0,
+            'lowStockCount' => $hasProducts ? Product::query()->where('is_active', true)->where('stock', '<=', 10)->count() : 0,
+            'paymentSummary' => $todaySales
+                ? (clone $todaySales)
+                    ->selectRaw('payment_method, COUNT(*) as orders_count, SUM(total) as total_sales')
+                    ->groupBy('payment_method')
+                    ->orderBy('payment_method')
+                    ->get()
+                : collect(),
+            'latestSales' => $hasSales
+                ? Sale::query()
+                    ->with($hasSaleItems ? ['items'] : [])
+                    ->where('status', 'paid')
+                    ->latest('paid_at')
+                    ->limit(6)
+                    ->get()
+                : collect(),
+            'topItems' => $hasSaleItems
+                ? SaleItem::query()
+                    ->whereHas('sale', fn ($query) => $query->where('status', 'paid'))
+                    ->selectRaw('product_name, sku, SUM(quantity) as sold_qty, SUM(line_total) as revenue')
+                    ->groupBy('product_name', 'sku')
+                    ->orderByDesc('sold_qty')
+                    ->limit(6)
+                    ->get()
+                : collect(),
+            'lowStockProducts' => $hasProducts
+                ? Product::query()
+                    ->with(Schema::hasTable('categories') ? ['category'] : [])
+                    ->where('is_active', true)
+                    ->where('stock', '<=', 10)
+                    ->orderBy('stock')
+                    ->limit(8)
+                    ->get()
+                : collect(),
         ]);
     }
 
@@ -92,6 +115,10 @@ class DashboardController extends Controller
      */
     private function incomeBetween($start, $end): array
     {
+        if (! Schema::hasTable('sales')) {
+            return ['orders' => 0, 'income' => 0];
+        }
+
         $query = Sale::query()
             ->where('status', 'paid')
             ->whereBetween('paid_at', [$start, $end]);

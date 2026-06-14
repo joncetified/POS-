@@ -5,6 +5,7 @@ use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\OperationController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProfileController;
@@ -12,16 +13,43 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/qr/meja/{tableNumber}/menu', [CustomerMenuController::class, 'table'])->name('customer.table.menu');
 Route::post('/qr/meja/{tableNumber}/orders', [CustomerMenuController::class, 'submitTableOrder'])->name('customer.table.orders');
 
+$servePublicStorage = function (string $path) {
+    abort_if(str_contains($path, '..'), 404);
+
+    $disk = Storage::disk('public');
+    abort_unless($disk->exists($path), 404);
+
+    $filePath = $disk->path($path);
+
+    return response()->file($filePath, [
+        'Content-Type' => File::mimeType($filePath) ?: 'application/octet-stream',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+};
+
+Route::get('/storage/{path}', $servePublicStorage)
+    ->where('path', '.*')
+    ->name('public-storage.show');
+
+$appBasePath = trim((string) parse_url((string) config('app.url'), PHP_URL_PATH), '/');
+if ($appBasePath !== '') {
+    Route::get($appBasePath . '/storage/{path}', $servePublicStorage)
+        ->where('path', '.*')
+        ->name('public-storage.subpath.show');
+}
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
-    Route::post('/login/fingerprint/options', [AuthController::class, 'fingerprintOptions'])->name('login.fingerprint.options');
-    Route::post('/login/fingerprint', [AuthController::class, 'fingerprintLogin'])->name('login.fingerprint');
+    Route::post('/login/face/options', [AuthController::class, 'faceOptions'])->name('login.face.options');
+    Route::post('/login/face', [AuthController::class, 'faceLogin'])->name('login.face');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
     Route::get('/email/verify', [AuthController::class, 'showVerification'])->name('verification.notice');
@@ -34,11 +62,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/fingerprint/options', [ProfileController::class, 'fingerprintOptions'])->name('profile.fingerprint.options');
-    Route::put('/profile/fingerprint', [ProfileController::class, 'updateFingerprint'])->name('profile.fingerprint.update');
+    Route::post('/profile/face/options', [ProfileController::class, 'faceOptions'])->name('profile.face.options');
+    Route::put('/profile/face', [ProfileController::class, 'updateFace'])->name('profile.face.update');
 
     Route::get('/access-control', [AccessControlController::class, 'index'])->name('access-control.index');
-    Route::match(['put', 'patch'], '/access-control/{user}', [AccessControlController::class, 'update'])->name('access-control.update');
+    Route::match(['put', 'patch'], '/access-control/{role}', [AccessControlController::class, 'update'])->name('access-control.update');
 
     Route::get('/settings', [SettingsController::class, 'index'])
         ->middleware('permission:page.settings')
@@ -83,6 +111,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/open', [SaleController::class, 'openOrders'])
         ->middleware('permission:page.orders')
         ->name('orders.open');
+
+    Route::get('/dapur', [KitchenController::class, 'index'])
+        ->middleware('permission:page.kitchen')
+        ->name('kitchen.index');
 
     Route::post('/orders/open', [SaleController::class, 'park'])
         ->middleware('permission:page.orders')

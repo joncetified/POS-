@@ -544,13 +544,14 @@
         const canOrder = @json($canOrder);
         const products = @json($menuProducts);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        const orderUrl = @json($canOrder ? route('customer.table.orders', ['tableNumber' => $tableNumber], false) : null);
+        const orderUrl = @json($canOrder ? route('customer.table.orders', ['tableNumber' => $tableNumber]) : null);
         const cart = new Map();
         const state = { category: 'all', search: '' };
         let activeUtterance = null;
         let activeRecognition = null;
         let isListening = false;
         const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
@@ -563,6 +564,24 @@
             toast.textContent = message;
             toast.classList.add('show');
             window.setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        async function readJsonResponse(response, fallbackMessage = 'Server mengembalikan halaman, bukan JSON. Refresh halaman lalu coba lagi.') {
+            const text = await response.text();
+
+            try {
+                return text ? JSON.parse(text) : {};
+            } catch (error) {
+                if (response.status === 401 || response.status === 419 || response.redirected) {
+                    throw new Error('Sesi halaman habis. Refresh halaman lalu coba lagi.');
+                }
+
+                if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+                    throw new Error(fallbackMessage);
+                }
+
+                throw new Error(text || fallbackMessage);
+            }
         }
 
         function totals() {
@@ -699,6 +718,30 @@
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
+        function getSpeechRecognitionErrorMessage(error) {
+            const messages = {
+                'not-allowed': 'Izin mic ditolak. Izinkan microphone di browser.',
+                'service-not-allowed': 'Voice-to-text diblokir browser.',
+                'audio-capture': 'Mic tidak ditemukan atau sedang dipakai aplikasi lain.',
+                'no-speech': 'Tidak ada suara terdengar. Coba bicara lebih dekat ke mic.',
+                network: 'Voice-to-text gagal karena koneksi/browser.',
+                aborted: 'Rekam suara dihentikan.',
+            };
+
+            return messages[error] || 'Voice-to-text gagal. Coba lagi.';
+        }
+
+        function getIndonesianVoice() {
+            if (!canSpeak || typeof window.speechSynthesis.getVoices !== 'function') {
+                return null;
+            }
+
+            const voices = window.speechSynthesis.getVoices();
+            return voices.find((voice) => voice.lang === 'id-ID')
+                || voices.find((voice) => voice.lang?.toLowerCase().startsWith('id'))
+                || null;
+        }
+
         function setSpeechButtonSpeaking(isSpeaking) {
             const button = byId('speak-note');
             const label = byId('speak-note-label');
@@ -722,7 +765,7 @@
         }
 
         function stopSpeech() {
-            if ('speechSynthesis' in window) {
+            if (canSpeak) {
                 window.speechSynthesis.cancel();
             }
 
@@ -731,7 +774,7 @@
         }
 
         function speakNote() {
-            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            if (!canSpeak) {
                 showToast('Browser tidak mendukung TTS');
                 return;
             }
@@ -749,6 +792,8 @@
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
+            const voice = getIndonesianVoice();
+            if (voice) utterance.voice = voice;
             utterance.rate = 0.95;
             utterance.pitch = 1;
             utterance.onend = () => {
@@ -769,7 +814,15 @@
 
         function stopVoiceNote() {
             if (activeRecognition) {
-                activeRecognition.stop();
+                try {
+                    activeRecognition.stop();
+                } catch (error) {
+                    try {
+                        activeRecognition.abort();
+                    } catch (abortError) {
+                        // Browser can throw if recognition already ended.
+                    }
+                }
             }
             activeRecognition = null;
             isListening = false;
@@ -806,8 +859,14 @@
                 }
             };
 
-            recognition.onerror = () => {
-                showToast('Voice-to-text gagal atau mic ditolak');
+            recognition.onerror = (event) => {
+                if (event.error !== 'aborted') {
+                    showToast(getSpeechRecognitionErrorMessage(event.error));
+                }
+            };
+
+            recognition.onnomatch = () => {
+                showToast('Suara belum terbaca. Coba ulangi lebih jelas.');
             };
 
             recognition.onend = () => {
@@ -826,7 +885,7 @@
                 activeRecognition = null;
                 isListening = false;
                 setListenButtonListening(false);
-                showToast('Voice-to-text gagal dimulai');
+                showToast('Voice-to-text gagal dimulai. Pastikan halaman memakai HTTPS atau localhost.');
             }
         }
 
@@ -855,9 +914,11 @@
             try {
                 const response = await fetch(orderUrl, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({
@@ -869,7 +930,7 @@
                         })),
                     }),
                 });
-                const payload = await response.json();
+                const payload = await readJsonResponse(response);
 
                 if (!response.ok) {
                     const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Pesanan gagal masuk ke kasir'];
@@ -921,7 +982,7 @@
                 byId('listen-note').title = 'Browser tidak mendukung voice-to-text';
             }
 
-            if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            if (!canSpeak) {
                 byId('speak-note').disabled = true;
                 byId('speak-note').title = 'Browser tidak mendukung text-to-voice';
             }

@@ -11,6 +11,9 @@
     @if (auth()->user()->hasPermission('page.qr_tables'))
         <a class="btn @class(['active' => request()->routeIs('customer.qr.*')])" href="{{ route('customer.qr.index') }}">QR Meja</a>
     @endif
+    @if (auth()->user()->hasPermission('page.kitchen'))
+        <a class="btn @class(['active' => request()->routeIs('kitchen.*')])" href="{{ route('kitchen.index') }}">Dapur</a>
+    @endif
     @if (auth()->user()->hasPermission('page.sales'))
         <a class="btn @class(['active' => request()->routeIs('sales.*')])" href="{{ route('sales.index') }}">Transaksi</a>
     @endif
@@ -23,7 +26,7 @@
     @if (auth()->user()->hasPermission('page.settings'))
         <a class="btn @class(['active' => request()->routeIs('settings.*')])" href="{{ route('settings.index') }}">Settings</a>
     @endif
-    @if (auth()->user()->role === \App\Enums\UserRole::SuperAdmin)
+    @if (auth()->user()->hasPermission('page.access_control'))
         <a class="btn @class(['active' => request()->routeIs('access-control.*')])" href="{{ route('access-control.index') }}">Akses User</a>
     @endif
     <a class="btn @class(['active' => request()->routeIs('profile.*')])" href="{{ route('profile.edit') }}">Profil Saya</a>

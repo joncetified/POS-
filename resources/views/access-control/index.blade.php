@@ -72,64 +72,59 @@
 
         <section class="panel">
             <div>
-                <h2>Checklist Halaman</h2>
-                <p class="muted">Centang berarti user boleh membuka halaman. Kosong berarti ditolak, walaupun role default biasanya punya akses.</p>
+                <h2>Checklist Halaman per Role</h2>
+                <p class="muted">Centang berarti semua akun dengan role tersebut boleh membuka halaman. Kosong berarti ditolak untuk role itu.</p>
             </div>
 
             <div class="access-grid">
-                @foreach ($users as $account)
-                    @php($locked = $account->role === \App\Enums\UserRole::SuperAdmin)
+                @foreach ($roles as $roleAccess)
+                    @php($role = $roleAccess['role'])
+                    @php($locked = ! $roleAccess['can_manage'])
+                    @php($protectedPermissions = collect($roleAccess['protected_permissions']))
                     <article class="access-card">
                         <div class="access-head">
                             <div class="access-user-row">
                                 <span class="access-avatar">
-                                    @if ($account->avatarUrl())
-                                        <img src="{{ $account->avatarUrl() }}" alt="{{ $account->name }}">
-                                    @else
-                                        {{ collect(explode(' ', $account->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
-                                    @endif
+                                    {{ collect(explode(' ', $role->label()))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}
                                 </span>
                                 <span>
-                                    <h3>{{ $account->name }}</h3>
-                                    <p class="muted">{{ $account->username }} &middot; {{ $account->email }}</p>
+                                    <h3>{{ $role->label() }}</h3>
+                                    <p class="muted">{{ $role->value }} &middot; {{ $roleAccess['user_count'] }} akun</p>
                                 </span>
                             </div>
                             <div>
-                                <span class="role-badge">{{ $account->roleLabel() }}</span>
+                                <span class="role-badge">{{ $role->label() }}</span>
                                 @if ($locked)
-                                    <span class="lock-badge">Dikunci</span>
+                                    <span class="lock-badge">Tidak bisa diubah</span>
                                 @endif
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('access-control.update', $account) }}">
+                        <form method="POST" action="{{ route('access-control.update', $role->value) }}">
                             @csrf
                             @method('PATCH')
                             <div class="access-role-grid">
                                 <div class="field">
                                     <label>Role</label>
-                                    <select name="role" @disabled($locked)>
-                                        @foreach (\App\Enums\UserRole::options() as $value => $label)
-                                            <option value="{{ $value }}" @selected($account->role->value === $value)>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if ($locked)
-                                        <input type="hidden" name="role" value="{{ $account->role->value }}">
-                                    @endif
+                                    <input value="{{ $role->label() }}" disabled>
                                 </div>
-                                <p class="muted">Nama, foto, dan password diubah masing-masing user lewat Profil Saya.</p>
+                                <p class="muted">Perubahan berlaku untuk semua akun yang memakai role ini.</p>
                             </div>
 
                             <div class="permission-list">
                                 @foreach ($pages as $permission => $page)
-                                    <label class="permission-option @if ($locked) locked @endif">
+                                    @php($protected = $protectedPermissions->contains($permission))
+                                    <label class="permission-option @if ($locked || $protected) locked @endif">
                                         <input
                                             type="checkbox"
                                             name="permissions[]"
                                             value="{{ $permission }}"
-                                            @checked($locked || $account->hasPermission($permission))
-                                            @disabled($locked)
+                                            @checked(in_array($permission, $roleAccess['permissions'], true) || $protected)
+                                            @disabled($locked || $protected)
                                         >
+                                        @if ($protected)
+                                            <input type="hidden" name="permissions[]" value="{{ $permission }}">
+                                        @endif
                                         <span>
                                             <strong>{{ $page['label'] }}</strong>
                                             <span>{{ $page['description'] }}</span>
@@ -138,11 +133,11 @@
                                 @endforeach
                             </div>
 
-                            @if ($locked)
-                                <p class="muted" style="margin-top: 10px;">Akses Super Admin selalu penuh supaya tidak ada akun utama yang terkunci.</p>
+                            @if ($protectedPermissions->isNotEmpty())
+                                <p class="muted" style="margin-top: 10px;">Settings dan Akses User wajib aktif untuk Super Admin supaya pengaturan tidak terkunci.</p>
                             @endif
                             <div class="card-actions" style="margin-top: 12px;">
-                                <button class="btn primary" type="submit">Simpan User</button>
+                                <button class="btn primary" type="submit" @disabled($locked)>Simpan Role</button>
                             </div>
                         </form>
                     </article>

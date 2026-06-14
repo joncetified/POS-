@@ -46,7 +46,7 @@ class CafeCatalog
         $settings = CompanySetting::current($defaults);
         $logoPath = $settings->logo_path;
         $paymentBarcodePath = $settings->payment_barcode_path;
-        $storageUrl = fn (?string $path): ?string => $path ? '/storage/' . ltrim($path, '/') : null;
+        $storageUrl = fn (?string $path): ?string => $path ? self::publicStorageUrl($path) : null;
 
         return [
             'name' => $settings->company_name ?: $defaults['name'],
@@ -69,6 +69,13 @@ class CafeCatalog
         $count = max(1, min($count, 200));
 
         return range(1, $count);
+    }
+
+    public static function publicStorageUrl(string $path): string
+    {
+        $basePath = parse_url((string) config('app.url'), PHP_URL_PATH) ?: '';
+
+        return rtrim($basePath, '/') . '/storage/' . ltrim($path, '/');
     }
 
     public static function ensure(): void

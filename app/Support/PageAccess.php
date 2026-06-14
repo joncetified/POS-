@@ -34,6 +34,10 @@ class PageAccess
                 'label' => 'Open Bill',
                 'description' => 'Simpan, parkir, muat, dan hapus order meja.',
             ],
+            'page.kitchen' => [
+                'label' => 'Dapur',
+                'description' => 'Daftar pesanan aktif untuk koki dengan text-to-voice.',
+            ],
             'page.sales' => [
                 'label' => 'Order / Transaksi',
                 'description' => 'Melihat riwayat transaksi paid.',
@@ -57,6 +61,10 @@ class PageAccess
             'page.settings' => [
                 'label' => 'Settings Website',
                 'description' => 'Nama perusahaan, logo, alamat, manager, dan kontak.',
+            ],
+            'page.access_control' => [
+                'label' => 'Akses User',
+                'description' => 'Mengatur akses halaman berdasarkan role akun.',
             ],
         ];
     }

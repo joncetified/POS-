@@ -19,6 +19,13 @@
 /storage/*.key
 /storage/pail
 /vendor
+/terasapp
+/terasapp-upload-fix
+/filehosting-terasapp-staging
+/probaru-hosting-ready
+/probaru-*.zip
+/terasapp-*.php
+/autoload_real_no_platform.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
