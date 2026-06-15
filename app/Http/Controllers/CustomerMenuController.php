@@ -84,7 +84,7 @@ class CustomerMenuController extends Controller
 
             $sale = Sale::query()
                 ->with('items')
-                ->whereIn('status', ['open', 'parked'])
+                ->where('status', 'open')
                 ->where('table_number', $tableNumber)
                 ->lockForUpdate()
                 ->first();
@@ -104,7 +104,7 @@ class CustomerMenuController extends Controller
                     'total' => 0,
                     'paid_amount' => 0,
                     'change_amount' => 0,
-                    'status' => 'parked',
+                    'status' => 'open',
                     'paid_at' => null,
                 ]);
                 $sale->load('items');
@@ -153,7 +153,7 @@ class CustomerMenuController extends Controller
                 'discount' => 0,
                 'tax' => $tax,
                 'total' => $subtotal + $tax,
-                'status' => 'parked',
+                'status' => 'open',
             ])->save();
 
             return $sale;

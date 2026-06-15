@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $openOrders = $hasSales
             ? Sale::query()
                 ->with($hasSaleItems ? ['items'] : [])
-                ->whereIn('status', ['open', 'parked'])
+                ->where('status', 'open')
                 ->latest('updated_at')
                 ->get()
             : collect();

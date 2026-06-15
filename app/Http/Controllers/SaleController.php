@@ -21,7 +21,6 @@ class SaleController extends Controller
 {
     private const TAX_RATE = 0.11;
     private const PAYMENT_METHODS = ['Tunai', 'QRIS', 'Barcode'];
-    private const OPEN_STATUSES = ['open', 'parked'];
 
     public function index(): View
     {
@@ -61,87 +60,6 @@ class SaleController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'Cache-Control' => 'no-store, no-cache',
         ]);
-    }
-
-    public function openOrders(): JsonResponse
-    {
-        $orders = Sale::query()
-            ->with('items.product')
-            ->whereIn('status', self::OPEN_STATUSES)
-            ->latest('updated_at')
-            ->get()
-            ->map(fn (Sale $sale) => $this->serializeOpenOrder($sale))
-            ->values();
-
-        return response()->json(['orders' => $orders]);
-    }
-
-    public function park(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
-            'customer_name' => ['nullable', 'string', 'max:120'],
-            'customer_note' => ['nullable', 'string', 'max:255'],
-            'table_number' => ['required', 'string', 'max:20'],
-            'cashier_name' => ['nullable', 'string', 'max:80'],
-            'order_type' => ['required', 'string', 'max:40'],
-            'discount' => ['nullable', 'integer', 'min:0'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $sale = DB::transaction(function () use ($validated) {
-            $lines = $this->buildOrderLines($validated['items'], false);
-            $totals = $this->calculateTotals($lines, (int) ($validated['discount'] ?? 0));
-
-            $sale = $this->openSaleForUpdate($validated['order_id'] ?? null, $validated['table_number']);
-
-            if (!$sale) {
-                $sale = new Sale([
-                    'invoice_number' => $this->nextDocumentNumber('ORD'),
-                    'status' => 'parked',
-                    'payment_method' => 'Tunai',
-                    'paid_amount' => 0,
-                    'change_amount' => 0,
-                ]);
-            }
-
-            $sale->fill([
-                'customer_name' => $validated['customer_name'] ?? null,
-                'customer_note' => $validated['customer_note'] ?? null,
-                'table_number' => $validated['table_number'],
-                'cashier_name' => $validated['cashier_name'] ?? CafeCatalog::store()['cashier'],
-                'order_type' => $validated['order_type'],
-                'payment_reference' => null,
-                'subtotal' => $totals['subtotal'],
-                'discount' => $totals['discount'],
-                'tax' => $totals['tax'],
-                'total' => $totals['total'],
-                'status' => 'parked',
-                'paid_at' => null,
-            ])->save();
-
-            $this->replaceSaleItems($sale, $lines, false);
-
-            return $sale->load('items.product');
-        });
-
-        return response()->json([
-            'message' => 'Order meja tersimpan di database.',
-            'order' => $this->serializeOpenOrder($sale),
-        ]);
-    }
-
-    public function destroyOpen(Sale $sale): JsonResponse
-    {
-        if (!in_array($sale->status, self::OPEN_STATUSES, true)) {
-            abort(404);
-        }
-
-        $sale->delete();
-
-        return response()->json(['message' => 'Order meja dihapus.']);
     }
 
     public function store(Request $request): JsonResponse
@@ -279,24 +197,7 @@ class SaleController extends Controller
                 ? null
                 : ($validated['payment_reference'] ?? $this->defaultPaymentReference($paymentMethod, $invoiceNumber));
 
-            $sale = null;
-            if (!empty($validated['order_id'])) {
-                $sale = Sale::query()
-                    ->whereKey($validated['order_id'])
-                    ->whereIn('status', self::OPEN_STATUSES)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$sale) {
-                    throw ValidationException::withMessages([
-                        'order_id' => 'Order meja tidak ditemukan atau sudah dibayar.',
-                    ]);
-                }
-            }
-
-            if (!$sale) {
-                $sale = new Sale();
-            }
+            $sale = new Sale();
 
             $sale->fill([
                 'invoice_number' => $invoiceNumber,
@@ -331,7 +232,6 @@ class SaleController extends Controller
     private function checkoutRules(): array
     {
         return [
-            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
             'customer_name' => ['nullable', 'string', 'max:120'],
             'customer_note' => ['nullable', 'string', 'max:255'],
             'table_number' => ['nullable', 'string', 'max:20'],
@@ -353,7 +253,6 @@ class SaleController extends Controller
     private function qrisOrderRules(): array
     {
         return [
-            'order_id' => ['nullable', 'integer', 'exists:sales,id'],
             'customer_name' => ['nullable', 'string', 'max:120'],
             'customer_note' => ['nullable', 'string', 'max:255'],
             'table_number' => ['nullable', 'string', 'max:20'],
@@ -552,31 +451,6 @@ class SaleController extends Controller
         ];
     }
 
-    private function openSaleForUpdate(?int $orderId, string $tableNumber): ?Sale
-    {
-        if ($orderId) {
-            $sale = Sale::query()
-                ->whereKey($orderId)
-                ->whereIn('status', self::OPEN_STATUSES)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$sale) {
-                throw ValidationException::withMessages([
-                    'order_id' => 'Order meja tidak ditemukan atau sudah dibayar.',
-                ]);
-            }
-
-            return $sale;
-        }
-
-        return Sale::query()
-            ->whereIn('status', self::OPEN_STATUSES)
-            ->where('table_number', $tableNumber)
-            ->lockForUpdate()
-            ->first();
-    }
-
     /**
      * @param Collection<int, array{product: Product, quantity: int, line_total: int, stock_decrements: array<int, int>}> $lines
      */
@@ -661,39 +535,6 @@ class SaleController extends Controller
             'total' => (clone $query)->sum('total'),
             'paid' => (clone $query)->sum('paid_amount'),
             'change' => (clone $query)->sum('change_amount'),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function serializeOpenOrder(Sale $sale): array
-    {
-        return [
-            'id' => $sale->id,
-            'label' => ($sale->table_number ? 'Meja ' . $sale->table_number : ($sale->customer_name ?: 'Order')) . ' - Rp ' . number_format($sale->total, 0, ',', '.'),
-            'customer' => $sale->customer_name,
-            'customerNote' => $sale->customer_note,
-            'tableNumber' => $sale->table_number,
-            'discount' => $sale->discount,
-            'discountPercent' => 0,
-            'discountMode' => 'amount',
-            'payment' => 'Tunai',
-            'paymentReference' => null,
-            'total' => $sale->total,
-            'status' => $sale->status,
-            'items' => $sale->items->map(fn ($item) => [
-                'product_id' => $item->product_id,
-                'sku' => $item->sku,
-                'qty' => $item->quantity,
-                'product_name' => $item->product_name,
-                'image_url' => $item->product?->imageUrl(),
-                'package_contents' => $item->product?->package_contents,
-                'is_bundle' => (bool) ($item->product?->is_bundle ?? false),
-                'quantity' => $item->quantity,
-                'unit_price' => $item->unit_price,
-                'line_total' => $item->line_total,
-            ])->values(),
         ];
     }
 

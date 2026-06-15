@@ -108,21 +108,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:page.sales_export')
         ->name('sales.excel');
 
-    Route::get('/orders/open', [SaleController::class, 'openOrders'])
-        ->middleware('permission:page.orders')
-        ->name('orders.open');
-
     Route::get('/dapur', [KitchenController::class, 'index'])
         ->middleware('permission:page.kitchen')
         ->name('kitchen.index');
-
-    Route::post('/orders/open', [SaleController::class, 'park'])
-        ->middleware('permission:page.orders')
-        ->name('orders.park');
-
-    Route::delete('/orders/open/{sale}', [SaleController::class, 'destroyOpen'])
-        ->middleware('permission:page.orders')
-        ->name('orders.destroy');
 
     Route::post('/sales', [SaleController::class, 'store'])
         ->middleware('permission:page.pos,page.orders')

@@ -12,7 +12,7 @@ class KitchenController extends Controller
     {
         $orders = Sale::query()
             ->with('items.product')
-            ->whereIn('status', ['open', 'parked'])
+            ->where('status', 'open')
             ->latest('updated_at')
             ->get();
 

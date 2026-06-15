@@ -133,7 +133,6 @@ textarea:focus,
 .logout-btn,
 .clear-btn,
 .save-btn,
-.park-btn,
 .checkout-btn,
 .add-btn,
 .pay-btn,
@@ -156,7 +155,6 @@ textarea:focus,
 .logout-btn:hover,
 .clear-btn:hover,
 .save-btn:hover,
-.park-btn:hover,
 .checkout-btn:hover,
 .add-btn:hover,
 .pay-btn:hover,
@@ -191,7 +189,6 @@ textarea:focus,
 }
 
 .save-btn,
-.park-btn,
 .pay-btn.active,
 .chip.active {
     border-color: var(--cafe-sage) !important;
@@ -826,7 +823,6 @@ body {
 .logout-btn,
 .clear-btn,
 .save-btn,
-.park-btn,
 .checkout-btn,
 .add-btn,
 .pay-btn,
@@ -976,12 +972,6 @@ body {
     color: #fff !important;
 }
 
-.park-btn {
-    background: var(--cafe-sage) !important;
-    border-color: var(--cafe-sage) !important;
-    color: #fff !important;
-}
-
 .payment-grid .pay-btn:nth-child(1) {
     background: #fff3d6 !important;
     border-color: var(--cafe-gold) !important;
@@ -1102,7 +1092,6 @@ th:last-child {
     .actions .btn,
     .actions button,
     .save-btn,
-    .park-btn,
     .checkout-btn {
         width: 100%;
         justify-content: center;
@@ -1317,7 +1306,6 @@ label {
 .logout-btn,
 .clear-btn,
 .save-btn,
-.park-btn,
 .checkout-btn,
 .add-btn,
 .pay-btn,
@@ -1340,7 +1328,6 @@ label {
 .btn.primary,
 .actions .btn.primary,
 .checkout-btn,
-.park-btn,
 .save-btn,
 .category-menu,
 .pay-btn.active,

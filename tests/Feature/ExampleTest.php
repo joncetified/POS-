@@ -586,100 +586,6 @@ class ExampleTest extends TestCase
         $this->assertSame(1, Sale::query()->count());
     }
 
-    public function test_waiter_can_park_table_order_in_database_without_decreasing_stock(): void
-    {
-        CafeCatalog::ensure();
-
-        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
-
-        $response = $this
-            ->actingAs(User::factory()->create())
-            ->postJson(route('orders.park'), [
-                'customer_name' => 'Meja Satu',
-                'table_number' => '1',
-                'cashier_name' => CafeCatalog::store()['cashier'],
-                'order_type' => 'Dine in',
-                'discount' => 0,
-                'items' => [
-                    ['product_id' => $product->id, 'quantity' => 1],
-                ],
-            ]);
-
-        $response
-            ->assertOk()
-            ->assertJsonPath('order.tableNumber', '1')
-            ->assertJsonPath('order.status', 'parked')
-            ->assertJsonPath('order.total', 19980);
-
-        $this->assertDatabaseHas('sales', [
-            'table_number' => '1',
-            'status' => 'parked',
-            'subtotal' => 18000,
-            'total' => 19980,
-            'paid_amount' => 0,
-        ]);
-
-        $this->assertSame(42, $product->fresh()->stock);
-    }
-
-    public function test_checkout_converts_parked_table_order_to_paid_sale(): void
-    {
-        CafeCatalog::ensure();
-
-        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
-        $user = User::factory()->create();
-
-        $parked = $this
-            ->actingAs($user)
-            ->postJson(route('orders.park'), [
-                'customer_name' => 'Dewi',
-                'table_number' => '7',
-                'cashier_name' => CafeCatalog::store()['cashier'],
-                'order_type' => 'Dine in',
-                'discount' => 0,
-                'items' => [
-                    ['product_id' => $product->id, 'quantity' => 2],
-                ],
-            ])
-            ->assertOk()
-            ->json('order');
-
-        $this->assertSame(42, $product->fresh()->stock);
-
-        $this
-            ->actingAs($user)
-            ->postJson('/sales', [
-                'order_id' => $parked['id'],
-                'customer_name' => 'Dewi',
-                'table_number' => '7',
-                'cashier_name' => CafeCatalog::store()['cashier'],
-                'order_type' => 'Dine in',
-                'payment_method' => 'QRIS',
-                'payment_reference' => 'QRIS-MEJA-7',
-                'discount' => 0,
-                'paid_amount' => 39960,
-                'items' => [
-                    ['product_id' => $product->id, 'quantity' => 2],
-                ],
-            ])
-            ->assertCreated()
-            ->assertJsonPath('sale.table_number', '7')
-            ->assertJsonPath('sale.status', null)
-            ->assertJsonPath('sale.payment_method', 'QRIS')
-            ->assertJsonPath('sale.total', 39960);
-
-        $this->assertDatabaseHas('sales', [
-            'id' => $parked['id'],
-            'table_number' => '7',
-            'status' => 'paid',
-            'payment_reference' => 'QRIS-MEJA-7',
-            'total' => 39960,
-        ]);
-
-        $this->assertSame(40, $product->fresh()->stock);
-        $this->assertSame(1, Sale::query()->count());
-    }
-
     public function test_qris_charge_creates_midtrans_payment_without_decreasing_stock(): void
     {
         CafeCatalog::ensure();
@@ -783,34 +689,6 @@ class ExampleTest extends TestCase
         $this->assertSame(41, $product->fresh()->stock);
     }
 
-    public function test_open_order_list_excludes_paid_sales(): void
-    {
-        CafeCatalog::ensure();
-
-        $product = Product::query()->where('sku', 'ESP-001')->firstOrFail();
-        $user = User::factory()->create();
-
-        $this
-            ->actingAs($user)
-            ->postJson(route('orders.park'), [
-                'table_number' => '3',
-                'cashier_name' => CafeCatalog::store()['cashier'],
-                'order_type' => 'Dine in',
-                'discount' => 0,
-                'items' => [
-                    ['product_id' => $product->id, 'quantity' => 1],
-                ],
-            ])
-            ->assertOk();
-
-        $this
-            ->actingAs($user)
-            ->getJson(route('orders.open'))
-            ->assertOk()
-            ->assertJsonCount(1, 'orders')
-            ->assertJsonPath('orders.0.tableNumber', '3');
-    }
-
     public function test_guest_customer_can_order_from_table_qr_without_login(): void
     {
         CafeCatalog::ensure();
@@ -842,7 +720,7 @@ class ExampleTest extends TestCase
             'customer_note' => 'Less sugar, tanpa es',
             'table_number' => '5',
             'cashier_name' => 'Customer QR',
-            'status' => 'parked',
+            'status' => 'open',
             'subtotal' => 36000,
             'total' => 39960,
             'paid_amount' => 0,

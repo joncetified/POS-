@@ -295,7 +295,6 @@
         .chip,
         .clear-btn,
         .save-btn,
-        .park-btn,
         .checkout-btn {
             min-height: 48px;
             border-radius: 8px;
@@ -773,19 +772,7 @@
         }
 
         .action-row {
-            grid-template-columns: 125px 125px minmax(0, 1fr);
-        }
-
-        .save-btn,
-        .park-btn {
-            border: 1px solid #f0c067;
-            color: var(--brown);
-            background: #fff8ed;
-        }
-
-        .park-btn {
-            background: #ffc94b;
-            border-color: #ffc94b;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .checkout-btn {
@@ -1141,8 +1128,6 @@
                             <input id="table-number" class="customer-input" type="text" placeholder="Meja nomor">
                         </div>
                         <textarea id="customer-note" class="customer-input customer-note" maxlength="255" rows="2" placeholder="Catatan pesanan, contoh: less sugar, tanpa es, alergi kacang"></textarea>
-                        <div id="saved-orders" class="saved-orders" hidden></div>
-
                         <div class="discount-row">
                             <span class="icon-cell">%</span>
                             <input id="discount-percent" type="number" min="0" max="100" step="1" value="0" aria-label="Diskon persen">
@@ -1183,8 +1168,6 @@
                         </div>
 
                         <div class="action-row">
-                            <button id="save-order" class="save-btn" type="button">Simpan</button>
-                            <button id="hold-order" class="park-btn" type="button">Parkir</button>
                             <button id="checkout" class="checkout-btn" type="button">Bayar</button>
                         </div>
                     </footer>
@@ -1249,15 +1232,10 @@
             payment: 'Tunai',
             discountMode: 'amount',
             cart: new Map(),
-            savedOrders: [],
-            currentOrderId: null,
             qrisOrderId: null,
             qrisPollTimer: null,
         };
 
-        const openOrdersUrl = @json(route('orders.open'));
-        const parkOrderUrl = @json(route('orders.park'));
-        const destroyOrderUrl = @json(route('orders.open'));
         const rupiah = (value) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(value)))}`;
         const byId = (id) => document.getElementById(id);
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (match) => ({
@@ -1269,7 +1247,6 @@
             grid: byId('product-grid'),
             cart: byId('cart-list'),
             cartCount: byId('cart-count'),
-            savedOrders: byId('saved-orders'),
             search: byId('search'),
             barcodeScan: byId('barcode-scan'),
             scanProduct: byId('scan-product'),
@@ -1314,24 +1291,6 @@
                 reference: false,
             },
         };
-
-        async function loadSavedOrdersFromServer() {
-            try {
-                const response = await fetch(openOrdersUrl, {
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
-                const payload = await readJsonResponse(response);
-                state.savedOrders = Array.isArray(payload.orders) ? payload.orders : [];
-            } catch (error) {
-                state.savedOrders = [];
-            }
-            renderSavedOrders();
-        }
 
         function totals() {
             const items = [...state.cart.values()];
@@ -1489,26 +1448,6 @@
             renderProducts();
         }
 
-        function renderSavedOrders() {
-            if (!state.savedOrders.length) {
-                nodes.savedOrders.hidden = true;
-                nodes.savedOrders.innerHTML = '';
-                return;
-            }
-
-            nodes.savedOrders.hidden = false;
-            nodes.savedOrders.innerHTML = state.savedOrders.map((order) => `
-                <div class="saved-order">
-                    <div>
-                        <strong>${escapeHtml(order.label)}</strong>
-                        ${order.customerNote ? `<p class="small">Catatan: ${escapeHtml(order.customerNote)}</p>` : ''}
-                    </div>
-                    <button type="button" data-load-order="${escapeHtml(order.id)}">Muat</button>
-                    <button type="button" data-delete-order="${escapeHtml(order.id)}">Hapus</button>
-                </div>
-            `).join('');
-        }
-
         function addItem(sku) {
             const product = products.find((item) => item.sku === sku);
             const current = state.cart.get(sku) || { ...product, qty: 0 };
@@ -1596,7 +1535,6 @@
 
         function resetOrder() {
             state.cart.clear();
-            state.currentOrderId = null;
             nodes.discountPercent.value = 0;
             nodes.discount.value = 0;
             state.discountMode = 'amount';
@@ -1606,147 +1544,6 @@
             nodes.customerNote.value = '';
             nodes.tableNumber.value = '';
             renderCart();
-        }
-
-        function currentOrderSnapshot() {
-            const data = totals();
-
-            return {
-                order_id: state.currentOrderId,
-                customer_name: nodes.customer.value || null,
-                customer_note: nodes.customerNote.value || null,
-                table_number: nodes.tableNumber.value || null,
-                cashier_name: '{{ $shift['cashier'] }}',
-                order_type: state.orderType,
-                discount: Math.round(data.discount),
-                items: data.items.map((item) => ({
-                    product_id: item.id,
-                    quantity: item.qty,
-                })),
-            };
-        }
-
-        async function saveCurrentOrder({ clearAfterSave = false } = {}) {
-            if (!state.cart.size) {
-                showToast('Nota aktif masih kosong');
-                return;
-            }
-
-            if (!nodes.tableNumber.value.trim()) {
-                showToast('Isi nomor meja sebelum simpan order');
-                return;
-            }
-
-            const button = clearAfterSave ? byId('hold-order') : byId('save-order');
-            const originalText = button.textContent;
-            button.disabled = true;
-            button.textContent = 'Menyimpan...';
-
-            try {
-                const response = await fetch(parkOrderUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify(currentOrderSnapshot()),
-                });
-                const payload = await readJsonResponse(response);
-
-                if (!response.ok) {
-                    const errors = payload.errors ? Object.values(payload.errors).flat() : [payload.message || 'Order gagal disimpan'];
-                    showToast(errors[0]);
-                    return;
-                }
-
-                state.currentOrderId = payload.order.id;
-                await loadSavedOrdersFromServer();
-
-                if (clearAfterSave) {
-                    resetOrder();
-                    showToast('Order meja diparkir di database');
-                    return;
-                }
-
-                showToast('Order meja tersimpan di database');
-            } catch (error) {
-                showToast('Koneksi ke server gagal');
-            } finally {
-                button.disabled = false;
-                button.textContent = originalText;
-            }
-        }
-
-        function loadSavedOrder(id) {
-            const order = state.savedOrders.find((item) => item.id === id);
-
-            if (!order) {
-                showToast('Order tersimpan tidak ditemukan');
-                return;
-            }
-
-            state.cart.clear();
-            order.items.forEach((item) => {
-                const product = products.find((entry) => entry.id === item.product_id || entry.sku === item.sku);
-                const qty = product ? Math.min(item.qty || item.quantity, product.stock) : 0;
-
-                if (product && qty > 0) {
-                    state.cart.set(product.sku, {
-                        ...product,
-                        qty,
-                    });
-                }
-            });
-
-            state.currentOrderId = order.id;
-            nodes.customer.value = order.customer || '';
-            nodes.customerNote.value = order.customerNote || '';
-            nodes.tableNumber.value = order.tableNumber || '';
-            nodes.discountPercent.value = order.discountPercent || 0;
-            nodes.discount.value = order.discount || 0;
-            state.discountMode = order.discountMode || (Number(order.discountPercent || 0) > 0 ? 'percent' : 'amount');
-            nodes.cash.value = order.cash || 0;
-            nodes.paymentReference.value = order.paymentReference || '';
-            state.payment = order.payment || 'Tunai';
-
-            document.querySelectorAll('[data-payment]').forEach((button) => {
-                button.classList.toggle('active', button.dataset.payment === state.payment);
-            });
-
-            renderCart();
-            showToast('Order dimuat ke keranjang');
-        }
-
-        async function deleteSavedOrder(id) {
-            try {
-                const response = await fetch(`${destroyOrderUrl}/${id}`, {
-                    method: 'DELETE',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
-                const payload = await readJsonResponse(response);
-
-                if (!response.ok) {
-                    showToast(payload.message || 'Order gagal dihapus');
-                    return;
-                }
-
-                if (String(state.currentOrderId) === String(id)) {
-                    resetOrder();
-                }
-
-                await loadSavedOrdersFromServer();
-                showToast('Order meja dihapus');
-            } catch (error) {
-                showToast('Koneksi ke server gagal');
-            }
         }
 
         function showToast(message) {
@@ -1775,7 +1572,6 @@
 
         function checkoutPayload(data, overrides = {}) {
             return {
-                order_id: state.currentOrderId,
                 customer_name: nodes.customer.value || null,
                 customer_note: nodes.customerNote.value || null,
                 table_number: nodes.tableNumber.value || null,
@@ -1817,7 +1613,6 @@
             try {
                 const sale = await submitPaidSale(data);
                 showReceipt(sale);
-                await loadSavedOrdersFromServer();
             } catch (error) {
                 showToast(error.message || 'Koneksi ke server gagal');
             } finally {
@@ -1889,7 +1684,6 @@
                 nodes.qrisModal.classList.remove('open');
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 showReceipt(sale);
-                await loadSavedOrdersFromServer();
             } catch (error) {
                 nodes.qrisStatus.textContent = error.message || 'Transaksi barcode gagal disimpan';
                 showToast(nodes.qrisStatus.textContent);
@@ -1996,7 +1790,6 @@
                 nodes.qrisModal.setAttribute('aria-hidden', 'true');
                 state.qrisOrderId = null;
                 showReceipt(payload.sale);
-                await loadSavedOrdersFromServer();
             } catch (error) {
                 nodes.qrisStatus.textContent = 'Koneksi ke server gagal, mencoba lagi...';
             }
@@ -2127,14 +1920,6 @@
             }
         });
 
-        nodes.savedOrders.addEventListener('click', (event) => {
-            const load = event.target.closest('[data-load-order]');
-            const remove = event.target.closest('[data-delete-order]');
-
-            if (load) loadSavedOrder(load.dataset.loadOrder);
-            if (remove) deleteSavedOrder(remove.dataset.deleteOrder);
-        });
-
         nodes.search.addEventListener('input', renderProducts);
         nodes.barcodeScan.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
@@ -2164,8 +1949,6 @@
         nodes.cash.addEventListener('input', renderCart);
 
         byId('clear-order').addEventListener('click', resetOrder);
-        byId('save-order').addEventListener('click', () => saveCurrentOrder());
-        byId('hold-order').addEventListener('click', () => saveCurrentOrder({ clearAfterSave: true }));
         byId('checkout').addEventListener('click', checkout);
         nodes.qrisCancel.addEventListener('click', closeQrisModal);
         nodes.barcodePaid.addEventListener('click', confirmBarcodePayment);
@@ -2176,7 +1959,6 @@
         });
         byId('print-receipt').addEventListener('click', () => window.print());
 
-        loadSavedOrdersFromServer();
         renderProducts();
         renderCart();
     </script>

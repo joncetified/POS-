@@ -32,7 +32,7 @@ class PageAccess
             ],
             'page.orders' => [
                 'label' => 'Open Bill',
-                'description' => 'Simpan, parkir, muat, dan hapus order meja.',
+                'description' => 'Melihat order meja terbuka dari QR dan dapur.',
             ],
             'page.kitchen' => [
                 'label' => 'Dapur',
