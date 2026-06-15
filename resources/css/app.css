@@ -4022,3 +4022,782 @@ tbody tr:hover {
         max-height: none !important;
     }
 }
+
+/* 2026 final UI/UX pass: one consistent operational app system. */
+:root {
+    --ui-bg: #f8efe8;
+    --ui-shell: rgba(255, 255, 255, .94);
+    --ui-panel: rgba(255, 253, 250, .92);
+    --ui-soft: #fff5ee;
+    --ui-line: #edd7ca;
+    --ui-ink: #2c211c;
+    --ui-muted: #8c766c;
+    --ui-accent: #ff8a52;
+    --ui-accent-dark: #df6631;
+    --ui-good: #287769;
+    --ui-danger: #be4a32;
+    --ui-radius: 18px;
+    --ui-shadow: 0 18px 44px rgba(112, 62, 32, .11);
+    --ui-shadow-soft: 0 10px 24px rgba(112, 62, 32, .075);
+}
+
+html,
+body {
+    min-width: 0 !important;
+    color: var(--ui-ink) !important;
+    background:
+        linear-gradient(140deg, rgba(255, 203, 176, .68), rgba(255, 246, 239, .86)),
+        var(--ui-bg) !important;
+}
+
+body::before {
+    opacity: .22 !important;
+    filter: saturate(.9) contrast(.95) !important;
+}
+
+body::after {
+    background: linear-gradient(180deg, rgba(255, 249, 245, .84), rgba(255, 238, 226, .76)) !important;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--ui-ink) !important;
+    line-height: 1.12 !important;
+}
+
+.muted,
+.small,
+label {
+    color: var(--ui-muted) !important;
+}
+
+.shell,
+.app-shell,
+.page,
+.auth-card {
+    border: 1px solid rgba(255, 255, 255, .9) !important;
+    background: var(--ui-shell) !important;
+    box-shadow: var(--ui-shadow) !important;
+    backdrop-filter: blur(16px) !important;
+}
+
+.panel,
+.card,
+.cards .card,
+.preview-card,
+.access-card,
+.products-panel,
+.cart-panel,
+.receipt,
+.catalog .panel,
+.customer .panel,
+.item,
+.cart,
+.product-card,
+.cart-row,
+.payment-status,
+.pay-row,
+.permission-option,
+.contact-list div,
+.table-wrap {
+    border: 1px solid var(--ui-line) !important;
+    border-radius: var(--ui-radius) !important;
+    background: var(--ui-panel) !important;
+    box-shadow: var(--ui-shadow-soft) !important;
+}
+
+input,
+select,
+textarea,
+.searchbox,
+.money-input,
+.customer-input {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 42px !important;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 14px !important;
+    background: #fffaf6 !important;
+    color: var(--ui-ink) !important;
+    box-shadow: none !important;
+}
+
+textarea,
+.customer-note {
+    min-height: 72px !important;
+    border-radius: 16px !important;
+    line-height: 1.35 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.customer-input:focus {
+    border-color: var(--ui-accent) !important;
+    box-shadow: 0 0 0 4px rgba(255, 138, 82, .16) !important;
+    outline: none !important;
+}
+
+input[type="file"] {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.btn,
+.actions .btn,
+.actions button,
+.logout-btn,
+.clear-btn,
+.save-btn,
+.checkout-btn,
+.add-btn,
+.pay-btn,
+.chip,
+.category-menu,
+.qty button,
+.qty-control button,
+.cart-row button,
+.receipt-actions button,
+.voice-note-btn {
+    min-width: 0 !important;
+    min-height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 14px !important;
+    padding: 9px 14px !important;
+    background: #fff8f2 !important;
+    color: var(--ui-ink) !important;
+    box-shadow: none !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: normal !important;
+}
+
+.btn:hover,
+.actions .btn:hover,
+.actions button:hover,
+.clear-btn:hover,
+.checkout-btn:hover,
+.add-btn:hover,
+.pay-btn:hover,
+.chip:hover,
+.category-menu:hover,
+.qty button:hover,
+.qty-control button:hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(255, 138, 82, .55) !important;
+    background: var(--ui-soft) !important;
+}
+
+.btn.primary,
+.checkout-btn,
+.save-btn,
+.category-menu,
+.add-btn,
+.pay-btn.active,
+.chip.active,
+.voice-note-btn.is-listening,
+.voice-note-btn.is-speaking,
+.receipt-actions .checkout-btn {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--ui-accent), var(--ui-accent-dark)) !important;
+    color: #fff !important;
+}
+
+.btn.danger,
+.clear-btn,
+.remove-btn {
+    border-color: #f1c4b7 !important;
+    background: #fff0ea !important;
+    color: var(--ui-danger) !important;
+}
+
+.status,
+.good,
+.badge {
+    border: 1px solid rgba(40, 119, 105, .2) !important;
+    background: #eaf7f2 !important;
+    color: var(--ui-good) !important;
+}
+
+.errors {
+    border: 1px solid #f0c5ba !important;
+    background: #fff0ec !important;
+    color: var(--ui-danger) !important;
+}
+
+.empty,
+.notice {
+    border: 1px dashed #eacdbf !important;
+    border-radius: 16px !important;
+    background: rgba(255, 250, 246, .74) !important;
+}
+
+table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: auto !important;
+    box-shadow: none !important;
+}
+
+.table-wrap table {
+    min-width: 820px !important;
+}
+
+th,
+td {
+    padding: 13px 12px !important;
+    border-bottom: 1px solid var(--ui-line) !important;
+    vertical-align: top !important;
+}
+
+th {
+    background: #fff3ec !important;
+    color: var(--ui-muted) !important;
+    font-size: .76rem !important;
+    font-weight: 850 !important;
+    text-transform: uppercase !important;
+}
+
+td {
+    color: var(--ui-ink) !important;
+    overflow-wrap: anywhere !important;
+}
+
+tbody tr:nth-child(odd) {
+    background: rgba(255, 249, 245, .45) !important;
+}
+
+tbody tr:hover {
+    background: #fff1e9 !important;
+}
+
+.staff-brand-stack,
+.staff-brand-wrap,
+.staff-nav,
+.staff-brand,
+.staff-user-profile {
+    min-width: 0 !important;
+}
+
+.staff-brand-mark,
+.staff-user-avatar,
+.logo-preview,
+.product-image-preview,
+.cart-thumb,
+.product-visual {
+    overflow: hidden !important;
+}
+
+.staff-brand-mark img,
+.staff-user-avatar img,
+.logo-preview img,
+.product-image-preview img,
+.cart-thumb img,
+.product-visual img,
+.menu-product-image {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+.image-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 6px !important;
+    color: inherit !important;
+    font-weight: 900 !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    overflow-wrap: anywhere !important;
+}
+
+.image-fallback[hidden] {
+    display: none !important;
+}
+
+@media (min-width: 981px) {
+    body:has(.shell > .topbar .staff-nav),
+    body:has(.app-shell) {
+        min-height: 100dvh !important;
+        overflow-x: hidden !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) {
+        width: min(1440px, calc(100vw - 18px)) !important;
+        min-height: calc(100dvh - 16px) !important;
+        margin: 8px auto !important;
+        display: grid !important;
+        grid-template-columns: 230px minmax(0, 1fr) !important;
+        grid-auto-rows: min-content !important;
+        gap: 0 !important;
+        overflow: visible !important;
+        border-radius: 24px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar {
+        grid-column: 1 !important;
+        grid-row: 1 / span 80 !important;
+        position: sticky !important;
+        top: 8px !important;
+        min-height: calc(100dvh - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto minmax(0, 1fr) !important;
+        gap: 18px !important;
+        align-content: start !important;
+        padding: 18px !important;
+        overflow-y: auto !important;
+        border: 0 !important;
+        border-right: 1px solid var(--ui-line) !important;
+        border-radius: 24px 0 0 24px !important;
+        background: rgba(255, 255, 255, .9) !important;
+        box-shadow: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar::after,
+    .shell:has(> .topbar .staff-nav) > .topbar > div:first-child::before {
+        display: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > *:not(.topbar) {
+        grid-column: 2 !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .panel,
+    .shell:has(> .topbar .staff-nav) > .cards,
+    .shell:has(> .topbar .staff-nav) > .grid,
+    .shell:has(> .topbar .staff-nav) > .split,
+    .shell:has(> .topbar .staff-nav) > .content,
+    .shell:has(> .topbar .staff-nav) > .layout {
+        padding: 22px !important;
+        background: rgba(255, 252, 249, .72) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand-stack {
+        gap: 12px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand {
+        display: grid !important;
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand-mark,
+    .shell:has(> .topbar .staff-nav) .staff-user-avatar {
+        width: 52px !important;
+        height: 52px !important;
+        border-radius: 14px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-user-profile {
+        display: grid !important;
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+        padding: 10px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand strong,
+    .shell:has(> .topbar .staff-nav) .staff-user-profile strong {
+        display: block !important;
+        font-size: .98rem !important;
+        line-height: 1.1 !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-brand small,
+    .shell:has(> .topbar .staff-nav) .staff-user-profile small {
+        display: block !important;
+        margin-top: 3px !important;
+        font-size: .76rem !important;
+        line-height: 1.18 !important;
+        color: var(--ui-muted) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-auto-rows: minmax(44px, auto) !important;
+        gap: 6px !important;
+        align-content: start !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav > a,
+    .shell:has(> .topbar .staff-nav) .staff-nav > .logout-form .btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        justify-content: flex-start !important;
+        border: 0 !important;
+        border-left: 4px solid transparent !important;
+        border-radius: 12px !important;
+        background: transparent !important;
+        color: #6d5a51 !important;
+        text-align: left !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav > a:hover,
+    .shell:has(> .topbar .staff-nav) .staff-nav > a.active,
+    .shell:has(> .topbar .staff-nav) .staff-nav > .logout-form .btn:hover {
+        border-left-color: var(--ui-accent) !important;
+        background: var(--ui-soft) !important;
+        color: var(--ui-accent-dark) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .cards {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 14px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav).dashboard-shell .cards,
+    .shell:has(> .topbar .staff-nav):has(.cards .card:nth-child(5)) .cards {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .grid,
+    .shell:has(> .topbar .staff-nav) .split {
+        gap: 16px !important;
+    }
+
+    .settings-shell:has(> .topbar .staff-nav) > .layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr) !important;
+        gap: 16px !important;
+    }
+}
+
+@media (min-width: 981px) {
+    .app-shell {
+        width: min(1440px, calc(100vw - 18px)) !important;
+        height: calc(100dvh - 16px) !important;
+        min-height: 0 !important;
+        margin: 8px auto !important;
+        display: grid !important;
+        grid-template-columns: 230px minmax(0, 1fr) !important;
+        overflow: hidden !important;
+        border-radius: 24px !important;
+    }
+
+    .app-shell .sidebar {
+        position: static !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        padding: 18px !important;
+        overflow-y: auto !important;
+        border-right: 1px solid var(--ui-line) !important;
+        background: rgba(255, 255, 255, .9) !important;
+    }
+
+    .app-shell .workspace {
+        min-height: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .content {
+        height: 100% !important;
+        min-height: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(380px, 420px) !important;
+        gap: 14px !important;
+        padding: 14px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .products-panel,
+    .app-shell .cart-panel {
+        min-height: 0 !important;
+        overflow: hidden !important;
+        border-radius: 18px !important;
+        background: rgba(255, 253, 250, .88) !important;
+    }
+
+    .app-shell .products-panel {
+        display: grid !important;
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 14px !important;
+    }
+
+    .app-shell .panel-head {
+        grid-template-columns: minmax(170px, 1fr) minmax(240px, 34%) auto !important;
+        gap: 12px !important;
+        align-items: end !important;
+    }
+
+    .app-shell .searchbox {
+        height: 40px !important;
+        min-height: 40px !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        padding: 0 14px !important;
+    }
+
+    .app-shell .searchbox span {
+        display: none !important;
+    }
+
+    .app-shell .searchbox input {
+        height: 100% !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    .app-shell .chips {
+        gap: 8px !important;
+        padding-bottom: 4px !important;
+        overflow-x: auto !important;
+        scrollbar-width: thin !important;
+    }
+
+    .app-shell .chips .chip {
+        flex: 0 0 auto !important;
+        min-width: 88px !important;
+        max-width: 142px !important;
+        min-height: 38px !important;
+        padding: 0 14px !important;
+        line-height: 1.12 !important;
+    }
+
+    .app-shell .product-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+        gap: 12px !important;
+        align-content: start !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 4px !important;
+    }
+
+    .app-shell .product-card {
+        min-height: 210px !important;
+        display: grid !important;
+        grid-template-columns: 108px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    .app-shell .product-visual {
+        width: 108px !important;
+        min-height: 118px !important;
+        border-radius: 14px !important;
+    }
+
+    .app-shell .product-info {
+        min-width: 0 !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        padding: 0 !important;
+    }
+
+    .app-shell .product-info h3 {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        font-size: .96rem !important;
+    }
+
+    .app-shell .add-btn {
+        width: min(124px, 100%) !important;
+        min-height: 36px !important;
+        justify-self: end !important;
+        font-size: 0 !important;
+    }
+
+    .app-shell .add-btn::after {
+        content: "Add to Cart" !important;
+        font-size: .78rem !important;
+    }
+
+    .app-shell .cart-panel {
+        display: grid !important;
+        grid-template-rows: auto minmax(90px, .42fr) minmax(0, 1.58fr) !important;
+        gap: 10px !important;
+        padding: 14px !important;
+    }
+
+    .app-shell .cart-table,
+    .app-shell .checkout-area {
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .app-shell .checkout-area {
+        display: grid !important;
+        gap: 8px !important;
+        padding-right: 4px !important;
+    }
+
+    .app-shell .customer-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(118px, .72fr) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .discount-row {
+        display: grid !important;
+        grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .payment-grid,
+    .app-shell .action-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .checkout-btn {
+        grid-column: 1 / -1 !important;
+    }
+
+    .app-shell .pay-row,
+    .app-shell .payment-status {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 1180px) {
+    .shell:has(> .topbar .staff-nav),
+    .app-shell {
+        width: calc(100% - 16px) !important;
+        grid-template-columns: 1fr !important;
+        overflow: visible !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .topbar {
+        position: static !important;
+        grid-column: 1 !important;
+        grid-row: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        border-right: 0 !important;
+        border-bottom: 1px solid var(--ui-line) !important;
+        border-radius: 24px 24px 0 0 !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > *:not(.topbar) {
+        grid-column: 1 !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .cards,
+    .shell:has(> .topbar .staff-nav).dashboard-shell .cards,
+    .shell:has(> .topbar .staff-nav):has(.cards .card:nth-child(5)) .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .app-shell {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    .app-shell .sidebar {
+        position: static !important;
+        height: auto !important;
+        display: block !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: 1fr !important;
+        overflow: visible !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+        overflow: visible !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .shell:has(> .topbar .staff-nav),
+    .app-shell,
+    .page,
+    .auth-card {
+        width: calc(100% - 12px) !important;
+        margin: 6px auto 16px !important;
+        border-radius: 18px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) > .panel,
+    .shell:has(> .topbar .staff-nav) > .cards,
+    .shell:has(> .topbar .staff-nav) > .grid,
+    .shell:has(> .topbar .staff-nav) > .split,
+    .shell:has(> .topbar .staff-nav) > .content,
+    .shell:has(> .topbar .staff-nav) > .layout,
+    .app-shell .content,
+    .app-shell .products-panel,
+    .app-shell .cart-panel {
+        padding: 12px !important;
+    }
+
+    .shell:has(> .topbar .staff-nav) .staff-nav,
+    .shell:has(> .topbar .staff-nav) .cards,
+    .shell:has(> .topbar .staff-nav).dashboard-shell .cards,
+    .shell:has(> .topbar .staff-nav):has(.cards .card:nth-child(5)) .cards,
+    .grid,
+    .split,
+    .form-grid,
+    .category-form,
+    .settings-shell .layout,
+    .app-shell .panel-head,
+    .app-shell .customer-row,
+    .app-shell .discount-row,
+    .app-shell .payment-grid,
+    .app-shell .action-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .app-shell .product-card {
+        grid-template-columns: 96px minmax(0, 1fr) !important;
+    }
+
+    .table-wrap table {
+        min-width: 760px !important;
+    }
+}
