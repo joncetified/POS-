@@ -1110,7 +1110,7 @@ body::before {
     z-index: -2;
     background:
         linear-gradient(rgba(18, 10, 6, 0.24), rgba(18, 10, 6, 0.18)),
-        url("/images/cafe-restaurant-bg.png") center / cover no-repeat;
+        url("../../images/cafe-restaurant-bg.png") center / cover no-repeat;
     transform: scale(1.02);
 }
 
@@ -1213,7 +1213,7 @@ body::before {
     z-index: -2 !important;
     background:
         linear-gradient(90deg, rgba(255, 195, 162, 0.46), rgba(255, 238, 226, 0.72)),
-        url("/images/purr-coffee-ui.png") center / cover no-repeat !important;
+        url("../../images/purr-coffee-ui.png") center / cover no-repeat !important;
     transform: none !important;
     opacity: 1 !important;
 }
@@ -1497,7 +1497,7 @@ tbody tr:hover {
     border-radius: 28px !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent),
-        url("/images/purr-coffee-ui.png") 72% 66% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 66% / 520% auto no-repeat,
         #ffad7e !important;
     box-shadow: 0 20px 40px rgba(255, 150, 95, 0.28) !important;
 }
@@ -1549,7 +1549,7 @@ tbody tr:hover {
     border-radius: 20px !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
-        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
         #ffad7e !important;
     color: transparent !important;
     box-shadow: 0 16px 30px rgba(255, 150, 95, 0.22) !important;
@@ -1627,7 +1627,7 @@ tbody tr:hover {
 
 .avatar {
     background:
-        url("/images/purr-coffee-ui.png") 82% 67% / 620% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 82% 67% / 620% auto no-repeat,
         #ffd1ba !important;
     color: var(--purr-accent-2) !important;
 }
@@ -1717,7 +1717,7 @@ tbody tr:hover {
     border-radius: 18px !important;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08)),
-        url("/images/purr-coffee-ui.png") 71% 67% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 71% 67% / 520% auto no-repeat,
         #fff4ee !important;
     box-shadow: none !important;
 }
@@ -1803,7 +1803,7 @@ tbody tr:hover {
     height: 58px !important;
     border-radius: 18px !important;
     background:
-        url("/images/purr-coffee-ui.png") 72% 68% / 560% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 560% auto no-repeat,
         #fff1e8 !important;
     color: transparent !important;
 }
@@ -1861,7 +1861,7 @@ tbody tr:hover {
     height: 74px !important;
     border-radius: 22px !important;
     background:
-        url("/images/purr-coffee-ui.png") 75% 68% / 620% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 75% 68% / 620% auto no-repeat,
         #fff3ec !important;
     opacity: 0.9 !important;
     pointer-events: none !important;
@@ -1898,7 +1898,7 @@ tbody tr:hover {
 .brand-mark,
 .auth-card::before {
     background:
-        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
         #ffb184 !important;
 }
 
@@ -2515,7 +2515,7 @@ tbody tr:hover {
     border: 1px solid #f1d8ca !important;
     border-radius: 20px !important;
     background:
-        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
         #ffb184 !important;
     box-shadow: 0 16px 30px rgba(255, 150, 95, 0.18) !important;
 }
@@ -2549,7 +2549,7 @@ tbody tr:hover {
     border: 1px solid #f1d8ca !important;
     border-radius: 20px !important;
     background:
-        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
         #ffb184 !important;
     color: #fff !important;
     font-weight: 900 !important;
@@ -2799,7 +2799,7 @@ tbody tr:hover {
     display: grid !important;
     place-items: center !important;
     background:
-        url("/images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
+        url("../../images/purr-coffee-ui.png") 72% 68% / 520% auto no-repeat,
         var(--color, #ffb184) !important;
     color: #fff !important;
     font-weight: 900 !important;
