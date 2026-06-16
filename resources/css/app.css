@@ -5124,3 +5124,46 @@ tbody tr:hover {
     min-width: 0 !important;
     overflow-wrap: anywhere !important;
 }
+
+/* Sidebar profile text must stay inside the profile card. */
+.staff-user-profile,
+.app-shell .sidebar .staff-user-profile,
+.shell:has(> .topbar .staff-nav) .staff-user-profile {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.staff-user-profile > span:last-child,
+.app-shell .sidebar .staff-user-profile > span:last-child,
+.shell:has(> .topbar .staff-nav) .staff-user-profile > span:last-child {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.staff-user-profile strong,
+.staff-user-profile small,
+.app-shell .sidebar .staff-user-profile strong,
+.app-shell .sidebar .staff-user-profile small,
+.shell:has(> .topbar .staff-nav) .staff-user-profile strong,
+.shell:has(> .topbar .staff-nav) .staff-user-profile small {
+    max-width: 100% !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.staff-user-profile strong,
+.app-shell .sidebar .staff-user-profile strong,
+.shell:has(> .topbar .staff-nav) .staff-user-profile strong {
+    font-size: .9rem !important;
+}
+
+.staff-user-profile small,
+.app-shell .sidebar .staff-user-profile small,
+.shell:has(> .topbar .staff-nav) .staff-user-profile small {
+    font-size: .72rem !important;
+}
