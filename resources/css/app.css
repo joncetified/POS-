@@ -4941,3 +4941,186 @@ tbody tr:hover {
         min-height: 104px !important;
     }
 }
+
+/* POS viewport repair: no horizontal clipping at 100% zoom, and receipt can scroll. */
+@media (min-width: 981px) {
+    html:has(.app-shell),
+    body:has(.app-shell) {
+        overflow-x: hidden !important;
+    }
+
+    .app-shell {
+        width: calc(100vw - 14px) !important;
+        max-width: calc(100vw - 14px) !important;
+        height: calc(100dvh - 14px) !important;
+        margin: 7px auto !important;
+        grid-template-columns: 220px minmax(0, 1fr) !important;
+    }
+
+    .app-shell .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 40%) !important;
+        gap: 14px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .products-panel,
+    .app-shell .cart-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .app-shell .products-panel {
+        grid-template-rows: auto auto minmax(0, 1fr) !important;
+    }
+
+    .app-shell .panel-head {
+        display: grid !important;
+        grid-template-columns: minmax(170px, 1fr) minmax(220px, 34%) !important;
+        grid-template-areas:
+            "title search"
+            "scan scan"
+            "category category" !important;
+        gap: 12px !important;
+        align-items: end !important;
+    }
+
+    .app-shell .panel-head > div:first-child {
+        grid-area: title !important;
+        min-width: 0 !important;
+    }
+
+    .app-shell .panel-head > .searchbox {
+        grid-area: search !important;
+        min-width: 0 !important;
+    }
+
+    .app-shell .scan-panel {
+        grid-area: scan !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 120px !important;
+        gap: 10px !important;
+        align-items: center !important;
+        padding: 10px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .scan-title-row {
+        display: grid !important;
+        grid-template-columns: auto auto !important;
+        justify-content: start !important;
+        gap: 10px !important;
+    }
+
+    .app-shell .scan-preview {
+        min-width: 0 !important;
+        display: grid !important;
+        grid-template-columns: auto minmax(160px, 1fr) minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+
+    .app-shell .scan-preview .searchbox {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .app-shell .scan-status {
+        min-width: 0 !important;
+        white-space: normal !important;
+    }
+
+    .app-shell .scan-barcode {
+        width: 120px !important;
+        max-width: 120px !important;
+        min-height: 58px !important;
+    }
+
+    .app-shell .category-menu {
+        grid-area: category !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
+        overflow-x: hidden !important;
+    }
+
+    .app-shell .cart-panel {
+        grid-template-rows: auto minmax(120px, .48fr) minmax(0, 1.52fr) !important;
+    }
+
+    .app-shell .cart-table,
+    .app-shell .checkout-area {
+        scrollbar-width: thin !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1280px) {
+    .app-shell {
+        grid-template-columns: 200px minmax(0, 1fr) !important;
+    }
+
+    .app-shell .content {
+        grid-template-columns: minmax(0, 1fr) 380px !important;
+    }
+
+    .app-shell .panel-head {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-areas:
+            "title"
+            "search"
+            "scan"
+            "category" !important;
+    }
+
+    .app-shell .scan-preview {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .app-shell .scan-title-row {
+        grid-template-columns: 1fr auto !important;
+    }
+
+    .app-shell .product-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.modal.open {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    align-items: start !important;
+    padding: 18px !important;
+}
+
+.receipt {
+    max-height: calc(100dvh - 36px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+}
+
+.receipt-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    padding-top: 10px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0), var(--ui-panel) 22%) !important;
+}
+
+.receipt-line,
+.receipt-item-main {
+    min-width: 0 !important;
+}
+
+.receipt-line strong,
+.receipt-item-main strong {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+}
