@@ -1222,9 +1222,9 @@
     <script>
         const products = @json($products);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        const salesStoreUrl = @json(route('sales.store', absolute: false));
-        const qrisChargeUrl = @json(route('payments.qris.charge', absolute: false));
-        const qrisFinalizeUrl = @json(route('payments.qris.finalize', absolute: false));
+        const salesStoreUrl = @json(ltrim(route('sales.store', absolute: false), '/'));
+        const qrisChargeUrl = @json(ltrim(route('payments.qris.charge', absolute: false), '/'));
+        const qrisFinalizeUrl = @json(ltrim(route('payments.qris.finalize', absolute: false), '/'));
         const paymentBarcodeUrl = @json($paymentBarcodeUrl);
         const taxRate = 0.11;
         const state = {
