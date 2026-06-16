@@ -40,8 +40,6 @@
         tbody tr:hover { background: var(--soft); }
         .product-fields { display: grid; grid-template-columns: minmax(120px, .72fr) minmax(190px, 1fr); gap: 8px; }
         .meta-fields { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(92px, .8fr) minmax(92px, .8fr); gap: 8px; }
-        .swatch-row { display: grid; grid-template-columns: 26px minmax(90px, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
-        .swatch { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: var(--color); }
         .row-actions { display: grid; grid-template-columns: minmax(112px, 1fr) minmax(92px, .8fr); gap: 8px; min-width: 220px; }
         .row-actions form { width: 100%; }
         .row-actions .btn { width: 100%; min-width: 0; padding-inline: 10px; white-space: normal; }
@@ -53,7 +51,7 @@
         .badge { display: inline-flex; width: max-content; min-height: 28px; align-items: center; border-radius: 999px; padding: 4px 9px; background: #fff0e7; color: #d86635; font-weight: 900; font-size: .78rem; }
         .product-image-preview { width: 76px; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff7f2; color: #fff; overflow: hidden; }
         .product-image-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .product-image-preview span { width: 100%; height: 100%; display: grid; place-items: center; background: var(--color, var(--primary)); font-weight: 950; }
+        .product-image-preview span { width: 100%; height: 100%; display: grid; place-items: center; background: #ff8a55; font-weight: 950; }
         .image-field { display: grid; gap: 8px; }
         .image-field .product-image-preview { width: 92px; }
         .image-upload-cell { display: grid; gap: 8px; }
@@ -192,14 +190,10 @@
                             <input id="tag" name="tag">
                         </div>
                         <div class="field">
-                            <label for="color">Warna</label>
-                            <input id="color" name="color" value="#0f766e" required>
-                        </div>
-                        <div class="field">
                             <label for="image">Gambar produk</label>
                             <div class="image-field">
                                 <div class="product-image-preview" data-image-preview="create">
-                                    <span style="--color: #0f766e">IMG</span>
+                                    <span>IMG</span>
                                 </div>
                                 <input id="image" name="image" type="file" accept="image/*" data-image-input="create">
                             </div>
@@ -250,7 +244,7 @@
                                             @if ($product->image_path)
                                                 <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}">
                                             @else
-                                                <span style="--color: {{ $product->color }}">{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+                                                <span>{{ collect(explode(' ', $product->name))->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
                                             @endif
                                         </div>
                                         <form id="image-update-{{ $product->id }}" method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
@@ -265,7 +259,6 @@
                                             <input type="hidden" name="unit" value="{{ $product->unit }}">
                                             <input type="hidden" name="tag" value="{{ $product->tag }}">
                                             <input type="hidden" name="package_contents" value="{{ $product->package_contents }}">
-                                            <input type="hidden" name="color" value="{{ $product->color }}">
                                             <input type="hidden" name="is_bundle" value="{{ $product->is_bundle ? 1 : 0 }}">
                                             <input type="hidden" name="is_active" value="{{ $product->is_active ? 1 : 0 }}">
                                             <input id="image-{{ $product->id }}" name="image" type="file" accept="image/*" aria-label="Gambar produk" data-image-input="{{ $product->id }}">
@@ -290,10 +283,6 @@
                                             @else
                                                 <span>Belum ada barcode.</span>
                                             @endif
-                                        </div>
-                                        <div class="swatch-row">
-                                            <span class="swatch" style="--color: {{ $product->color }}"></span>
-                                            <input name="color" value="{{ $product->color }}" required aria-label="Warna">
                                         </div>
                                         <input name="tag" value="{{ $product->tag }}" placeholder="Tag" style="margin-top: 8px;" aria-label="Tag">
                                         <input type="hidden" name="is_bundle" value="0">

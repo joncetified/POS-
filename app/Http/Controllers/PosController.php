@@ -53,7 +53,6 @@ class PosController extends Controller
                     'unit' => $product->unit,
                     'tag' => $product->tag,
                     'package_contents' => $hasPackageContents ? $product->package_contents : null,
-                    'color' => $product->color,
                     'is_bundle' => $hasIsBundle ? $product->is_bundle : false,
                     'image_url' => $hasImagePath ? $product->imageUrl() : null,
                 ])

@@ -371,7 +371,7 @@
             overflow: hidden;
             background:
                 radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), transparent 22%),
-                linear-gradient(145deg, var(--tile-color), #f0d0a2);
+                linear-gradient(145deg, var(--tile-color, #ff8a55), #f0d0a2);
         }
 
         .product-visual::before {
@@ -538,7 +538,7 @@
             display: grid;
             place-items: center;
             color: #fff;
-            background: linear-gradient(145deg, var(--tile-color), #e8c38f);
+            background: linear-gradient(145deg, var(--tile-color, #ff8a55), #e8c38f);
             font-size: 0.75rem;
             font-weight: 950;
         }
@@ -1374,7 +1374,7 @@
 
                 return `
                     <article class="product-card">
-                        <div class="product-visual" style="--tile-color: ${escapeHtml(product.color)};">
+                        <div class="product-visual">
                             ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">` : ''}
                             <span>${escapeHtml(initials(product.name))}</span>
                         </div>
@@ -1426,7 +1426,7 @@
                 return `
                 <article class="cart-row">
                     <div class="cart-product">
-                        <div class="cart-thumb" style="--tile-color: ${escapeHtml(item.color)};">${image}</div>
+                        <div class="cart-thumb">${image}</div>
                         <div>
                             <strong>${escapeHtml(item.name)}</strong>
                             ${packageLine}
