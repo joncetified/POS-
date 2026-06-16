@@ -1364,12 +1364,8 @@
                 const remaining = product.stock - inCart;
                 const disabled = remaining <= 0 ? 'disabled' : '';
                 const productLabel = product.is_bundle ? 'Paket' : (product.tag || product.unit);
-                const barcodeLabel = product.barcode ? ` / Barcode ${escapeHtml(product.barcode)}` : '';
                 const packageLine = product.is_bundle && product.package_contents
                     ? `<p class="small">${escapeHtml(product.package_contents)}</p>`
-                    : '';
-                const barcodeImage = product.barcode_image_url
-                    ? `<div class="product-barcode"><img src="${escapeHtml(product.barcode_image_url)}" alt="Barcode ${escapeHtml(product.barcode)}"></div>`
                     : '';
 
                 return `
@@ -1384,11 +1380,10 @@
                                 <span class="price">${rupiah(product.price)}</span>
                                 <p class="small">${escapeHtml(productLabel)} / Stok ${remaining} ${escapeHtml(product.unit)}</p>
                                 ${packageLine}
-                                <p class="small">${escapeHtml(product.sku)}${barcodeLabel}</p>
+                                <p class="small">${escapeHtml(product.sku)}</p>
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
                         </div>
-                        ${barcodeImage}
                     </article>
                 `;
             }).join('');

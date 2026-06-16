@@ -4801,3 +4801,124 @@ tbody tr:hover {
         min-width: 760px !important;
     }
 }
+
+/* POS product-card repair: barcode stays scannable, but never crowds menu cards. */
+.app-shell .product-card .product-barcode {
+    display: none !important;
+}
+
+@media (min-width: 981px) {
+    .app-shell .product-grid {
+        grid-template-columns: repeat(2, minmax(300px, 1fr)) !important;
+        gap: 14px !important;
+    }
+
+    .app-shell .product-card {
+        min-height: 168px !important;
+        display: grid !important;
+        grid-template-columns: 122px minmax(0, 1fr) !important;
+        grid-template-rows: 1fr !important;
+        gap: 14px !important;
+        align-items: stretch !important;
+        padding: 14px !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .product-visual {
+        width: 122px !important;
+        min-width: 122px !important;
+        height: 122px !important;
+        min-height: 122px !important;
+        align-self: center !important;
+        border-radius: 16px !important;
+    }
+
+    .app-shell .product-visual img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+
+    .app-shell .product-info {
+        min-width: 0 !important;
+        height: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: minmax(0, 1fr) auto !important;
+        gap: 10px !important;
+        padding: 0 !important;
+    }
+
+    .app-shell .product-info > div {
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .app-shell .product-info h3 {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        max-height: 2.4em !important;
+        overflow: hidden !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .app-shell .product-info .price {
+        display: block !important;
+        margin: 4px 0 !important;
+        font-size: 1rem !important;
+        line-height: 1.15 !important;
+    }
+
+    .app-shell .product-info .small {
+        display: block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: .78rem !important;
+        line-height: 1.24 !important;
+    }
+
+    .app-shell .add-btn {
+        width: 132px !important;
+        max-width: 100% !important;
+        min-height: 38px !important;
+        justify-self: end !important;
+        align-self: end !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1220px) {
+    .app-shell .product-grid {
+        grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
+    }
+
+    .app-shell .product-card {
+        grid-template-columns: 104px minmax(0, 1fr) !important;
+    }
+
+    .app-shell .product-visual {
+        width: 104px !important;
+        min-width: 104px !important;
+        height: 112px !important;
+        min-height: 112px !important;
+    }
+}
+
+@media (max-width: 720px) {
+    .app-shell .product-card {
+        grid-template-columns: 92px minmax(0, 1fr) !important;
+        min-height: 144px !important;
+    }
+
+    .app-shell .product-visual {
+        width: 92px !important;
+        height: 104px !important;
+        min-height: 104px !important;
+    }
+}
