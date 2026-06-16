@@ -1222,8 +1222,9 @@
     <script>
         const products = @json($products);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-        const qrisChargeUrl = @json(route('payments.qris.charge'));
-        const qrisFinalizeUrl = @json(route('payments.qris.finalize'));
+        const salesStoreUrl = @json(route('sales.store', absolute: false));
+        const qrisChargeUrl = @json(route('payments.qris.charge', absolute: false));
+        const qrisFinalizeUrl = @json(route('payments.qris.finalize', absolute: false));
         const paymentBarcodeUrl = @json($paymentBarcodeUrl);
         const taxRate = 0.11;
         const state = {
@@ -1621,7 +1622,7 @@
         }
 
         async function submitPaidSale(data, overrides = {}) {
-            const response = await fetch(@json(route('sales.store')), {
+            const response = await fetch(salesStoreUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -1724,7 +1725,7 @@
                 showQrisModal(payload);
                 pollQrisPayment(payload.order_id);
             } catch (error) {
-                showToast('Koneksi ke server gagal');
+                showToast(error.message || 'Koneksi ke server gagal');
                 resetCheckoutButton();
             }
         }
