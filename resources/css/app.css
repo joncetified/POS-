@@ -4802,9 +4802,27 @@ tbody tr:hover {
     }
 }
 
-/* POS product-card repair: barcode stays scannable, but never crowds menu cards. */
+/* POS product-card repair: barcode remains visible without crowding menu cards. */
 .app-shell .product-card .product-barcode {
-    display: none !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    max-height: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    padding: 6px 10px !important;
+    border: 1px solid var(--ui-line) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+}
+
+.app-shell .product-card .product-barcode img {
+    width: 100% !important;
+    height: 34px !important;
+    max-height: 34px !important;
+    display: block !important;
+    object-fit: contain !important;
 }
 
 @media (min-width: 981px) {
@@ -4814,10 +4832,10 @@ tbody tr:hover {
     }
 
     .app-shell .product-card {
-        min-height: 168px !important;
+        min-height: 220px !important;
         display: grid !important;
         grid-template-columns: 122px minmax(0, 1fr) !important;
-        grid-template-rows: 1fr !important;
+        grid-template-rows: 1fr auto !important;
         gap: 14px !important;
         align-items: stretch !important;
         padding: 14px !important;
@@ -4900,6 +4918,7 @@ tbody tr:hover {
 
     .app-shell .product-card {
         grid-template-columns: 104px minmax(0, 1fr) !important;
+        min-height: 214px !important;
     }
 
     .app-shell .product-visual {
@@ -4913,7 +4932,7 @@ tbody tr:hover {
 @media (max-width: 720px) {
     .app-shell .product-card {
         grid-template-columns: 92px minmax(0, 1fr) !important;
-        min-height: 144px !important;
+        min-height: 198px !important;
     }
 
     .app-shell .product-visual {

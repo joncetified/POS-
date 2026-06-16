@@ -1367,6 +1367,9 @@
                 const packageLine = product.is_bundle && product.package_contents
                     ? `<p class="small">${escapeHtml(product.package_contents)}</p>`
                     : '';
+                const barcodeImage = product.barcode_image_url
+                    ? `<div class="product-barcode"><img src="${escapeHtml(product.barcode_image_url)}" alt="Barcode ${escapeHtml(product.barcode || product.sku)}"></div>`
+                    : '';
 
                 return `
                     <article class="product-card">
@@ -1384,6 +1387,7 @@
                             </div>
                             <button class="add-btn" type="button" data-add="${escapeHtml(product.sku)}" ${disabled}>+</button>
                         </div>
+                        ${barcodeImage}
                     </article>
                 `;
             }).join('');
